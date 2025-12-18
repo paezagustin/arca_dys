@@ -1,4 +1,4 @@
 requests
 jinja2
 python-dateutil
-pyafipws
+afip.py

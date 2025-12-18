@@ -64,18 +64,23 @@ if DRY_RUN:
 # ================= AFIP =================
 afip = Afip({"CUIT": CUIT, "access_token": AFIP_TOKEN})
 
-#cert = afip.createAutomation("create-cert-prod",{
-#   "cuit": CUIT,
-#   "username": CUIT,
-#   "password": AFIP_PASSWORD,
-#   "alias": "afipsdk"
-# }, True)
+                 #Para produccion es create-cert-prod
 cert = afip.createAutomation("create-cert-dev", {
     "cuit": CUIT,
     "username": CUIT,
     "password": AFIP_PASSWORD,
     "alias": "afipsdk"
 }, True)
+                        #Para produccion es auth-web-service-prod
+auth_cert = afip.createAutomation("auth-web-service-dev", {
+    
+    "cuit": CUIT,
+    "username": CUIT,
+    "password": AFIP_PASSWORD,
+    "alias": "afipsdk",
+    "service": "wsfe"
+}, True)
+
 
 cert = cert["data"]
 afip = Afip({
