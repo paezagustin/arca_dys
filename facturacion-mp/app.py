@@ -19,27 +19,28 @@ URL = "https://api.mercadopago.com/v1/payments/search"
 
 
 TZ_AR = timezone(timedelta(hours=-3))
-
 hoy = date.today()
 
-inicio = datetime.combine(hoy, time(7, 0)).replace(tzinfo=TZ_AR)
-fin    = datetime.combine(hoy, time(23, 0)).replace(tzinfo=TZ_AR)
+begin_date = datetime.combine(hoy, time(7, 0)).replace(
+    tzinfo=TZ_AR
+).isoformat()
 
-begin_date = inicio.isoformat()
-end_date   = fin.isoformat()
+end_date = datetime.combine(hoy, time(23, 0)).replace(
+    tzinfo=TZ_AR
+).isoformat()
 
 params = {
     "sort": "date_approved",
-    "criteria": "asc",
+    "criteria": "desc",
     "begin_date": begin_date,
     "end_date": end_date,
     "limit": 100,
     "offset": 0
 }
 
-
 response = requests.get(URL, params=params, headers=HEADERS)
-response.raise_for_status()
+#response.raise_for_status()
+print(response)
 results = response.json()["results"]
 
 fecha_hoy = date.today()
