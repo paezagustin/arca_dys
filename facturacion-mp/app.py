@@ -1,5 +1,5 @@
 import os, requests
-from datetime import date, datetime
+from datetime import datetime, date, time, timezone, timedelta
 from dateutil import parser
 from jinja2 import Template
 from afip import Afip
@@ -16,11 +16,27 @@ HEADERS = {"Authorization": f"Bearer {MP_TOKEN}"}
 URL = "https://api.mercadopago.com/v1/payments/search"
 
 # ================= MERCADO PAGO =================
+
+
+TZ_AR = timezone(timedelta(hours=-3))
+
+hoy = date.today()
+
+inicio = datetime.combine(hoy, time(7, 0)).replace(tzinfo=TZ_AR)
+fin    = datetime.combine(hoy, time(23, 0)).replace(tzinfo=TZ_AR)
+
+begin_date = inicio.isoformat()
+end_date   = fin.isoformat()
+
 params = {
-    "sort": "date_created",
-    "criteria": "desc",
-    "limit": 100
+    "sort": "date_approved",
+    "criteria": "asc",
+    "begin_date": begin_date,
+    "end_date": end_date,
+    "limit": 100,
+    "offset": 0
 }
+
 
 response = requests.get(URL, params=params, headers=HEADERS)
 response.raise_for_status()
@@ -124,7 +140,7 @@ if "CAE" not in res:
     raise Exception("AFIP no autorizó la factura")
 
 # ================= PDF =================
-with open("bill.html", encoding="utf-8") as f:
+with open("templates/bill.html", encoding="utf-8") as f:
     template = Template(f.read())
 
 
