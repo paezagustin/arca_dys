@@ -2,3 +2,5 @@ requests
 jinja2
 python-dateutil
 afip.py
+fastapi
+uvicorn
