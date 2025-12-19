@@ -4,3 +4,4 @@ python-dateutil
 afip.py
 fastapi
 uvicorn
+psycopg2-binary
