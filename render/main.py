@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request
 import json
 import db 
-from repository import save_payment
-from mp import get_payment
+from render.repository import save_payment
+from render.mp import get_payment
 
 app = FastAPI()
 

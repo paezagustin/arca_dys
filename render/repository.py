@@ -1,5 +1,5 @@
 import psycopg2
-from db import get_conn
+from render.db import get_conn
 
 def save_payment(payment):
     conn = get_conn()
