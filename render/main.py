@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 import json
-import db 
+from render.db import init_db
 from render.repository import save_payment
 from render.mp import get_payment
 
@@ -25,4 +25,4 @@ async def mp_webhook(request: Request):
 
 @app.on_event("startup")
 def startup():
-    db.init_db()
+    init_db()
