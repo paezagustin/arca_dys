@@ -7,7 +7,9 @@ from render.mp import get_payment
 app = FastAPI()
 
 @app.post("/mp/webhook")
-async def mp_webhook(request: Request):
+async def mp_webhook(request: Request): #Llega el POST y debo proprocesarlo - Verificar fecha y luego guardar monto, tipo de pago, estaod, id del pago (con esto podemos verificarlo en MP hacienod el GET) y por ultimo el json completo.
+
+    #if preproceso ok : add payment to db, but if not ok: add payment to other table in db for later review
     payload = await request.json()
     payment_id = payload.get("data", {}).get("id")
 
@@ -26,7 +28,7 @@ async def mp_webhook(request: Request):
         print("No payment ID found in payload.")
         #return {"ignored": True}
 
-
+    
     #payment = get_payment(payment_id)
     #if payment["status"] != "approved":
     #    return {"not_approved": True}
