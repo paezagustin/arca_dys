@@ -1,34 +1,32 @@
 import psycopg2
 from render.db import get_conn
+import psycopg2.extras
 
 def save_payment(payment):
     conn = get_conn()
     cur = conn.cursor()
 
     try:
+        print("Guardando pago en DB...")
         cur.execute("""
         INSERT INTO payments (
             mp_payment_id,
             status,
             amount,
-            currency,
             payment_type,
-            method,
-            date_approved,
             raw_json
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+        ) VALUES (%s,%s,%s,%s,%s)
         ON CONFLICT (mp_payment_id) DO NOTHING
         """, (
-            payment["id"],
+            int(payment["id"]),
             payment["status"],
             payment["transaction_amount"],
-            payment["currency_id"],
             payment["payment_type_id"],
-            payment["payment_method_id"],
-            payment["date_approved"],
             psycopg2.extras.Json(payment)
         ))
         conn.commit()
+        print("Pago guardado.")
         return cur.rowcount == 1
     finally:
         conn.close()
+

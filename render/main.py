@@ -16,21 +16,23 @@ async def mp_webhook(request: Request):
     #if not payment_id:
     #    return {"ignored": True}
 
-    amount = payload.get('ammount')
+    amount = payload.get('amount')
     client = payload.get('client_id')
     state = payload.get('payment').get('state')
     type_payment = payload.get('payment').get('type')
     print(f"Amount: {amount}, Client ID: {client}, State: {state}, Type: {type_payment}")
 
     if not payment_id:
+        print("No payment ID found in payload.")
         return {"ignored": True}
+
 
     #payment = get_payment(payment_id)
     #if payment["status"] != "approved":
     #    return {"not_approved": True}
 
-    #saved = save_payment(payment)
-
+    saved = save_payment(payload)
+    print(f"Payment saved: {saved}")
     #return {"ok": True, "saved": saved}
 
 

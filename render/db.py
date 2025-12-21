@@ -16,13 +16,11 @@ def init_db():
         mp_payment_id BIGINT UNIQUE,
         status TEXT,
         amount NUMERIC(12,2),
-        currency TEXT,
         payment_type TEXT,
-        method TEXT,
-        date_approved TIMESTAMPTZ,
         raw_json JSONB,
         created_at TIMESTAMPTZ DEFAULT NOW()
     )
     """)
     conn.commit()
     conn.close()
+    print("DB inicializada.")
