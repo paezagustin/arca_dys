@@ -24,7 +24,7 @@ async def mp_webhook(request: Request):
 
     if not payment_id:
         print("No payment ID found in payload.")
-        return {"ignored": True}
+        #return {"ignored": True}
 
 
     #payment = get_payment(payment_id)
