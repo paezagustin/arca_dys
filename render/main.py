@@ -11,6 +11,8 @@ async def mp_webhook(request: Request):
     payload = await request.json()
     payment_id = payload.get("data", {}).get("id")
 
+    print("Received webhook for payment ID:", payment_id)
+    print("Full payload:", json.dumps(payload))
     if not payment_id:
         return {"ignored": True}
 
