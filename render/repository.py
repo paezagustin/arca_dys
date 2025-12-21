@@ -20,8 +20,8 @@ def save_payment(payment):
         """, (
             int(payment["id"]),
             payment["state"],
-            payment["transaction_amount"],
-            payment["payment_type_id"],
+            payment["amount"],
+            payment["id"],
             psycopg2.extras.Json(payment)
         ))
         conn.commit()
