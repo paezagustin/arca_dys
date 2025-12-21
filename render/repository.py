@@ -19,7 +19,7 @@ def save_payment(payment):
         ON CONFLICT (mp_payment_id) DO NOTHING
         """, (
             int(payment["id"]),
-            payment["status"],
+            payment["state"],
             payment["transaction_amount"],
             payment["payment_type_id"],
             psycopg2.extras.Json(payment)
