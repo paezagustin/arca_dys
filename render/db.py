@@ -7,6 +7,7 @@ def get_conn():
     return psycopg2.connect(DATABASE_URL)
 
 def init_db():
+    print("Conectando a DB...")
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("""
