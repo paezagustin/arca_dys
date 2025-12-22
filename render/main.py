@@ -24,8 +24,8 @@ async def mp_webhook(request: Request): #Llega el POST y debo proprocesarlo - Ve
     type_payment = payload.get('payment').get('type')
     print(f"Amount: {amount}, Client ID: {client}, State: {state}, Type: {type_payment}")
 
-    if not payment_id:
-        print("No payment ID found in payload.")
+    #if not payment_id:
+    #    print("No payment ID found in payload.")
         #return {"ignored": True}
 
     
@@ -33,8 +33,8 @@ async def mp_webhook(request: Request): #Llega el POST y debo proprocesarlo - Ve
     #if payment["status"] != "approved":
     #    return {"not_approved": True}
 
-    saved = save_payment(payload)
-    print(f"Payment saved: {saved}")
+    #saved = save_payment(payload)
+    print("Payment llegó")
     #return {"ok": True, "saved": saved}
 
 
