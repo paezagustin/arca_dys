@@ -7,7 +7,7 @@ from dateutil import parser
 
 
 
-# Agregar si ese pago está facturado o no, con otra columna. Ya con la columna 'bill' separo si se debe facturar o no.
+# En vez de hacer una ventana para pagos aprobados, verificar si ya está en la bd (actualmente en el dataframe)
 def pre_process_webhook(payload):
     print("Pre-processing webhook")
 
