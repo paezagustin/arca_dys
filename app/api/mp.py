@@ -1,8 +1,36 @@
-import mercadopago
+# app/api/mp.py
 
-def call_api_mp(resource):
-    print("Calling MercadoPago API for resource")
+from fastapi import APIRouter, Request, Depends
+from sqlalchemy.orm import Session
 
-    sdk = mercadopago.SDK("APP_USR-2170308863522747-122910-dd6487377aa91decd0d6181626e61da3-427540214")
-    payment_info = sdk.payment().get(resource)
-    return payment_info["response"]
+from app.core.database import get_db
+from app.services.payments import pre_process_webhook
+from app.repositories.payment_repo import create_payment, payment_exists
+from app.services.mp import call_api_mp  # donde tengas esto
+
+router = APIRouter(prefix="/mp", tags=["MercadoPago"])
+
+
+@router.post("/webhook")
+async def mp_webhook(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    payload = await request.json()
+
+    resource = payload.get("resource")
+    if not resource:
+        return {"ok": True}
+
+    mp_payment = call_api_mp(resource)
+    processed = pre_process_webhook(mp_payment)
+
+    if not processed:
+        return {"ok": True}
+
+    if payment_exists(db, processed["id_payment_mp"]):
+        return {"ok": True}
+
+    create_payment(db, processed)
+
+    return {"ok": True}
