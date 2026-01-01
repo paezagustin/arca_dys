@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
-from datetime import date
+from datetime import date, time, datetime,timedelta
 from app.models.payment import Payment
-
-
+from sqlalchemy import text
+import os
 def create_payment(db: Session, data: dict) -> Payment:
     payment = Payment(**data)
     db.add(payment)
@@ -23,3 +23,26 @@ def payment_exists(db: Session, id_payment_mp: str) -> bool:
     return db.query(Payment).filter(
         Payment.id_payment_mp == id_payment_mp
     ).first() is not None
+
+
+def get_today_payments(db: Session):
+    """
+    Devuelve todos los pagos del día actual (00:00 a 23:59)
+    """
+    #result = db.execute(
+    #    text("SELECT * FROM payments")
+    #)
+    #print(result.fetchall())
+    #
+    #return result.mappings().all()
+    now = datetime.utcnow()
+    start = datetime(now.year, now.month, now.day)
+    end = start + timedelta(days=1)
+
+    return (
+        db.query(Payment)
+        .filter(Payment.created_at >= start)
+        .filter(Payment.created_at < end)
+        .filter(Payment.status == "approved")
+        .all()
+    )

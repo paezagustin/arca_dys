@@ -1,12 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.config import DATABASE_URL
+import os
+Base = declarative_base()
 
-# Engine SQLite
+
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False}  # requerido para FastAPI + SQLite
 )
+
 
 # Sesión
 SessionLocal = sessionmaker(
@@ -16,7 +19,7 @@ SessionLocal = sessionmaker(
 )
 
 # Base para modelos
-Base = declarative_base()
+#Base = declarative_base()
 
 
 # Dependency para FastAPI
