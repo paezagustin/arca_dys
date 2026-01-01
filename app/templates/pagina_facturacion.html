@@ -31,8 +31,8 @@
         <tbody>
         {% for pago in pagos %}
             <tr>
-                <td>$ {{ pago.amount }}</td>
-                <td>{{ pago.created_at.strftime("%d/%m/%Y %H:%M") }} hs</td>
+                <td>$ {{ pago.mont }}</td>
+                <td>{{ pago.date_approved }} hs</td>
             </tr>
         {% else %}
             <tr>

@@ -19,10 +19,10 @@ def ver_facturacion(
     #_: None = Depends(ip_whitelist)
 ):
     pagos = get_today_payments(db)
-
-    total = sum(p.amount for p in pagos)
+    
+    total = sum(p.mont for p in pagos)
     cantidad = len(pagos)
-
+    
     return templates.TemplateResponse(
         "pagina_facturacion.html",
         {
@@ -32,4 +32,5 @@ def ver_facturacion(
             "cantidad": cantidad
         }
     )
+
 
