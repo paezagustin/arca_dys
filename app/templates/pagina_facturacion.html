@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Facturación del día</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        table { border-collapse: collapse; width: 400px; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f0f0f0; }
+        .resumen { margin-bottom: 20px; }
+        button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h2>📄 Facturación del día</h2>
+
+    <div class="resumen">
+        <p><strong>Monto total a facturar:</strong> $ {{ total }}</p>
+        <p><strong>Cantidad de pagos:</strong> {{ cantidad }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>MONTO</th>
+                <th>DÍA / HORA</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for pago in pagos %}
+            <tr>
+                <td>$ {{ pago.amount }}</td>
+                <td>{{ pago.created_at.strftime("%d/%m/%Y %H:%M") }} hs</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="2">No hay pagos hoy</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="/facturar" method="post">
+        <button type="submit">🧾 FACTURAR</button>
+    </form>
+
+</body>
+</html>
