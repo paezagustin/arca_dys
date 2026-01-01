@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from datetime import date
+from datetime import date, time, datetime
 from app.models.payment import Payment
 
 
@@ -27,31 +27,21 @@ def payment_exists(db: Session, id_payment_mp: str) -> bool:
 
 # Provisorio
 
-from datetime import datetime
 
-class MockPayment:
-    def __init__(self, amount, created_at):
-        self.amount = amount
-        self.created_at = created_at
-
-
-def get_today_payments(db=None):
+def get_today_payments(db: Session):
     """
-    Mock de pagos del día para testeo de Jinja2.
-    Ignora la DB y devuelve datos hardcodeados.
+    Devuelve todos los pagos del día actual (00:00 a 23:59)
     """
 
-    return [
-        MockPayment(
-            amount=3000,
-            created_at=datetime(2025, 1, 1, 16, 0)
-        ),
-        MockPayment(
-            amount=4500,
-            created_at=datetime(2025, 1, 1, 18, 30)
-        ),
-        MockPayment(
-            amount=1200,
-            created_at=datetime(2025, 1, 1, 20, 15)
-        ),
-    ]
+    today = datetime.now().date()
+
+    start = datetime.combine(today, time.min)
+    end = datetime.combine(today, time.max)
+
+    return (
+        db.query(Payment)
+        .filter(Payment.created_at >= start)
+        .filter(Payment.created_at <= end)
+        .filter(Payment.status == "approved")
+        .all()
+    )
