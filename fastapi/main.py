@@ -91,6 +91,7 @@ async def facturar():
     print(f"Monto total a facturar: {monto_total}")
     responses = pipeline_facturacion(monto_total,datetime.now().date())
     print(responses)
+    ## Guardar datos de factura en bd
 
     return {
         "status": "facturacion_completed",
