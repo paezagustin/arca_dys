@@ -25,7 +25,7 @@ async def facturar():
     df_to_facturar = df[
         (df['bill'] == True) &
         (pd.to_datetime(df['date_approved'], errors='coerce').dt.date == datetime.now().date())
-    ]
+    #]
     #print(df_to_facturar)
     if df_to_facturar.empty:
         return {

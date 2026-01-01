@@ -1,12 +1,10 @@
-# app/api/mp.py
-
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.services.payments import pre_process_webhook
 from app.repositories.payment_repo import create_payment, payment_exists
-from app.services.mp import call_api_mp  # donde tengas esto
+from app.services.mp import call_api_mp
 
 router = APIRouter(prefix="/mp", tags=["MercadoPago"])
 
