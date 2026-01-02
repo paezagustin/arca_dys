@@ -62,7 +62,7 @@ def pre_process_webhook(payload):
                 "status_detail": "approved",
                 "mont": monto,
                 "type_of_paid": tipo_de_pago,
-                "date_approved": fecha_pago.isoformat(),
+                "date_approved": fecha_pago,
                 'bill': True,
                 'registered_arca': False,
                 'id_arca': '',

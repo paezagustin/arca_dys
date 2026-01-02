@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # app/data/app.db
 DB_PATH = os.path.join(BASE_DIR, "data", "app.db")
-#print("DB:", DB_PATH)
+print("DB:", DB_PATH)
 
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 #DATABASE_URL = os.getenv("DATABASE_URL")
