@@ -1,9 +1,23 @@
 from app.services.payments import pipeline_facturacion
 from datetime import datetime
+from fastapi import APIRouter, Request, Depends
+
+
+
+
+router = APIRouter(prefix="/fact", tags=["Jinja2"])
+
+
+@router.get("/facturacion", response_class=HTMLResponse)
+
+
+
+
 
 @app.post('/facturar')
 
 async def facturar():
+
 
     fecha_hoy = datetime.now().date().isoformat()
     #pagos = get_payments_to_bill(fecha_hoy)

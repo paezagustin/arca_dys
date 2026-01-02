@@ -29,12 +29,6 @@ def get_today_payments(db: Session):
     """
     Devuelve todos los pagos del día actual (00:00 a 23:59)
     """
-    #result = db.execute(
-    #    text("SELECT * FROM payments")
-    #)
-    #print(result.fetchall())
-    #
-    #return result.mappings().all()
     now = datetime.utcnow()
     start = datetime(now.year, now.month, now.day)
     end = start + timedelta(days=1)
@@ -43,6 +37,6 @@ def get_today_payments(db: Session):
         db.query(Payment)
         .filter(Payment.created_at >= start)
         .filter(Payment.created_at < end)
-        .filter(Payment.status == "approved")
+        #.filter(Payment.status == "approved")
         .all()
     )

@@ -26,8 +26,10 @@ async def mp_webhook(
     if not processed:
         return {"ok": True}
 
-    if payment_exists(db, processed["id_payment_mp"]):
-        return {"ok": True}
+    #Saco esto así entran todos los pagos aunque estén repetidos
+    
+    #if payment_exists(db, processed["id_payment_mp"]):
+    #    return {"ok": True}
 
     create_payment(db, processed)
 
