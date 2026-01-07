@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: arm32v7/postgres:17
+    container_name: pg_dys
+    environment:
+      POSTGRES_USER: arca_user
+      POSTGRES_PASSWORD: arca_db_dys26
+      POSTGRES_DB: arca_dys
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - dev_net
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8081:8080"
+    networks:
+      - dev_net
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://arca_user:arca_db_dys26@postgres:5432/arca_dys
+    depends_on:
+      - postgres
+    networks:
+      - dev_net
+
+volumes:
+  pg_data:
+
+networks:
+  dev_net:
