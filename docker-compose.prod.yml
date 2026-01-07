@@ -1,0 +1,46 @@
+
+services:
+  postgres:
+    image: arm32v7/postgres:17
+    container_name: pg_dys
+    environment:
+      POSTGRES_USER: arca_user
+      POSTGRES_PASSWORD: arca_db_dys26
+      POSTGRES_DB: arca_dys
+      TZ: America/Argentina/Buenos_Aires
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_AR.UTF-8 --data-checksums"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://arca_user:arca_db_dys26@postgres:5432/arca_dys
+    depends_on:
+      - postgres
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8081:8080"
+  
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    network_mode: "host"   # ?? usa la red del host
+    environment:
+      NGROK_AUTHTOKEN: 33QqKy97HNepS56yT1L2wX72X71_Udz91Cxapbu9XDkvNAtG
+    command: http 8000      # ?? expone el FastAPI corriendo en 8000
+
+volumes:
+  pg_data:
+

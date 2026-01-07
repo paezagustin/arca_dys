@@ -1,0 +1,26 @@
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, JSON
+from datetime import datetime
+from app.core.database import Base
+
+
+class Invoice(Base):
+    __tablename__ = "invoices"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    invoice_number = Column(String(300), unique=True, nullable=True)
+    total_amount = Column(Float, nullable=True)
+
+    status = Column(String(100), default="pending")  # pending / success / failed
+    error_message = Column(String(200), nullable=True)
+
+    cae = Column(String(300), nullable=True)
+    cae_due_date = Column(Date, nullable=True)
+
+    invoice_date = Column(Date, nullable=True)
+
+    pdf_url = Column(String(300), nullable=True)
+    
+    raw_afip_response = Column(JSON)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
