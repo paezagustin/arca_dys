@@ -1,6 +1,11 @@
 from datetime import datetime, timedelta
 from dateutil import parser
 from zoneinfo import ZoneInfo
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 def process_webhook(mp_payment: dict) -> dict:
 
     """Procesa el pago recibido desde el webhook de MercadoPago.
@@ -11,8 +16,10 @@ def process_webhook(mp_payment: dict) -> dict:
     Returns:
         dict: Diccionario con los datos procesados del pago.
     """
-    if mp_payment['date_approved'] == None:
-		raise ValueError("Date_approved None")
+    if not mp_payment:
+        logger.warning("No payment data to process")
+        return None
+        
     fecha_pago_utc = parser.isoparse(mp_payment["date_approved"]) if mp_payment["date_approved"] != None else datetime(9999,12,31)
     fecha_pago_ba = fecha_pago_utc.astimezone(ZoneInfo("America/Argentina/Buenos_Aires"))
     

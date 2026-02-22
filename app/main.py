@@ -6,7 +6,7 @@ from app.core.logging import setup_logging
 import logging
 from sqlalchemy.exc import OperationalError
 import time
-from app.core.middlewares.error_middleware import error_middleware
+
 
 
 setup_logging()
@@ -16,8 +16,7 @@ logger.info("🚀 ARCA API iniciando...")
 
 app = FastAPI()
 
-# Crear tablas
-#Base.metadata.create_all(bind=engine)
+
 
 @app.on_event("startup")
 def startup_db():
@@ -36,7 +35,6 @@ def startup_db():
     logger.error("❌ No se pudo conectar a la DB")
     raise RuntimeError("Database not available")
 
-app.middleware("http")(error_middleware)
 
 # Routers
 app.include_router(mp.router)

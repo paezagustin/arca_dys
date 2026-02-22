@@ -5,6 +5,10 @@ from app.services.arca.pdf import generate_invoice_pdf
 from app.repositories.log_invoice_repo import create_log_invoice
 from sqlalchemy.orm import Session
 import logging
+from enum import Enum
+from dataclasses import dataclass
+from typing import Optional
+
 
 class InvoiceError(Exception):
     pass
@@ -72,7 +76,7 @@ def pipeline_invoice(
         create_log_invoice(
             db=db,
             level= "CRITICAL",
-            phase = "authentication"
+            phase = "authentication",
             error=error_msg,
             retryable = False
         )
@@ -100,7 +104,7 @@ def pipeline_invoice(
         create_log_invoice(
             db=db,
             level= "ERROR",
-            phase = "billing"
+            phase = "billing",
             error=error_msg,
             retryable = False
         )

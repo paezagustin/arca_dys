@@ -8,32 +8,35 @@ from app.services.mp import call_api_mp
 import logging
 
 router = APIRouter(prefix="/mp", tags=["MercadoPago"])
-
 logger = logging.getLogger(__name__)
 
 @router.post("/webhook")
-async def mp_webhook(
-    request: Request,
-    db: Session = Depends(get_db)
-):
-try:
+async def mp_webhook(request: Request,db: Session = Depends(get_db)):
 
-    logger.info("Webhook MP recibido")
+    try:
+        logger.info("Webhook MP received")
+        
+        payload = await request.json()
+
+    except Exception as e:
+        logger.error(f"Error processing webhook: {e}")
+
+        return {"status": "error", "message": str(e), "reason": "Invalid JSON"}
+
+        payment_id = payload.get("resource",{})
+
+        if not payment_id:
+             logger.warning("No resource ID in webhook payload")
+             return {"status": "ignored", "message": "No resource ID in payload", "reason": "Missing resource"}
+
+        mp_payment = call_api_mp(payment_id)
+        if mp_payment is None:
+            return {"status": "error","reason": "mp_api_error"}
+        processed = process_webhook(mp_payment)
     
-    payload = await request.json()
+        if not processed:
+            return {"ok": True}
 
-    logger.debug(f"Payload MP: {payload}")
+        create_payment(db, processed)
 
-    resource = payload.get("resource")
-    if not resource:
         return {"ok": True}
-
-    mp_payment = call_api_mp(resource)
-    processed = process_webhook(mp_payment)
-
-    if not processed:
-        return {"ok": True}
-
-    create_payment(db, processed)
-
-    return {"ok": True}
