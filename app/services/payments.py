@@ -11,11 +11,14 @@ def process_webhook(mp_payment: dict) -> dict:
     Returns:
         dict: Diccionario con los datos procesados del pago.
     """
-    
-    fecha_pago_utc = parser.isoparse(mp_payment["date_approved"])
+    if mp_payment['date_approved'] == None:
+		raise ValueError("Date_approved None")
+    fecha_pago_utc = parser.isoparse(mp_payment["date_approved"]) if mp_payment["date_approved"] != None else datetime(9999,12,31)
     fecha_pago_ba = fecha_pago_utc.astimezone(ZoneInfo("America/Argentina/Buenos_Aires"))
-    return {
-        "id_payment_mp": mp_payment.get("id"),
+    
+    
+    paid_json = {
+        "id_payment_mp": mp_payment.get("id") if mp_payment.get("id") != None else 'Without_id',
 
         "status": mp_payment.get("status"),
 
@@ -33,5 +36,6 @@ def process_webhook(mp_payment: dict) -> dict:
         "id_arca": '',
         "raw_json": mp_payment
     }
+    return paid_json
 
 

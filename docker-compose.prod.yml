@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-  
+    
 
   fastapi:
     build:
@@ -26,6 +26,7 @@ services:
       DATABASE_URL: postgresql://arca_user:arca_db_dys26@postgres:5432/arca_dys
     depends_on:
       - postgres
+    restart: unless-stopped
 
   adminer:
     image: adminer

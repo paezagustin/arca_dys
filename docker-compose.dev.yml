@@ -3,45 +3,65 @@ version: "3.9"
 services:
   postgres:
     image: arm32v7/postgres:17
-    container_name: pg_dys
+    container_name: pg_dys_dev
     environment:
       POSTGRES_USER: arca_user
       POSTGRES_PASSWORD: arca_db_dys26
       POSTGRES_DB: arca_dys
+      TZ: America/Argentina/Buenos_Aires
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_AR.UTF-8 --data-checksums"
     ports:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-    networks:
-      - dev_net
+    # Healthcheck para asegurar que Postgres esté listo antes de iniciar FastAPI
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arca_user -d arca_dys"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   adminer:
     image: adminer
-    container_name: adminer
+    container_name: adminer_dev
     ports:
       - "8081:8080"
-    networks:
-      - dev_net
+    depends_on:
+      - postgres
 
   fastapi:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fastapi_app
+    container_name: fastapi_app_dev
+    # Comando de desarrollo con hot-reload
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
+      # Monta el código local para desarrollo en vivo
       - ./:/app
+      # Evita que el __pycache__ del contenedor sobreescriba el local
+      - /app/__pycache__
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://arca_user:arca_db_dys26@postgres:5432/arca_dys
+      # Variable para indicar modo desarrollo
+      ENVIRONMENT: development
     depends_on:
-      - postgres
-    networks:
-      - dev_net
+      postgres:
+        condition: service_healthy
+    # restart: unless-stopped  # Opcional: descomentar si quieres auto-restart
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok_dev
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-33QqKy97HNepS56yT1L2wX72X71_Udz91Cxapbu9XDkvNAtG}
+    command: http fastapi:8000  # Usa el nombre del servicio en lugar de host network
+    ports:
+      - "4040:4040"  # Dashboard de ngrok
+    depends_on:
+      - fastapi
 
 volumes:
   pg_data:
-
-networks:
-  dev_net:

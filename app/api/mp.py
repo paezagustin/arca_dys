@@ -16,8 +16,10 @@ async def mp_webhook(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    logger.info("Webhook MP recibido")
+try:
 
+    logger.info("Webhook MP recibido")
+    
     payload = await request.json()
 
     logger.debug(f"Payload MP: {payload}")
