@@ -5,54 +5,9 @@ from app.services.arca.pdf import generate_invoice_pdf
 from app.repositories.log_invoice_repo import create_log_invoice
 from sqlalchemy.orm import Session
 import logging
-from enum import Enum
+
 from dataclasses import dataclass
 from typing import Optional
-
-
-class InvoiceError(Exception):
-    pass
-class InvoiceStatus(Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED_RETRY = "failed_retry"      # Se puede reintentar
-    FAILED_FATAL = "failed_fatal"      # Requiere intervención manual
-    PARTIAL = "partial"                # Factura OK pero PDF falló
-
-
-@dataclass
-class InvoiceResult:
-    status: InvoiceStatus
-    invoice_number: Optional[str] = None
-    cae: Optional[str] = None
-    pdf_url: Optional[str] = None
-    error_message: Optional[str] = None
-    retryable: bool = False
-
-
-class ARCAError(Exception):
-    """Error base de ARCA"""
-    def __init__(self, message: str, retryable: bool = False):
-        self.message = message
-        self.retryable = retryable
-        super().__init__(message)
-
-class ARCAAuthError(ARCAError):
-    """Error de autenticación - NO retryable (requiere fix manual)"""
-    def __init__(self, message: str):
-        super().__init__(message, retryable=False)
-
-class ARCAValidationError(ARCAError):
-    """Error de validación de datos - NO retryable (datos malos)"""
-    def __init__(self, message: str):
-        super().__init__(message, retryable=False)
-
-class ARCATransientError(ARCAError):
-    """Error temporal - SI retryable (timeout, 5xx)"""
-    def __init__(self, message: str):
-        super().__init__(message, retryable=True)
-
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +15,19 @@ def pipeline_invoice(
     db: Session,
     monto_total: float,
     fecha_hoy: date
-) -> InvoiceResult:
-
+) -> dict:
     """
-    Pipeline completo de facturación ARCA
+    Pipeline de facturación ARCA.
+    
+    Returns:
+        {
+            "ok": True/False,
+            "datos_factura": {...} o None,  # numero_factura, cae, vencimiento_cae
+            "pdf_url": "..." o None,
+            "error": "mensaje" si ok=False,
+            "tipo": "auth|billing|pdf|system",
+            "retryable": True/False
+        }
     """
     # 1ra etapa: Autenticación con AFIP
     try:
@@ -73,18 +37,15 @@ def pipeline_invoice(
     except Exception as e:
         error_msg = f"Error to obtain AFIP client: {str(e)}"
         logger.error(error_msg)
-        create_log_invoice(
-            db=db,
-            level= "CRITICAL",
-            phase = "authentication",
-            error=error_msg,
-            retryable = False
-        )
-        return InvoiceResult(
-            status=InvoiceStatus.FAILED_FATAL,
-            error_message=error_msg,
-            retryable=False
-        )
+        return {
+            "ok": False,
+            "error": error_msg,
+            "tipo": "auth",
+            "retryable": False,  # Requiere fix manual (certificados, etc.)
+            "datos_factura": None,
+            "pdf_url": None
+        }
+
 
     # 2da etapa: Generar factura
     try:
@@ -95,35 +56,34 @@ def pipeline_invoice(
             monto_total,
             fecha_hoy
         )
-        if not datos_factura.get("cae"):
-            raise ARCAValidationError("Bill generated without CAE.")
+        if not datos_factura or not datos_factura.get("cae"):
+            error_msg = "Invoice generated without CAE."
+            logger.error(error_msg)
+            return {
+                "ok": False,
+                "error": error_msg,
+                "tipo": "billing",
+                "retryable": False,  # Datos inválidos, no reintentar
+                "datos_factura": None,
+                "pdf_url": None
+            }
 
-    except ARCAValidationError as e:
-        error_msg = f"Validation error - failed: {e.message}"
-        logger.error(error_msg)
-        create_log_invoice(
-            db=db,
-            level= "ERROR",
-            phase = "billing",
-            error=error_msg,
-            retryable = False
-        )
-        return InvoiceResult(
-            status=InvoiceStatus.FAILED_FATAL,
-            error_message=error_msg,
-            retryable=False
-        )
     except Exception as e:
-        error_msg = f"Error during billing: {str(e)}"
+        error_msg = f"Error generating invoice: {str(e)}"
         logger.warning(error_msg)
-        create_log_invoice(db = db, level = "WARNING", phase = "billing", error=error_msg, retryable=True)
-        return InvoiceResult(
-            status=InvoiceStatus.FAILED_RETRY,
-            error_message=error_msg,
-            retryable=True
-        )
+        
+        return {
+            "ok": False,
+            "error": error_msg,
+            "tipo": "billing",
+            "retryable": True,  # Puede ser timeout de ARCA, reintentar
+            "datos_factura": None,
+            "pdf_url": None
+        }
+    
     # 3ra etapa: Generar PDF de factura
     pdf_url = None
+    pdf_error = None
     try:
         logger.info("Generating invoice PDF")
         
@@ -134,20 +94,26 @@ def pipeline_invoice(
         )
     
     except Exception as e:
-        error_msg = f"Error generating invoice PDF: {str(e)}"
-        logger.warning(error_msg)
-        create_log_invoice(db = db, level = "WARNING", phase = "pdf_generation", error=error_msg, retryable=True)
-        invoice_number = datos_factura.get("numero_factura")
+        pdf_error = f"PDF failed: {str(e)}"
+        logger.warning(pdf_error)
 
     status = InvoiceStatus.COMPLETED if pdf_url else InvoiceStatus.PARTIAL
     logger.info (f"Invoice pipeline completed with status: {status.value}")
     logger.info (f"Invoice:{datos_factura['numero_factura']} - CAE: {datos_factura.get('cae')} - PDF URL: {pdf_url}")
 
-    return InvoiceResult(
-        status=status,
-        invoice_number=datos_factura.get("numero_factura"),
-        cae=datos_factura.get("cae"),
-        pdf_url=pdf_url,
-        error_message=None,
-        retryable=False
-    )
+    return {
+        "ok": True,
+        "datos_factura": {
+            "numero_factura": datos_factura.get("numero_factura"),
+            "cae": datos_factura.get("cae"),
+            "vencimiento_cae": datos_factura.get("vencimiento_cae")
+        },
+        "pdf_url": pdf_url,
+        "pdf_error": pdf_error,  # Para loguear si falló
+        "error": None,
+        "tipo": None,
+        "retryable": False
+    }
+
+
+

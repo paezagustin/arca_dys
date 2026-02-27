@@ -1,13 +1,12 @@
 services:
   postgres:
-    image: arm32v7/postgres:17
+    image: postgres:17
     container_name: pg_dys_dev
     environment:
       POSTGRES_USER: arca_user
       POSTGRES_PASSWORD: arca_db_dys26
       POSTGRES_DB: arca_dys
       TZ: America/Argentina/Buenos_Aires
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_AR.UTF-8 --data-checksums"
     ports:
       - "5432:5432"
     volumes:
@@ -40,7 +39,7 @@ services:
       # Evita que el __pycache__ del contenedor sobreescriba el local
       - /app/__pycache__
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       DATABASE_URL: postgresql://arca_user:arca_db_dys26@postgres:5432/arca_dys
       # Variable para indicar modo desarrollo

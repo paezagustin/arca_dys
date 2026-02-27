@@ -1,0 +1,34 @@
+from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Boolean
+from app.core.database import Base
+from datetime import datetime
+
+class ErrorLog(Base):
+    __tablename__ = "error_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # ¿Cuándo ocurrió?
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # ¿Dónde ocurrió? (webhook_mp, facturacion_arca, etc.)
+    source = Column(String(50), nullable=False)
+    
+    # ¿Qué tipo de error? (validation, api_error, system, etc.)
+    error_type = Column(String(50), nullable=False)
+    
+    # Mensaje descriptivo del error
+    message = Column(Text, nullable=False)
+    
+    # ID del recurso afectado (payment_id, invoice_id, etc.)
+    resource_id = Column(String(100), nullable=True)
+    
+    # Datos crudos para debuggear (payload completo)
+    raw_data = Column(JSON, nullable=True)
+    
+    # ¿Ya fue resuelto el error?
+    resolved = Column(Boolean, default=False)
+    resolved_at = Column(DateTime, nullable=True)
+    resolved_by = Column(String(100), nullable=True)  # quién lo resolvió
+    
+    # Notas de resolución
+    resolution_notes = Column(Text, nullable=True)

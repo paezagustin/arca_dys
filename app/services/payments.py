@@ -14,15 +14,38 @@ def process_webhook(mp_payment: dict) -> dict:
         mp_payment (dict): Diccionario con la información del pago desde MercadoPago.
 
     Returns:
-        dict: Diccionario con los datos procesados del pago.
+        {
+            "ok": True/False,
+            "datos": {...} si ok=True,
+            "error": "mensaje" si ok=False,
+            "tipo": "validation|business_rule|system"
+        }
     """
     if not mp_payment:
         logger.warning("No payment data to process")
-        return None
-        
-    fecha_pago_utc = parser.isoparse(mp_payment["date_approved"]) if mp_payment["date_approved"] != None else datetime(9999,12,31)
-    fecha_pago_ba = fecha_pago_utc.astimezone(ZoneInfo("America/Argentina/Buenos_Aires"))
-    
+        return {
+            "ok": False,
+            "error": "Data empty",
+            "tipo": "validation"
+        }
+    status = mp_payment.get("status")
+    if status != "approved":
+        return {
+            "ok": False,
+            "error": f"Payment not approved: {status}",
+            "tipo": "business_rule"
+        }
+    try:
+        fecha_pago_utc = parser.isoparse(mp_payment["date_approved"]) if mp_payment["date_approved"] != None else datetime(9999,12,31)
+        fecha_pago_ba = fecha_pago_utc.astimezone(ZoneInfo("America/Argentina/Buenos_Aires"))
+    except Exception as e:
+        logger.error(f"Error parsing date_approved: {e}")
+        fecha_pago_ba = datetime(9999,12,31)
+        return {
+            "ok": False,
+            "error": f"Error parsing date_approved: {e}",
+            "tipo": "validation"
+        }   
     
     paid_json = {
         "id_payment_mp": mp_payment.get("id") if mp_payment.get("id") != None else 'Without_id',
@@ -43,6 +66,9 @@ def process_webhook(mp_payment: dict) -> dict:
         "id_arca": '',
         "raw_json": mp_payment
     }
-    return paid_json
-
+    logger.info('Payment processed successfully')
+    return {
+        "ok": True,
+        "datos": paid_json
+    }
 

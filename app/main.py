@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.core.database import engine, Base
-from app.api import invoice, mp, page
+from app.api import invoice, mp, page, test_errors
 import app.models
 from app.core.logging import setup_logging
 import logging
@@ -40,3 +40,4 @@ def startup_db():
 app.include_router(mp.router)
 app.include_router(page.router)
 app.include_router(invoice.router)
+app.include_router(test_errors.router)
