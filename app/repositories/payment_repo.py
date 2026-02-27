@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models.payment import Payment
 
@@ -48,3 +49,43 @@ def mark_payment_as_registered(db: Session, payment_id: int):
         db.commit()
         db.refresh(payment)
     return payment
+
+def get_duplicated_mp_ids(db: Session) -> list:
+    """
+    Devuelve solo los pagos cuyo id_payment_mp aparece más de una vez.
+    """
+
+    subquery = (
+        db.query(Payment.id_payment_mp)
+        .group_by(Payment.id_payment_mp)
+        .having(func.count(Payment.id_payment_mp) > 1)
+        .subquery()
+    )
+
+    return (
+        db.query(Payment)
+        .filter(Payment.id_payment_mp.in_(subquery))
+        .order_by(Payment.id_payment_mp.asc(), Payment.created_at.asc())
+        .all()
+    )
+
+def get_duplicated_amounts(db: Session) -> list:
+    """
+    Devuelve solo los pagos cuyo monto (mont) aparece más de una vez.
+    Útil para detectar posibles pagos repetidos por importe.
+    """
+
+    subquery = (
+        db.query(Payment.mont)
+        .filter(Payment.mont != None)
+        .group_by(Payment.mont)
+        .having(func.count(Payment.mont) > 1)
+        .subquery()
+    )
+
+    return (
+        db.query(Payment)
+        .filter(Payment.mont.in_(subquery))
+        .order_by(Payment.mont.asc(), Payment.created_at.asc())
+        .all()
+    )

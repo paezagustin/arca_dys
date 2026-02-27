@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Auditoría de Pagos - MercadoPago</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f6f6f6;
+            margin: 30px;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #eaeaea;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid #ccc;
+        }
+
+        td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .json-container {
+            max-height: 200px;
+            overflow: auto;
+            background: #111;
+            color: #0f0;
+            padding: 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        details summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #0066cc;
+        }
+
+        .group-title {
+            background: #ddd;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🔎 Auditoría de Pagos MercadoPago</h1>
+
+<!-- ======================================================= -->
+<!-- REPORTE 1 - AGRUPADO POR ID_PAYMENT_MP -->
+<!-- ======================================================= -->
+
+<div class="card">
+    <h2>Pagos agrupados por ID MercadoPago</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID MP</th>
+                <th>ID Local</th>
+                <th>Monto</th>
+                <th>Status</th>
+                <th>Fecha Aprobado</th>
+                <th>Creado</th>
+                <th>JSON</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for pago in pagos_por_mp %}
+            <tr>
+                <td>{{ pago.id_payment_mp }}</td>
+                <td>{{ pago.id }}</td>
+                <td>$ {{ pago.mont }}</td>
+                <td>{{ pago.status }} / {{ pago.status_detail }}</td>
+                <td>{{ pago.date_approved }}</td>
+                <td class="small">{{ pago.created_at }}</td>
+                <td>
+                    <details>
+                        <summary>Ver JSON</summary>
+                        <div class="json-container">
+<pre>{{ pago.raw_json }}</pre>
+                        </div>
+                    </details>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="7">No hay registros</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ======================================================= -->
+<!-- REPORTE 2 - AGRUPADO POR MONTO -->
+<!-- ======================================================= -->
+
+<div class="card">
+    <h2>Pagos agrupados por MONTO</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Monto</th>
+                <th>ID MP</th>
+                <th>ID Local</th>
+                <th>Status</th>
+                <th>Fecha Aprobado</th>
+                <th>JSON</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for pago in pagos_por_monto %}
+            <tr>
+                <td>$ {{ pago.mont }}</td>
+                <td>{{ pago.id_payment_mp }}</td>
+                <td>{{ pago.id }}</td>
+                <td>{{ pago.status }}</td>
+                <td>{{ pago.date_approved }}</td>
+                <td>
+                    <details>
+                        <summary>Ver JSON</summary>
+                        <div class="json-container">
+<pre>{{ pago.raw_json }}</pre>
+                        </div>
+                    </details>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="6">No hay registros</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
