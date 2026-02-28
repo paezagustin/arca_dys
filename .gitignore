@@ -29,3 +29,6 @@ Thumbs.db
 node_modules/
 dist/
 build/
+
+#Lo cree en para ejecutar en windows.
+docker-compose-dev-window.yml

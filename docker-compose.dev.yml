@@ -17,7 +17,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
+    restart: unless-stopped
   adminer:
     image: adminer
     container_name: adminer_dev
@@ -25,7 +25,7 @@ services:
       - "8081:8080"
     depends_on:
       - postgres
-
+    restart: unless-stopped
   fastapi:
     build:
       context: .
@@ -47,7 +47,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # restart: unless-stopped  # Opcional: descomentar si quieres auto-restart
+    restart: unless-stopped  # Opcional: descomentar si quieres auto-restart
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -59,6 +59,16 @@ services:
       - "4040:4040"  # Dashboard de ngrok
     depends_on:
       - fastapi
+    restart: unless-stopped
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime_kuma
+    volumes:
+      - uptime_kuma_data:/app/data
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
 
 volumes:
   pg_data:
+  uptime_kuma_data:
