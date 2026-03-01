@@ -45,7 +45,7 @@ async def mp_webhook(request: Request, db: Session = Depends(get_db)):
         
         # Procesar el pago
         resultado = process_webhook(payment_data)
-        logger.info(f"Webhook processing result: {resultado}")
+        
         if not resultado["ok"]:
             # Error de validación
             create_error_log(
@@ -57,7 +57,7 @@ async def mp_webhook(request: Request, db: Session = Depends(get_db)):
                 raw_data=payment_data
             )
             return {"status": "ignored", "reason": resultado["error"]}
-        
+        logger.info(f"Webhook processed")
         # Todo OK - guardar el pago
         from app.repositories.payment_repo import create_payment
         logger.info(f"Creating payment in DB with data")

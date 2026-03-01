@@ -1,7 +1,7 @@
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 from datetime import datetime
-
+import os
 BASE_DIR = Path(__file__).resolve().parents[3]
 TEMPLATES_DIR = BASE_DIR / "app" / "templates"
 

@@ -16,6 +16,10 @@ from app.repositories.payment_repo import (
 )
 from app.services.arca.service import pipeline_invoice
 
+from fastapi.responses import HTMLResponse
+from app.repositories.error_log_repo import create_error_log
+from dateutil import parser
+import logging
 router = APIRouter(prefix="/ARCA", tags=["ARCA"])
 logger = logging.getLogger(__name__)
 
@@ -66,11 +70,8 @@ def _facturar_pagos(db: Session, pagos: list):
             total_amount=total,
             invoice_date=datetime.now().date(),
             cae=datos_factura["cae"],
-            cae_due_date=datetime.strptime(
-                datos_factura["vencimiento_cae"], "%Y%m%d"
-            ).date(),
+            cae_due_date = parser.parse(datos_factura['vencimiento_cae']).date(),
             pdf_url=pdf_url,
-            status="completed",
         )
 
         for pago in pagos:
@@ -108,9 +109,8 @@ def _facturar_pagos(db: Session, pagos: list):
 
         if not updated:
             raise Exception("No se pudo actualizar el estado de la factura")
-
-        return HTMLResponse(
-            f"""
+            
+        return HTMLResponse(f"""
                 <script>
                     alert("Factura generada correctamente");
                     window.open("{pdf_url}", "_blank");
