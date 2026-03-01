@@ -5,6 +5,7 @@ from app.services.arca.pdf import generate_invoice_pdf
 from app.repositories.log_invoice_repo import create_log_invoice
 from sqlalchemy.orm import Session
 import logging
+import os
 
 from dataclasses import dataclass
 from typing import Optional
@@ -97,8 +98,9 @@ def pipeline_invoice(
         pdf_error = f"PDF failed: {str(e)}"
         logger.warning(pdf_error)
 
-    status = InvoiceStatus.COMPLETED if pdf_url else InvoiceStatus.PARTIAL
-    logger.info (f"Invoice pipeline completed with status: {status.value}")
+    
+    status = "completed" if pdf_url else "partial"
+    logger.info (f"Invoice pipeline completed with status: {status}")
     logger.info (f"Invoice:{datos_factura['numero_factura']} - CAE: {datos_factura.get('cae')} - PDF URL: {pdf_url}")
 
     return {

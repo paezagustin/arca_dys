@@ -8,11 +8,10 @@ from app.services.arca.service import pipeline_invoice
 from app.repositories.payment_invoice_repo import link_payment_to_invoice
 from app.repositories.invoice_repo import create_invoice, update_status_invoice
 from fastapi.responses import HTMLResponse
+from app.repositories.error_log_repo import create_error_log
 from dateutil import parser
 import logging
-
 router = APIRouter(prefix="/ARCA", tags=["ARCA"])
-
 logger = logging.getLogger(__name__)
 
 @router.post("/invoice")
@@ -59,12 +58,8 @@ def facturar(db: Session = Depends(get_db)):
             total_amount=total,
             invoice_date=datetime.now().date(),
             cae=datos_factura["cae"],
-            cae_due_date=datetime.strptime(
-                datos_factura["vencimiento_cae"], 
-                "%Y%m%d"
-            ).date(),
+            cae_due_date = parser.parse(datos_factura['vencimiento_cae']).date(),
             pdf_url=pdf_url,
-            status="completed"
         )
         
 
@@ -107,7 +102,7 @@ def facturar(db: Session = Depends(get_db)):
 
         if not updated:
             raise Exception("No se pudo actualizar el estado de la factura")
-        
+            
         return HTMLResponse(f"""
                 <script>
                     alert("✅ Factura generada correctamente");
@@ -132,7 +127,5 @@ def facturar(db: Session = Depends(get_db)):
             <h1>❌ Error del Sistema</h1>
             <p>Ocurrió un error inesperado. Contactar soporte.</p>
         """, status_code=500)
-
-
 
 
