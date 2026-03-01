@@ -2,48 +2,56 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Facturación del día</title>
+    <title>Facturacion del dia</title>
     <style>
         body { font-family: Arial; margin: 40px; }
-        table { border-collapse: collapse; width: 400px; margin-top: 20px; }
+        table { border-collapse: collapse; width: 520px; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
         th { background-color: #f0f0f0; }
         .resumen { margin-bottom: 20px; }
-        button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
+        .acciones { display: flex; gap: 10px; margin-top: 20px; }
+        button { padding: 10px 20px; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <h2>📄 Facturación del día</h2>
+    <h2>Facturacion del dia</h2>
 
     <div class="resumen">
         <p><strong>Monto total a facturar:</strong> $ {{ total }}</p>
         <p><strong>Cantidad de pagos:</strong> {{ cantidad }}</p>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>MONTO</th>
-                <th>DÍA / HORA</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for pago in pagos %}
-            <tr>
-                <td>$ {{ pago.mont }}</td>
-                <td>{{ pago.date_approved }} hs</td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="2">No hay pagos hoy</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <form method="post">
+        <table>
+            <thead>
+                <tr>
+                    <th>SELECCIONAR</th>
+                    <th>MONTO</th>
+                    <th>DIA / HORA</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for pago in pagos %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="payment_ids" value="{{ pago.id }}">
+                    </td>
+                    <td>$ {{ pago.mont }}</td>
+                    <td>{{ pago.date_approved }} hs</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3">No hay pagos hoy</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
-    <form action="/ARCA/invoice" method="post">
-        <button type="submit">🧾 FACTURAR</button>
+        <div class="acciones">
+            <button type="submit" formaction="/ARCA/invoice" formmethod="post">FACTURAR TODO</button>
+            <button type="submit" formaction="/ARCA/invoice/selected" formmethod="post">FACTURAR SELECCIONADOS</button>
+        </div>
     </form>
 
 </body>

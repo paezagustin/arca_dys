@@ -1,6 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models.payment import Payment
+from typing import Iterable
 
 
 def create_payment(db: Session, data: dict) -> Payment:
@@ -32,6 +33,25 @@ def get_today_payments(db: Session)-> list:
 
     return (
         db.query(Payment)
+        .filter(Payment.status == "approved")
+        .filter(Payment.mont > 0.0)
+        .filter(Payment.mont != None)
+        .filter(Payment.registered_arca == False)
+        .all()
+    )
+
+
+def get_payments_by_ids_to_bill(db: Session, payment_ids: Iterable[int]) -> list:
+    """
+    Devuelve pagos facturables filtrados por IDs.
+    """
+    ids = list(payment_ids or [])
+    if not ids:
+        return []
+
+    return (
+        db.query(Payment)
+        .filter(Payment.id.in_(ids))
         .filter(Payment.status == "approved")
         .filter(Payment.mont > 0.0)
         .filter(Payment.mont != None)
