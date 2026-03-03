@@ -49,20 +49,22 @@ services:
         condition: service_healthy
     restart: unless-stopped  # Opcional: descomentar si quieres auto-restart
 
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: ngrok_dev
-    environment:
-      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-33QqKy97HNepS56yT1L2wX72X71_Udz91Cxapbu9XDkvNAtG}
-    command: http http://fastapi_app_dev:8000  # Usa el nombre del servicio en lugar de host network
-    ports:
-      - "4040:4040"  # Dashboard de ngrok
-    depends_on:
-      - fastapi
-    restart: unless-stopped
+  # LO COMENTE PARA CORRERLO EN WINDOWS.
+  # como ngrok esta corriendo en la raspy no me permite lvantarlo tmb en mi pc.
+  #ngrok:
+  #  image: ngrok/ngrok:latest
+  #  container_name: ngrok_dev
+  #  environment:
+  #    NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-33QqKy97HNepS56yT1L2wX72X71_Udz91Cxapbu9XDkvNAtG}
+  #  command: http http://fastapi_app_dev:8000  # Usa el nombre del servicio en lugar de host network
+  #  ports:
+  #    - "4040:4040"  # Dashboard de ngrok
+  #  depends_on:
+  #    - fastapi
+  #  restart: unless-stopped
   uptime-kuma:
     image: louislam/uptime-kuma:latest
-    container_name: uptime_kuma
+    container_name: uptime_kuma_dev
     volumes:
       - uptime_kuma_data:/app/data
     ports:
