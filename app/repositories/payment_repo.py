@@ -1,3 +1,4 @@
+from datetime import date, datetime, time
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models.payment import Payment
@@ -39,6 +40,41 @@ def get_today_payments(db: Session)-> list:
         .filter(Payment.registered_arca == False)
         .all()
     )
+
+
+def get_invoice_report_payments(
+    db: Session,
+    facturado: str = "no",
+    fecha_desde: date | None = None,
+    fecha_hasta: date | None = None,
+) -> list:
+    """
+    Devuelve pagos para el reporte de facturacion con filtros por estado
+    de facturacion y rango de fecha sobre date_approved.
+    """
+    query = (
+        db.query(Payment)
+        .filter(Payment.status == "approved")
+        .filter(Payment.mont > 0.0)
+        .filter(Payment.mont != None)
+        .filter(Payment.date_approved.isnot(None))
+    )
+
+    if facturado == "si":
+        query = query.filter(Payment.registered_arca == True)
+    elif facturado == "no":
+        query = query.filter(Payment.registered_arca == False)
+
+    if fecha_desde:
+        query = query.filter(
+            Payment.date_approved >= datetime.combine(fecha_desde, time.min)
+        )
+    if fecha_hasta:
+        query = query.filter(
+            Payment.date_approved <= datetime.combine(fecha_hasta, time.max)
+        )
+
+    return query.order_by(Payment.date_approved.desc()).all()
 
 
 def get_payments_by_ids_to_bill(db: Session, payment_ids: Iterable[int]) -> list:

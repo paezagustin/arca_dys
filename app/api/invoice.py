@@ -11,26 +11,41 @@ from app.repositories.invoice_repo import create_invoice, update_status_invoice
 from app.repositories.payment_invoice_repo import link_payment_to_invoice
 from app.repositories.payment_repo import (
     get_payments_by_ids_to_bill,
-    get_today_payments,
     mark_payment_as_registered,
 )
 from app.services.arca.service import pipeline_invoice
 
-from fastapi.responses import HTMLResponse
-from app.repositories.error_log_repo import create_error_log
 from dateutil import parser
-import logging
 router = APIRouter(prefix="/ARCA", tags=["ARCA"])
 logger = logging.getLogger(__name__)
 
 
-def _facturar_pagos(db: Session, pagos: list):
+def _facturar_pagos(
+    db: Session,
+    pagos: list,
+    origen: str = "desconocido",
+    requested_ids: list[int] | None = None,
+):
     try:
+        pagos_ids = [p.id for p in pagos]
+        logger.info(
+            "Inicio facturacion | origen=%s | requested_ids=%s | pagos_filtrados=%s",
+            origen,
+            requested_ids if requested_ids is not None else [],
+            pagos_ids,
+        )
+
         if not pagos:
+            logger.warning("No hay pagos para facturar | origen=%s", origen)
             return HTMLResponse("<h2>No hay pagos para facturar hoy</h2>")
 
         total = sum(p.mont for p in pagos)
-        logger.info(f"Trying bill: {total}")
+        logger.info(
+            "Pipeline ARCA | origen=%s | cantidad_pagos=%s | total=%s",
+            origen,
+            len(pagos),
+            total,
+        )
 
         resultado = pipeline_invoice(
             db=db,
@@ -39,6 +54,13 @@ def _facturar_pagos(db: Session, pagos: list):
         )
 
         if not resultado["ok"]:
+            logger.error(
+                "Error pipeline ARCA | origen=%s | tipo=%s | retryable=%s | error=%s",
+                origen,
+                resultado.get("tipo"),
+                resultado.get("retryable"),
+                resultado.get("error"),
+            )
             create_error_log(
                 db=db,
                 source="facturacion_arca",
@@ -59,7 +81,11 @@ def _facturar_pagos(db: Session, pagos: list):
             )
 
         logger.info(
-            f"Factura OK | Nro {resultado['datos_factura']['numero_factura']} | CAE {resultado['datos_factura']['cae']}"
+            "Factura OK | origen=%s | nro=%s | cae=%s | pagos=%s",
+            origen,
+            resultado["datos_factura"]["numero_factura"],
+            resultado["datos_factura"]["cae"],
+            pagos_ids,
         )
         datos_factura = resultado["datos_factura"]
         pdf_url = resultado["pdf_url"]
@@ -77,6 +103,13 @@ def _facturar_pagos(db: Session, pagos: list):
         for pago in pagos:
             mark_payment_as_registered(db, pago.id)
             link_payment_to_invoice(db, payment_id=pago.id, invoice_id=invoice.id)
+
+        logger.info(
+            "Pagos marcados como facturados | origen=%s | invoice_id=%s | pagos=%s",
+            origen,
+            invoice.id,
+            pagos_ids,
+        )
 
         if resultado.get("pdf_error"):
             create_error_log(
@@ -120,7 +153,13 @@ def _facturar_pagos(db: Session, pagos: list):
         )
 
     except Exception as e:
-        logger.error(f"Unexpected Error: {e}", exc_info=True)
+        logger.error(
+            "Unexpected Error en facturacion | origen=%s | requested_ids=%s | error=%s",
+            origen,
+            requested_ids if requested_ids is not None else [],
+            str(e),
+            exc_info=True,
+        )
 
         create_error_log(
             db=db,
@@ -140,22 +179,50 @@ def _facturar_pagos(db: Session, pagos: list):
 
 
 @router.post("/invoice")
-def facturar_todo(db: Session = Depends(get_db)):
-    pagos_hoy = get_today_payments(db)
-    return _facturar_pagos(db=db, pagos=pagos_hoy)
+async def facturar_todo(request: Request, db: Session = Depends(get_db)):
+    form_data = await request.form()
+    raw_ids = form_data.getlist("visible_payment_ids")
+    logger.info("Click FACTURAR TODO | raw_ids=%s", raw_ids)
+
+    try:
+        payment_ids = [int(pid) for pid in raw_ids]
+    except (TypeError, ValueError):
+        logger.exception("IDs invalidos en FACTURAR TODO | raw_ids=%s", raw_ids)
+        return HTMLResponse(
+            "<h2>IDs de pagos invalidos en el listado</h2>", status_code=422
+        )
+
+    logger.info("FACTURAR TODO | ids_parseados=%s", payment_ids)
+    pagos = get_payments_by_ids_to_bill(db, payment_ids)
+    logger.info("FACTURAR TODO | pagos_encontrados=%s", [p.id for p in pagos])
+    return _facturar_pagos(
+        db=db,
+        pagos=pagos,
+        origen="facturar_todo",
+        requested_ids=payment_ids,
+    )
 
 
 @router.post("/invoice/selected")
 async def facturar_seleccionados(request: Request, db: Session = Depends(get_db)):
     form_data = await request.form()
     raw_ids = form_data.getlist("payment_ids")
+    logger.info("Click FACTURAR SELECCIONADOS | raw_ids=%s", raw_ids)
 
     try:
         payment_ids = [int(pid) for pid in raw_ids]
     except (TypeError, ValueError):
+        logger.exception("IDs invalidos en FACTURAR SELECCIONADOS | raw_ids=%s", raw_ids)
         return HTMLResponse(
             "<h2>IDs de pagos invalidos en la seleccion</h2>", status_code=422
         )
 
+    logger.info("FACTURAR SELECCIONADOS | ids_parseados=%s", payment_ids)
     pagos = get_payments_by_ids_to_bill(db, payment_ids)
-    return _facturar_pagos(db=db, pagos=pagos)
+    logger.info("FACTURAR SELECCIONADOS | pagos_encontrados=%s", [p.id for p in pagos])
+    return _facturar_pagos(
+        db=db,
+        pagos=pagos,
+        origen="facturar_seleccionados",
+        requested_ids=payment_ids,
+    )

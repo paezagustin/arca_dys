@@ -2,27 +2,230 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Facturacion del dia</title>
+    <title>ARCA DYS</title>
     <style>
-        body { font-family: Arial; margin: 40px; }
-        table { border-collapse: collapse; width: 520px; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: #f0f0f0; }
-        .resumen { margin-bottom: 20px; }
-        .acciones { display: flex; gap: 10px; margin-top: 20px; }
-        button { padding: 10px 20px; font-size: 16px; }
+        :root {
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --text: #17212b;
+            --muted: #637083;
+            --line: #dce2e8;
+            --head: #edf2f6;
+            --primary: #0b63c9;
+            --primary-hover: #094f9f;
+            --secondary: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            padding: 28px;
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(23, 33, 43, 0.08);
+            padding: 20px;
+        }
+
+        h2 {
+            margin: 0 0 16px;
+            font-size: 24px;
+        }
+
+        .resumen {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .resumen p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .resumen strong {
+            color: var(--text);
+        }
+
+        .filtros {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: end;
+        }
+
+        .filtro-campo {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        select,
+        input[type="date"] {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            height: 38px;
+            padding: 0 10px;
+            background: #fff;
+            color: var(--text);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 8px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ebeff3;
+            text-align: center;
+        }
+
+        th {
+            background: var(--head);
+            font-size: 13px;
+            letter-spacing: 0.2px;
+        }
+
+        tr:nth-child(even) {
+            background: #fafcfe;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        button,
+        .btn-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 38px;
+            padding: 0 14px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.16s ease;
+        }
+
+        button[type="submit"] {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        button[type="submit"]:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        .btn-link {
+            background: var(--secondary);
+            color: var(--text);
+        }
+
+        .btn-link:hover {
+            background: #f6f9fc;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 16px;
+            }
+
+            .card {
+                padding: 14px;
+            }
+
+            .acciones {
+                width: 100%;
+            }
+
+            button,
+            .btn-link {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+    <div class="card">
 
-    <h2>Facturacion del dia</h2>
+    <h2>ARCA DYS</h2>
 
     <div class="resumen">
         <p><strong>Monto total a facturar:</strong> $ {{ total }}</p>
         <p><strong>Cantidad de pagos:</strong> {{ cantidad }}</p>
     </div>
 
+    <form method="get" action="{{ request.url.path }}" class="filtros">
+        <div class="filtro-campo">
+            <label for="facturado">Facturado</label>
+            <select id="facturado" name="facturado">
+                <option value="todo" {% if facturado == "todo" %}selected{% endif %}>Todo</option>
+                <option value="si" {% if facturado == "si" %}selected{% endif %}>Si</option>
+                <option value="no" {% if facturado == "no" %}selected{% endif %}>No</option>
+            </select>
+        </div>
+
+        <div class="filtro-campo">
+            <label for="fecha_desde">Fecha desde</label>
+            <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+        </div>
+
+        <div class="filtro-campo">
+            <label for="fecha_hasta">Fecha hasta</label>
+            <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+        </div>
+
+        <div class="acciones">
+            <button type="submit">Buscar</button>
+            <a class="btn-link" href="{{ request.url.path }}">Limpiar</a>
+        </div>
+    </form>
+
     <form method="post">
+        {% for pago in pagos %}
+            <input type="hidden" name="visible_payment_ids" value="{{ pago.id }}">
+        {% endfor %}
+
         <table>
             <thead>
                 <tr>
@@ -54,5 +257,7 @@
         </div>
     </form>
 
+    </div>
+    </div>
 </body>
 </html>
