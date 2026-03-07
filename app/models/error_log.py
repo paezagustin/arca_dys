@@ -1,14 +1,18 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Boolean
 from app.core.database import Base
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
+def now_argentina():
+    return datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
+    
 class ErrorLog(Base):
     __tablename__ = "error_logs"
     
     id = Column(Integer, primary_key=True, index=True)
     
     # ¿Cuándo ocurrió?
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=now_argentina, nullable=False)
     
     # ¿Dónde ocurrió? (webhook_mp, facturacion_arca, etc.)
     source = Column(String(50), nullable=False)

@@ -1,7 +1,9 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, JSON
 from datetime import datetime
 from app.core.database import Base
-
+from zoneinfo import ZoneInfo
+def now_argentina():
+    return datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
 
 class Payment(Base):
     __tablename__ = "payments"
@@ -24,4 +26,4 @@ class Payment(Base):
 
     raw_json = Column(JSON)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=now_argentina)

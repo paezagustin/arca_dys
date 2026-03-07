@@ -13,7 +13,7 @@ router = APIRouter(prefix="/page", tags=["Reports"])
 templates = Jinja2Templates(directory="app/templates")
 
 
-@router.get("/reports-statistics", response_class=HTMLResponse)
+@router.get("/reports-stadistics", response_class=HTMLResponse)
 def pageReportsStatistics(
     request: Request,
     db: Session = Depends(get_db)
