@@ -145,3 +145,4 @@ def get_duplicated_amounts(db: Session) -> list:
         .order_by(Payment.mont.asc(), Payment.created_at.asc())
         .all()
     )
+

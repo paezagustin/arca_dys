@@ -22,7 +22,8 @@ def get_afip_client() -> Afip:
     # Cliente base (sin cert)
     afip = Afip({
         "CUIT": ARCA_CUIT,
-        "access_token": ARCA_ACCESS_TOKEN
+        "access_token": ARCA_ACCESS_TOKEN,
+        "production": True if ENV == "production" else False
     })
 
     # =========================
@@ -78,7 +79,8 @@ def get_afip_client() -> Afip:
         "CUIT": ARCA_CUIT,
         "access_token": ARCA_ACCESS_TOKEN,
         "cert": cert,
-        "key": key
+        "key": key,
+        "production": True if ENV == "production" else False
     })
 
     return afip_auth

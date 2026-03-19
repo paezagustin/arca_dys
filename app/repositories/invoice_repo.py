@@ -1,8 +1,11 @@
+import logging
+from venv import logger
+
 from sqlalchemy.orm import Session
 from datetime import date
 from app.models.invoice import Invoice
 
-
+logger = logging.getLogger(__name__)
 def create_invoice(
     db: Session,
     invoice_number: str,
@@ -31,9 +34,6 @@ def create_invoice(
 def get_invoice_by_id(db: Session, invoice_id: int) -> Invoice | None:
     return db.query(Invoice).filter(Invoice.id == invoice_id).first()
 
-from sqlalchemy.orm import Session
-from app.models.invoice import Invoice
-
 
 def update_status_invoice(
     db: Session,
@@ -58,3 +58,20 @@ def update_status_invoice(
         db.rollback()
         return False
 
+
+def get_invoices_by_date_range(db: Session, fecha_desde: date, fecha_hasta: date):
+    '''
+    Devuelve las facturas cuyo invoice_date esté entre fecha_desde y fecha_hasta.
+    '''
+    logger.info("Consultando facturas por rango de fechas | fecha_desde=%s | fecha_hasta=%s", fecha_desde, fecha_hasta)
+    return db.query(Invoice).filter(
+        Invoice.invoice_date >= fecha_desde,
+        Invoice.invoice_date <= fecha_hasta
+    ).order_by(Invoice.invoice_date.desc()).all()
+
+def get_all_invoices(db: Session):
+    '''
+    Devuelve todas las facturas.
+    '''
+    logger.info("Consultando todas las facturas")
+    return db.query(Invoice).order_by(Invoice.invoice_date.desc()).all()
