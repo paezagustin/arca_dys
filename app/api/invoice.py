@@ -1,8 +1,14 @@
 from datetime import datetime
+from http.client import HTTPException
 import logging
 
+from requests import Response
+from fastapi import Response as FastAPIResponse
+from app.models.invoice import Invoice
+from app.services.invoices import generar_pdf_factura
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -225,4 +231,47 @@ async def facturar_seleccionados(request: Request, db: Session = Depends(get_db)
         pagos=pagos,
         origen="facturar_seleccionados",
         requested_ids=payment_ids,
+    )
+
+
+
+
+
+@router.get('/invoice/{invoice_id}/pdf')
+def descargar_pdf_factura(invoice_id: int, db: Session = Depends(get_db)):
+    logger.info("Descarga PDF | invoice_id=%s", invoice_id)
+    
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    if not invoice:
+        create_error_log(
+            db=db,
+            source="descarga_pdf",
+            error_type="not_found",
+            message=f"Factura con ID {invoice_id} no encontrada",
+            resource_id=str(invoice_id),
+            raw_data=None,
+        )
+        raise HTTPException(status_code=404, detail="Factura no encontrada")  # ✅ RAISE
+
+    try:
+        pdf_bytes = generar_pdf_factura(invoice)  # ✅ Recibir los bytes
+    except Exception as e:
+        logger.error(f"Error generando PDF para factura {invoice_id}: {e}", exc_info=True)
+        create_error_log(
+            db=db,
+            source="descarga_pdf",
+            error_type="pdf_generation",
+            message=f"Error generando PDF: {str(e)}",
+            resource_id=str(invoice_id),
+            raw_data=None,
+        )
+        raise HTTPException(status_code=500, detail="Error generando PDF")  # ✅ RAISE
+
+    # ✅ Response con los bytes del PDF
+    return FastAPIResponse(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=factura_{invoice.invoice_number}.pdf"
+        }
     )

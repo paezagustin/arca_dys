@@ -256,11 +256,11 @@
             <button type="submit" formaction="/ARCA/invoice/selected" formmethod="post">FACTURAR SELECCIONADOS</button>
         </div>
     </form>
-        <!-- NUEVO: Tabla de Facturas Generadas -->
+    <!-- TABLA DE FACTURAS GENERADAS -->
     {% if facturas %}
-    <div style="margin-top: 32px;">
-        <h3 style="margin: 0 0 16px; font-size: 18px; color: var(--text);">
-            Facturas Generadas
+    <div style="margin-top: 40px; border-top: 2px solid #dce2e8; padding-top: 20px;">
+        <h3 style="margin: 0 0 16px; font-size: 20px; color: #17212b;">
+            Facturas Generadas ({{ facturas|length }})
         </h3>
         
         <table>
@@ -279,11 +279,11 @@
                     <td>{{ factura.invoice_number }}</td>
                     <td>{{ factura.cae }}</td>
                     <td>{{ factura.invoice_date }}</td>
-                    <td>$ {{ factura.total_amount }}</td>
+                    <td>$ {{ "%.2f"|format(factura.total_amount) }}</td>
                     <td>
-                        <a href="/invoices/{{ factura.id }}/pdf" 
+                        <a href="/ARCA/invoice/{{ factura.id }}/pdf" 
                            target="_blank"
-                           style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                           style="color: #0b63c9; text-decoration: none; font-weight: 600;">
                             📄 Descargar
                         </a>
                     </td>

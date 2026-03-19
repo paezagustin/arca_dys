@@ -1,4 +1,6 @@
 from datetime import date
+
+import logging
 from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -6,10 +8,12 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 #from app.dependencies.ip_whitelist import ip_whitelist
 from app.repositories.payment_repo import get_invoice_report_payments
+from app.repositories.invoice_repo import get_all_invoices
 
 router = APIRouter(prefix="/page", tags=["Jinja2"])
 templates = Jinja2Templates(directory="app/templates")
 
+logger = logging.getLogger(__name__)
 
 @router.get("/invoice", response_class=HTMLResponse)
 def pageInvoice(
@@ -35,10 +39,13 @@ def pageInvoice(
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
     )
+    facturas = get_all_invoices(
+        db=db,
+    )
     
     total = sum(p.mont for p in pagos)
     cantidad = len(pagos)
-    
+    logger.info('facturas: %s', [f.invoice_number for f in facturas])
     return templates.TemplateResponse(
         "pagina_facturacion.html",
         {
@@ -49,6 +56,7 @@ def pageInvoice(
             "facturado": facturado,
             "fecha_desde": fecha_desde.isoformat() if fecha_desde else "",
             "fecha_hasta": fecha_hasta.isoformat() if fecha_hasta else "",
+            "facturas": facturas,
         }
     )
 
