@@ -1,24 +1,24 @@
 services:
   postgres:
-    image: postgres:17
-    container_name: pg_dys
-    environment:
-      POSTGRES_USER: arca_user
-      POSTGRES_PASSWORD: arca_db_dys26
-      POSTGRES_DB: arca_dys
-      TZ: America/Argentina/Buenos_Aires
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_AR.UTF-8 --data-checksums"
-    ports:
-      - "5432:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    # Healthcheck para asegurar que Postgres esté listo antes de iniciar FastAPI
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arca_user -d arca_dys"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+   image: postgres:17
+   container_name: pg_dys
+   environment:
+     POSTGRES_USER: arca_user
+     POSTGRES_PASSWORD: arca_db_dys26
+     POSTGRES_DB: arca_dys
+     TZ: America/Argentina/Buenos_Aires
+     POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_AR.UTF-8 --data-checksums"
+   ports:
+     - "5432:5432"
+   volumes:
+     - /mnt/datos/docker/arca_dys/postgres:/var/lib/postgresql/data
+   healthcheck:
+     test: ["CMD-SHELL", "pg_isready -U arca_user -d arca_dys"]
+     interval: 5s
+     timeout: 5s
+     retries: 5
+   restart: unless-stopped
+
   adminer:
     image: adminer
     container_name: adminer
@@ -27,6 +27,7 @@ services:
     depends_on:
       - postgres
     restart: unless-stopped
+
   fastapi:
     build:
       context: .
@@ -61,15 +62,12 @@ services:
     depends_on:
       - fastapi
     restart: unless-stopped
+
   uptime-kuma:
     image: louislam/uptime-kuma:latest
     container_name: uptime_kuma
     volumes:
-      - uptime_kuma_data:/app/data
+      - /mnt/datos/docker/uptime-kuma/data:/app/data
     ports:
       - "3001:3001"
     restart: unless-stopped
-
-volumes:
-  pg_data:
-  uptime_kuma_data:

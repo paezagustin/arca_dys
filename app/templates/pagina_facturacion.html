@@ -14,6 +14,8 @@
             --primary: #0b63c9;
             --primary-hover: #094f9f;
             --secondary: #ffffff;
+            --success: #d4edda;
+            --success-text: #155724;
         }
 
         * {
@@ -44,6 +46,12 @@
         h2 {
             margin: 0 0 16px;
             font-size: 24px;
+        }
+
+        h3 {
+            margin: 0 0 16px;
+            font-size: 20px;
+            color: #17212b;
         }
 
         .resumen {
@@ -155,6 +163,13 @@
             border-color: var(--primary-hover);
         }
 
+        button[type="submit"]:disabled {
+            background: #ccc;
+            border-color: #ccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
         .btn-link {
             background: var(--secondary);
             color: var(--text);
@@ -162,6 +177,62 @@
 
         .btn-link:hover {
             background: #f6f9fc;
+        }
+
+        /* Mensaje de éxito */
+        .alert-success {
+            background: var(--success);
+            color: var(--success-text);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #c3e6cb;
+        }
+
+        /* Sección de facturas */
+        .facturas-section {
+            margin-top: 40px;
+            border-top: 2px solid #dce2e8;
+            padding-top: 20px;
+        }
+
+        .sin-facturas {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        /* Mensaje de carga */
+        #mensajeCarga {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            text-align: center;
+            padding-top: 200px;
+            z-index: 9999;
+        }
+
+        #mensajeCarga h2 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .spinner {
+            margin-top: 20px;
+            font-size: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         @media (max-width: 700px) {
@@ -185,10 +256,24 @@
     </style>
 </head>
 <body>
+    <!-- Mensaje de carga (oculto por defecto) -->
+    <div id="mensajeCarga">
+        <h2>⏳ Generando factura...</h2>
+        <p>Por favor espere, esto puede tardar unos segundos</p>
+        <div class="spinner">🔄</div>
+    </div>
+
     <div class="container">
     <div class="card">
 
     <h2>ARCA DYS</h2>
+
+    <!-- Mensaje de éxito (si viene de facturar) -->
+    {% if request.query_params.get('success') == 'true' %}
+    <div class="alert-success">
+        ✅ Factura generada correctamente
+    </div>
+    {% endif %}
 
     <div class="resumen">
         <p><strong>Monto total a facturar:</strong> $ {{ total }}</p>
@@ -221,7 +306,7 @@
         </div>
     </form>
 
-    <form method="post">
+    <form method="post" onsubmit="return mostrarCarga()">
         {% for pago in pagos %}
             <input type="hidden" name="visible_payment_ids" value="{{ pago.id }}">
         {% endfor %}
@@ -256,13 +341,12 @@
             <button type="submit" formaction="/ARCA/invoice/selected" formmethod="post">FACTURAR SELECCIONADOS</button>
         </div>
     </form>
-    <!-- TABLA DE FACTURAS GENERADAS -->
-    {% if facturas %}
-    <div style="margin-top: 40px; border-top: 2px solid #dce2e8; padding-top: 20px;">
-        <h3 style="margin: 0 0 16px; font-size: 20px; color: #17212b;">
-            Facturas Generadas ({{ facturas|length }})
-        </h3>
+
+    <!-- TABLA DE FACTURAS GENERADAS (siempre visible) -->
+    <div class="facturas-section">
+        <h3>Facturas Generadas ({{ facturas|length }})</h3>
         
+        {% if facturas %}
         <table>
             <thead>
                 <tr>
@@ -291,9 +375,30 @@
             {% endfor %}
             </tbody>
         </table>
+        {% else %}
+        <div class="sin-facturas">
+            No hay facturas generadas en este período.
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
+
     </div>
     </div>
+
+    <script>
+    function mostrarCarga() {
+        // Mostrar mensaje de carga
+        document.getElementById('mensajeCarga').style.display = 'block';
+        
+        // Deshabilitar todos los botones
+        const botones = document.querySelectorAll('button[type="submit"]');
+        botones.forEach(btn => {
+            btn.disabled = true;
+        });
+        
+        // Permitir que el formulario se envíe
+        return true;
+    }
+    </script>
 </body>
 </html>

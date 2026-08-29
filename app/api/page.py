@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 #from app.dependencies.ip_whitelist import ip_whitelist
 from app.repositories.payment_repo import get_invoice_report_payments
-from app.repositories.invoice_repo import get_all_invoices
+from app.repositories.invoice_repo import get_all_invoices, get_invoices_by_date_range
 
 router = APIRouter(prefix="/page", tags=["Jinja2"])
 templates = Jinja2Templates(directory="app/templates")
@@ -39,9 +39,8 @@ def pageInvoice(
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
     )
-    facturas = get_all_invoices(
-        db=db,
-    )
+    facturas = get_invoices_by_date_range(db=db, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta)
+
     
     total = sum(p.mont for p in pagos)
     cantidad = len(pagos)

@@ -49,7 +49,7 @@ def get_afip_client() -> Afip:
 
     cert = cert_response["data"].get("cert")
     key = cert_response["data"].get("key")
-
+    
     # =========================
     # Autorización WSFE
     # =========================

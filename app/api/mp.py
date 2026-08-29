@@ -5,7 +5,6 @@ from app.core.database import get_db
 from app.services.payments import process_webhook
 from app.repositories.payment_repo import create_payment
 from app.repositories.error_log_repo import create_error_log
-
 from app.services.mp import call_api_mp
 
 import logging
@@ -59,7 +58,7 @@ async def mp_webhook(request: Request, db: Session = Depends(get_db)):
             return {"status": "ignored", "reason": resultado["error"]}
         logger.info(f"Webhook processed")
         # Todo OK - guardar el pago
-        from app.repositories.payment_repo import create_payment
+        
         logger.info(f"Creating payment in DB with data")
         payment = create_payment(db, resultado["datos"])
         logger.info(f"Payment created in BBDD correctly")
