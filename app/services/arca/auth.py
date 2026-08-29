@@ -5,6 +5,8 @@ from app.core.config import (
     ARCA_ACCESS_TOKEN,
     ARCA_ALIAS,
     ENV,
+    ARCA_CRT_PATH,
+    ARCA_KEY_PATH
 )
 
 class AFIPAuthError(Exception):
@@ -26,29 +28,14 @@ def get_afip_client() -> Afip:
         "production": True if ENV == "production" else False
     })
 
-    # =========================
-    # Creación del certificado
-    # =========================
-    data_create_cert = {
-        "cuit": ARCA_CUIT,
-        "username": ARCA_CUIT,
-        "password": ARCA_PASSWORD,
-        "alias": ARCA_ALIAS
-    }
-
-    cert_mode = "create-cert-prod" if ENV == "production" else "create-cert-dev"
-
-    cert_response = afip.createAutomation(
-        cert_mode,
-        data_create_cert,
-        True
-    )
-
-    if cert_response.get("status") != "complete":
-        raise AFIPAuthError("Error creando certificado AFIP")
-
-    cert = cert_response["data"].get("cert")
-    key = cert_response["data"].get("key")
+    #Leer certificado y clave desde archivso
+    try:
+        with open(ARCA_CRT_PATH, "r") as cert_file:
+            cert = cert_file.read()
+        with open(ARCA_KEY_PATH, "r") as key_file:
+            key = key_file.read()
+    except Exception as e:
+        raise AFIPAuthError(f"Error leyendo certificados desde archivos: {str(e)}")
     
     # =========================
     # Autorización WSFE

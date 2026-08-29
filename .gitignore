@@ -32,3 +32,7 @@ build/
 
 #Lo cree en para ejecutar en windows.
 docker-compose-dev-window.yml
+
+#afipsdk
+*.crt
+*.key
