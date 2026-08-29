@@ -153,7 +153,7 @@ def _facturar_pagos(
                 <script>
                     alert("Factura generada correctamente");
                     window.open("{pdf_url}", "_blank");
-                    window.history.back();
+                    window.location.href = "/page/invoice?success=true";
                 </script>
             """
         )
