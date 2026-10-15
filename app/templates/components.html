@@ -1,0 +1,15 @@
+{% macro pager(page, key='page') -%}
+<nav class="pagination" aria-label="Páginas de {{ key }}">
+{% if page.number > 1 %}<a href="{{ page_url(request,key,page.number-1) }}">Anterior</a>{% endif %}
+<span>Página {{ page.number }} de {{ page.pages }} · {{ page.total }} registros</span>
+{% if page.number < page.pages %}<a href="{{ page_url(request,key,page.number+1) }}">Siguiente</a>{% endif %}
+</nav>{%- endmacro %}
+
+{% macro attempt_table(attempts, key='page') -%}
+<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Origen</th><th>Importe</th><th>Resultado</th><th>Acción</th></tr></thead><tbody>
+{% for row in attempts.items %}<tr data-request-id="{{ row.id }}"><td>{{ row.created_at|local_date }}</td><td>{{ 'Mercado Pago' if row.payment_ids else 'Independiente' }}</td><td class="money">{{ row.total|money }}</td>
+<td><span class="badge">{{ {'queued':'En proceso','sending':'En proceso','check_queued':'Consultando','retry_queued':'Reintentando','authorized':'Facturada','prepared':'Sin enviar','uncertain':'Por verificar','rejected':'Revisar rechazo'}.get(row.state,row.state) }}</span></td>
+<td><a href="/ARCA/requests/{{ row.id }}">Ver resultado</a></td></tr>{% else %}<tr><td colspan="5" class="empty">No hay solicitudes en este período.</td></tr>{% endfor %}</tbody></table></div>{{ pager(attempts,key) }}
+{%- endmacro %}
+
+{% macro payment_status(status) -%}{{ {'approved':'Aprobado','pending':'Pendiente de aprobación','authorized':'Autorizado','in_process':'En proceso','in_mediation':'En revisión','rejected':'Rechazado','cancelled':'Cancelado','refunded':'Devuelto','charged_back':'Contracargo','partially_refunded':'Devolución parcial'}.get(status,status) }}{%- endmacro %}

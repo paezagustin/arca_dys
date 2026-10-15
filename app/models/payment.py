@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, JSON, Index
 from datetime import datetime
 from app.core.database import Base
 from zoneinfo import ZoneInfo
@@ -7,6 +7,7 @@ def now_argentina():
 
 class Payment(Base):
     __tablename__ = "payments"
+    __table_args__ = (Index("ix_payments_billing_date", "status", "registered_arca", "date_approved", "id"),)
 
     id = Column(Integer, primary_key=True, index=True)
 

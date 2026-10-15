@@ -140,14 +140,3 @@ class MPInbox:
                 raise ValueError("Notificación no encontrada")
             row.state, row.next_attempt_at = "pending", utcnow()
             db.commit()
-
-
-def worker(stop):
-    inbox = MPInbox()
-    while not stop.is_set():
-        try:
-            processed = inbox.process_one()
-        except Exception:
-            processed = False
-        if not processed:
-            stop.wait(3)

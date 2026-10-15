@@ -5,6 +5,10 @@ from threading import Thread, Event
 from fastapi import FastAPI, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse, Response
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from app.web import templates
 from sqlalchemy import text
 from alembic.config import Config
 from alembic.script import ScriptDirectory
@@ -35,8 +39,8 @@ async def lifespan(app):
     stop = Event()
     thread = None
     if ENV != "test":
-        from app.services.mp_inbox import worker
-        thread = Thread(target=worker, args=(stop,), daemon=True, name="mp-inbox")
+        from app.services.worker import worker
+        thread = Thread(target=worker, args=(stop,), daemon=True, name="business-worker")
         thread.start()
     try:
         yield
@@ -82,6 +86,34 @@ async def privacy_headers(request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "same-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     if not request.url.path.startswith("/assets/"):
         response.headers["Cache-Control"] = "no-store"
     return response
+
+
+def error_response(request, status, message, headers=None):
+    if status == 303:
+        return Response(status_code=303, headers=headers)
+    if "text/html" in request.headers.get("accept", "") and not request.url.path.startswith("/mp/"):
+        title = "No encontramos esa página" if status == 404 else "No pudimos completar la operación"
+        return templates.TemplateResponse(request=request, name="error.html", context={"title": title, "message": message},
+                                          status_code=status, headers=headers)
+    return JSONResponse({"detail": message}, status_code=status, headers=headers)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_error(request, error):
+    message = error.detail if isinstance(error.detail, str) else "Revisá los datos y volvé a intentarlo"
+    return error_response(request, error.status_code, message, error.headers)
+
+
+@app.exception_handler(RequestValidationError)
+async def invalid_request(request, error):
+    return error_response(request, 422, "Revisá los filtros y los datos del formulario; algún valor no es válido.")
+
+
+@app.exception_handler(Exception)
+async def unexpected_error(request, error):
+    logger.error("Error web inesperado | tipo=%s", type(error).__name__)
+    return error_response(request, 500, "La operación no pudo confirmarse. Si estabas facturando, revisá las solicitudes guardadas antes de repetirla.")

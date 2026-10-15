@@ -2,20 +2,19 @@
 from decimal import Decimal
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.simulation import payment_resource
 from app.services.mp_inbox import MPInbox
 from app.models.mp_event import MPEvent
+from app.web import templates
 
 router = APIRouter(prefix="/dev", tags=["Simulación local"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("")
 def index(request: Request):
-    return templates.TemplateResponse("development.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="development.html")
 
 
 @router.post("/payments")

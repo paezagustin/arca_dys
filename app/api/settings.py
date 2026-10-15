@@ -1,7 +1,6 @@
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -10,9 +9,10 @@ from app.api.access import require_admin
 from app.models.mp_event import MPEvent
 from app.services.settings import read_settings, save_settings
 from app.services.mp_inbox import MPInbox
+from app.services.listings import paginate
+from app.web import templates
 
 router = APIRouter(dependencies=[Depends(require_admin)], tags=["Configuración"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/settings")
@@ -38,13 +38,10 @@ async def update_settings(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/settings/mp")
 def mp_settings(request: Request, page: int = Query(1, ge=1), db: Session = Depends(get_db)):
-    total = db.scalar(select(func.count()).select_from(MPEvent))
-    rows = list(db.scalars(select(MPEvent).order_by(MPEvent.received_at.desc(), MPEvent.id.desc()).offset((page - 1) * 25).limit(25)))
+    events = paginate(db, select(MPEvent).order_by(MPEvent.received_at.desc(), MPEvent.id.desc()), page, 25)
     ready = {"Token de acceso": bool(config.MP_ACCESS_TOKEN), "Cuenta receptora": bool(config.MP_COLLECTOR_ID),
              "Firma de notificaciones": bool(config.MP_WEBHOOK_SECRET), "Entrada QR/IPN alternativa": len(config.MP_LEGACY_WEBHOOK_TOKEN) >= 32}
-    return templates.TemplateResponse(request=request, name="mp_settings.html", context={"rows": rows,
-        "total": total, "page": page, "pages": max(1, (total + 24) // 25), "ready": ready,
-        "timezone": ZoneInfo("America/Argentina/Buenos_Aires")})
+    return templates.TemplateResponse(request=request, name="mp_settings.html", context={"events": events, "ready": ready})
 
 
 @router.post("/settings/mp/events/{event_id}/retry")

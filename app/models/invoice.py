@@ -5,7 +5,7 @@ from app.core.database import Base
 
 class Invoice(Base):
     __tablename__ = "invoices"
-    __table_args__ = (Index("invoices_invoice_number_key", "invoice_number", unique=True),)
+    __table_args__ = (Index("invoices_invoice_number_key", "invoice_number", unique=True), Index("ix_invoices_date", "invoice_date", "id"))
 
     id = Column(Integer, primary_key=True, index=True)
 

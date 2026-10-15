@@ -7,7 +7,7 @@ from hashlib import sha256
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 import logging
-from sqlalchemy import select, text
+from sqlalchemy import select, text, case
 from sqlalchemy.orm import Session
 from app.core import config
 from app.core.database import engine as default_engine
@@ -20,6 +20,8 @@ from app.services.fiscal_gateway import gateway_for, voucher_payload, authorizat
 from app.services.settings import fiscal_configuration
 
 logger = logging.getLogger(__name__)
+UNCERTAIN_STATES = ["sending", "uncertain", "check_queued", "retry_queued"]
+QUEUED_STATES = ["queued", "check_queued", "retry_queued"]
 
 
 class BillingConflict(ValueError):
@@ -44,11 +46,16 @@ class BillingService:
         self.gateway_factory = gateway_factory
 
     @contextmanager
-    def _locked(self, point):
+    def _locked(self, point, wait=True):
         # Bloqueo de SESIÓN: sobrevive a los commits que preceden al envío.
         # No se libera al pool una conexión con el bloqueo todavía adquirido.
         with self.engine.connect() as connection:
-            connection.execute(text("SELECT pg_advisory_lock(72421, :key)"), {"key": point * 100 + 11})
+            if wait:
+                connection.execute(text("SELECT pg_advisory_lock(72421, :key)"), {"key": point * 100 + 11})
+            elif not connection.scalar(text("SELECT pg_try_advisory_lock(72421, :key)"), {"key": point * 100 + 11}):
+                connection.rollback()
+                yield None
+                return
             connection.commit()
             try:
                 with Session(bind=connection, expire_on_commit=False) as db:
@@ -58,7 +65,7 @@ class BillingService:
                 connection.execute(text("SELECT pg_advisory_unlock(72421, :key)"), {"key": point * 100 + 11})
                 connection.commit()
 
-    def issue(self, payment_ids=(), *, manual_amount=None, idempotency_key=None, expected_total=None, settings_version=None):
+    def issue(self, payment_ids=(), *, manual_amount=None, idempotency_key=None, expected_total=None, settings_version=None, enqueue=False):
         ids = sorted(set(payment_ids))
         if manual_amount is None and not ids:
             raise ValueError("Seleccioná al menos un pago")
@@ -85,7 +92,7 @@ class BillingService:
             if settings_version is not None and version != settings_version:
                 raise BillingConflict("La configuración cambió. Volvé a revisar y confirmar la factura.")
             unresolved = db.scalar(select(BillingRequest.id).where(BillingRequest.point == point,
-                BillingRequest.voucher_type == 11, BillingRequest.state.in_(["sending", "uncertain"])))
+                BillingRequest.voucher_type == 11, BillingRequest.state.in_(UNCERTAIN_STATES)))
             if unresolved:
                 raise BillingConflict("Hay una emisión por verificar. Resolvela antes de emitir otra: " + unresolved)
             payments = list(db.scalars(select(Payment).where(Payment.id.in_(ids)).order_by(Payment.id).with_for_update())) if ids else []
@@ -99,7 +106,7 @@ class BillingService:
             if expected_total is not None and total != expected_total:
                 raise BillingConflict("Los importes cambiaron. Volvé a revisar la selección.")
             today = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires")).date()
-            row = BillingRequest(id=str(uuid4()), idempotency_key=key, state="prepared", total=total,
+            row = BillingRequest(id=str(uuid4()), idempotency_key=key, state="queued" if enqueue else "prepared", total=total,
                 invoice_date=today, point=point, voucher_type=11, payment_ids=ids,
                 payment_snapshot=[{"id": p.id, "external_id": p.id_payment_mp, "amount": str(p.mont)} for p in payments],
                 fiscal_snapshot=snapshot)
@@ -108,9 +115,17 @@ class BillingService:
             for payment in payments:
                 db.add(BillingReservation(payment_id=payment.id, request_id=row.id))
             db.commit()  # La identidad, el importe y las reservas existen ANTES del proveedor.
-            return self._send(db, row)
+            return result(row) if enqueue else self._send(db, row)
 
     def _send(self, db, row, gateway=None):
+        payments = list(db.scalars(select(Payment).where(Payment.id.in_(row.payment_ids)).with_for_update())) if row.payment_ids else []
+        if (len(payments) != len(row.payment_ids) or any(p.status != "approved" or p.registered_arca is not False for p in payments)
+                or (row.payment_ids and sum((Decimal(str(p.mont)) for p in payments), Decimal(0)) != row.total)):
+            row.state = "uncertain" if row.payload is not None else "rejected"
+            row.error = "Algún pago cambió o ya fue facturado. La solicitud se conserva para revisar; no se envió otro comprobante."
+            db.commit()
+            return result(row)
+        db.commit()
         try:
             gateway = gateway or self._gateway(row)
             if row.payload is None:
@@ -122,6 +137,7 @@ class BillingService:
         except Exception:
             db.rollback()
             row = db.get(BillingRequest, row.id)
+            row.state = "prepared"
             row.error = "No se pudo iniciar la emisión. No se envió un comprobante; podés reintentar esta solicitud."
             db.commit()
             return result(row)
@@ -141,12 +157,19 @@ class BillingService:
             # No es seguro inferir que no se emitió. No incluir respuestas/tokens en logs.
             db.rollback()
             row = db.get(BillingRequest, row.id)
+            if row.invoice_id is not None:
+                # Puede perderse el ACK de COMMIT aunque PostgreSQL lo confirmara.
+                return result(row)
             row.state, row.error = "uncertain", "La emisión necesita verificación. No vuelvas a facturar estos pagos desde otro intento."
             db.commit()
             logger.warning("Emisión por verificar | request_id=%s", row.id)
             return result(row)
 
     def _finalize(self, db, row, response):
+        if row.invoice_id is not None:
+            row.state, row.error = "authorized", None
+            db.commit()
+            return result(row)
         cae, due = authorization(response, row.payload)
         number = f"{row.point:05d}-{row.voucher_number:08d}"
         if row.fiscal_snapshot.get("simulation"):
@@ -173,7 +196,10 @@ class BillingService:
             point = found.point
         with self._locked(point) as db:
             row = db.get(BillingRequest, request_id)
-            if row.state == "authorized":
+            if row.invoice_id is not None:
+                if row.state != "authorized":
+                    row.state, row.error = "authorized", None
+                    db.commit()
                 return result(row)
             try:
                 gateway = self._gateway(row)
@@ -182,12 +208,13 @@ class BillingService:
                     if response is not None:
                         return self._finalize(db, row, response)
                 if not retry:
+                    row.state = "uncertain" if row.payload is not None else "prepared"
                     row.error = "No se confirmó una autorización. Podés consultar otra vez o reintentar la MISMA solicitud."
                     db.commit()
                     return result(row)
                 other = db.scalar(select(BillingRequest.id).where(BillingRequest.point == row.point,
                     BillingRequest.voucher_type == row.voucher_type, BillingRequest.id != row.id,
-                    BillingRequest.state.in_(["sending", "uncertain"])))
+                    BillingRequest.state.in_(UNCERTAIN_STATES)))
                 if other:
                     raise BillingConflict("Hay otra emisión por verificar")
                 # Reenvío explícito con el MISMO número/payload, jamás otro número.
@@ -205,6 +232,51 @@ class BillingService:
         if config.INTEGRATIONS_MODE == "production" and row.fiscal_snapshot.get("cuit") != config.ARCA_CUIT:
             raise ValueError("El emisor del intento no coincide con los certificados configurados")
         return self.gateway_factory(self.engine)
+
+    def schedule(self, request_id, *, retry=False):
+        with Session(self.engine, expire_on_commit=False) as db:
+            row = db.scalar(select(BillingRequest).where(BillingRequest.id == request_id).with_for_update())
+            if row is None:
+                raise ValueError("Solicitud no encontrada")
+            if row.state in {"authorized", "sending", *QUEUED_STATES}:
+                return result(row)
+            row.state = "retry_queued" if retry else "check_queued"
+            row.error = None
+            db.commit()
+            return result(row)
+
+    def process_one_queued(self):
+        # Detectar un proceso interrumpido sin confundirlo con una emisión activa.
+        # Solo una consulta se agenda automáticamente; jamás una nueva emisión.
+        with Session(self.engine) as read:
+            interrupted = list(read.execute(select(BillingRequest.id, BillingRequest.point).where(BillingRequest.state == "sending").limit(10)))
+        for request_id, point in interrupted:
+            with self._locked(point, wait=False) as db:
+                if db is not None:
+                    row = db.get(BillingRequest, request_id)
+                    if row.state == "sending":
+                        row.state = "check_queued"
+                        db.commit()
+        with Session(self.engine) as read:
+            candidates = list(read.execute(select(BillingRequest.id, BillingRequest.point, BillingRequest.state)
+                .where(BillingRequest.state.in_(QUEUED_STATES))
+                .order_by(case((BillingRequest.state == "queued", 1), else_=0), BillingRequest.created_at, BillingRequest.id).limit(10)))
+        for request_id, point, state in candidates:
+            if state != "queued":
+                self.recover(request_id, retry=state == "retry_queued")
+                return True
+            with self._locked(point, wait=False) as db:
+                if db is None:
+                    continue
+                row = db.get(BillingRequest, request_id)
+                if row.state != "queued":
+                    continue
+                blocked = db.scalar(select(BillingRequest.id).where(BillingRequest.point == point,
+                    BillingRequest.state.in_(UNCERTAIN_STATES), BillingRequest.id != request_id))
+                if not blocked:
+                    self._send(db, row)
+                    return True
+        return False
 
 
 def get_billing_service():

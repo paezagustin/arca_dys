@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, Date, DateTime, Numeric, JSON, Text, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Integer, Date, DateTime, Numeric, JSON, Text, ForeignKey, UniqueConstraint, Index
 from app.core.database import Base
 
 
@@ -9,6 +9,7 @@ def utcnow():
 
 class BillingRequest(Base):
     __tablename__ = "billing_requests"
+    __table_args__ = (Index("ix_billing_state", "state", "created_at"), Index("ix_billing_date", "invoice_date", "created_at", "id"))
     id = Column(String(36), primary_key=True)
     idempotency_key = Column(String(100), unique=True, nullable=False)
     state = Column(String(20), nullable=False)

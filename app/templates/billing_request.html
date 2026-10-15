@@ -1,8 +1,9 @@
-{% extends "base.html" %}{% block title %}Resultado de facturación{% endblock %}{% block content %}
+{% extends "base.html" %}{% block title %}Resultado de facturación{% endblock %}{% block head_extra %}{% if operation.state in ['queued','sending','check_queued','retry_queued'] %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}{% block content %}
 <a href="/page/invoice">← Volver a facturación</a><section class="card narrow">
-{% if operation.state == 'authorized' %}<h1>Factura generada correctamente</h1>
+{% if operation.state in ['queued','sending','check_queued','retry_queued'] %}<h1>Factura en proceso</h1><div class="notice" role="status">La solicitud está guardada. Esta pantalla se actualizará con el resultado.</div><p class="metric">{{ operation.total|money }}</p><p>Podés volver al listado y consultar el resultado más tarde. No hace falta repetir la operación.</p>
+{% elif operation.state == 'authorized' %}<h1>Factura generada correctamente</h1>
 <div class="notice" role="status">La factura quedó guardada. Podés descargar el comprobante.</div>
-<p class="metric">${{ '%.2f'|format(operation.total) }}</p><p>{{ operation.fiscal_snapshot.get('name','') }} · Punto de venta {{ operation.point }}</p>
+<p class="metric">{{ operation.total|money }}</p><p>{{ operation.fiscal_snapshot.get('name','') }} · Punto de venta {{ operation.point }}</p>
 <div class="actions"><a class="button" href="/ARCA/invoice/{{ operation.invoice_id }}/pdf">Descargar comprobante PDF</a></div>
 <p class="muted">Si falla la descarga, podés repetirla desde aquí. No hace falta emitir otra factura.</p>
 {% else %}<h1>Facturación por revisar</h1><div class="notice warning" role="alert">{{ operation.error or 'La solicitud quedó guardada para verificar.' }}</div>

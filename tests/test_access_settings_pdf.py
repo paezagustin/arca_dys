@@ -115,6 +115,9 @@ def test_independent_invoice_requires_review_and_repeated_confirmation_does_not_
         response = client.post(f"/ARCA/previews/{identifier}/confirm")
         assert response.status_code == 200
     with Session(engine) as db:
+        assert db.scalar(select(func.count()).select_from(Invoice)) == 0
+    assert BillingService().process_one_queued()
+    with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(Invoice)) == 1
         assert db.scalar(select(func.count()).select_from(Payment)) == 0
         assert Decimal(str(db.scalar(select(Invoice.total_amount)))) == Decimal("12345.67")

@@ -82,3 +82,15 @@ aplicación. Comprobar los datos antes de facturar; cambios posteriores se aplic
 nuevos comprobantes. Las claves de conexión se administran en la instalación.
 Mercado Pago muestra las notificaciones y permite reintentar las que tienen error.
 Consultar un pago por ID lo actualiza desde la cuenta, sin facturarlo automáticamente.
+
+## Listas y selección
+Los filtros se despliegan desde su título. Cada listado conserva su propia página.
+Los totales corresponden al filtro completo. Seleccionar todos marca únicamente
+los pagos de la página visible; FACTURAR TODO abarca todos los disponibles del filtro.
+Ambas acciones muestran primero cantidad e importe. Si cambia un pago antes de
+confirmar, revisar nuevamente; no se factura una parte silenciosamente.
+Al confirmar se guarda una solicitud y aparece “Factura en proceso”. La página
+actualiza el resultado. Podés volver al historial si cerraste la ventana. Repetir
+la misma confirmación no genera otra factura.
+Auditoría muestra coincidencias de identificadores e importes en listas separadas.
+Dos importes iguales no demuestran un pago duplicado y no se borran automáticamente.

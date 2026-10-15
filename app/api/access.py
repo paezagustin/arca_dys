@@ -1,15 +1,22 @@
 import hmac
 import secrets
+from dataclasses import dataclass
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core import config
 from app.core.database import get_db
 from app.services.access import COOKIE, authenticate, start_session, lookup_session
+from app.web import templates
 
 router = APIRouter(tags=["Acceso"])
-templates = Jinja2Templates(directory="app/templates")
+
+
+@dataclass(frozen=True)
+class Principal:
+    id: int
+    username: str
+    role: str
 
 
 async def require_web_access(request: Request, db: Session = Depends(get_db)):
@@ -20,7 +27,7 @@ async def require_web_access(request: Request, db: Session = Depends(get_db)):
     if not identity:
         raise HTTPException(303, headers={"Location": "/login"})
     session, user = identity
-    request.state.user, request.state.csrf_token = user, session.csrf_token
+    request.state.user, request.state.csrf_token = Principal(user.id, user.username, user.role), session.csrf_token
     request.state.session_hash = session.token_hash
     if request.method not in {"GET", "HEAD", "OPTIONS"}:
         token = request.headers.get("x-csrf-token")

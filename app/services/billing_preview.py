@@ -42,7 +42,7 @@ def confirm_preview(db, preview_id, user_id, service=None):
     ids, amount, version, kind = preview.payment_ids, preview.total, preview.settings_version, preview.kind
     db.commit()
     result = (service or BillingService()).issue(ids, manual_amount=amount if kind == "manual" else None,
-        idempotency_key=preview_id, expected_total=amount, settings_version=version)
+        idempotency_key=preview_id, expected_total=amount, settings_version=version, enqueue=True)
     preview = db.get(BillingPreview, preview_id)
     preview.request_id = result.request_id
     db.commit()

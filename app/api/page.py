@@ -1,69 +1,87 @@
-from datetime import date
-
-import logging
-from fastapi import APIRouter, Request, Depends, Query
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Request, Depends, Query, HTTPException
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-#from app.dependencies.ip_whitelist import ip_whitelist
-from app.repositories.payment_repo import get_invoice_report_payments
-from app.repositories.invoice_repo import get_all_invoices, get_invoices_by_date_range
+from app.models.payment import Payment
+from app.models.invoice import Invoice
+from app.models.billing import BillingRequest
+from app.services.billing import UNCERTAIN_STATES
+from app.services.settings import read_settings
+from app.services.listings import parse_filters, payment_statement, paginate, payment_totals
+from app.services.payments import STATUSES
+from app.web import templates
 
-router = APIRouter(prefix="/page", tags=["Jinja2"])
-templates = Jinja2Templates(directory="app/templates")
-
-logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/page", tags=["Páginas"])
 
 
-@router.get("/invoice/manual", response_class=HTMLResponse)
+def filters_or_error(facturado="no", start=None, end=None, default_today=True):
+    try:
+        return parse_filters(facturado, start, end, default_today=default_today)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+
+
+def date_range(statement, field, filters):
+    if filters.start:
+        statement = statement.where(field >= filters.start)
+    if filters.end:
+        statement = statement.where(field <= filters.end)
+    return statement
+
+
+@router.get("/invoice/manual")
 def manual_invoice(request: Request, db: Session = Depends(get_db)):
-    from app.services.settings import read_settings
     values, _ = read_settings(db)
     return templates.TemplateResponse(request=request, name="manual_invoice.html", context={"values": values})
 
-@router.get("/invoice", response_class=HTMLResponse)
-def pageInvoice(
-    request: Request,
-    facturado: str = Query(default="no"),
-    fecha_desde: date | None = Query(default=None),
-    fecha_hasta: date | None = Query(default=None),
-    db: Session = Depends(get_db)#,
-    #_: None = Depends(ip_whitelist)
-):
-    # Vista inicial: pagos del dia no facturados
-    if fecha_desde is None and fecha_hasta is None:
-        today = date.today()
-        fecha_desde = today
-        fecha_hasta = today
 
-    if facturado not in ("todo", "si", "no"):
-        facturado = "no"
-
-    pagos = get_invoice_report_payments(
-        db=db,
-        facturado=facturado,
-        fecha_desde=fecha_desde,
-        fecha_hasta=fecha_hasta,
-    )
-    facturas = get_invoices_by_date_range(db=db, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta)
-
-    
-    total = sum(p.mont for p in pagos)
-    cantidad = len(pagos)
-    logger.info('facturas: %s', [f.invoice_number for f in facturas])
-    return templates.TemplateResponse(
-        "pagina_facturacion.html",
-        {
-            "request": request,
-            "pagos": pagos,
-            "total": total,
-            "cantidad": cantidad,
-            "facturado": facturado,
-            "fecha_desde": fecha_desde.isoformat() if fecha_desde else "",
-            "fecha_hasta": fecha_hasta.isoformat() if fecha_hasta else "",
-            "facturas": facturas,
-        }
-    )
+@router.get("/invoice")
+def invoice_page(request: Request, facturado: str = "no", fecha_desde: str | None = None, fecha_hasta: str | None = None,
+                 payments_page: int = Query(1, ge=1), invoices_page: int = Query(1, ge=1), requests_page: int = Query(1, ge=1),
+                 page_size: int = Query(25, ge=10, le=100), db: Session = Depends(get_db)):
+    filters = filters_or_error(facturado, fecha_desde, fecha_hasta)
+    payments = payment_statement(filters)
+    eligible = payment_statement(filters, eligible=True)
+    count, total = payment_totals(db, payments)
+    eligible_count, eligible_total = payment_totals(db, eligible)
+    invoices = date_range(select(Invoice), Invoice.invoice_date, filters).order_by(Invoice.invoice_date.desc(), Invoice.id.desc())
+    attempts = date_range(select(BillingRequest), BillingRequest.invoice_date, filters).order_by(BillingRequest.created_at.desc(), BillingRequest.id.desc())
+    review = db.scalar(select(func.count()).select_from(BillingRequest).where(BillingRequest.state.in_(UNCERTAIN_STATES + ["prepared", "rejected"])))
+    payments_result = paginate(db, payments, payments_page, page_size)
+    eligible_page_ids = set(db.scalars(eligible.with_only_columns(Payment.id).where(Payment.id.in_([p.id for p in payments_result.items]))))
+    return templates.TemplateResponse(request=request, name="pagina_facturacion.html", context={"filters": filters,
+        "payments": payments_result, "eligible_page_ids": eligible_page_ids, "invoices": paginate(db, invoices, invoices_page, page_size),
+        "attempts": paginate(db, attempts, requests_page, page_size), "count": count, "total": total,
+        "eligible_count": eligible_count, "eligible_total": eligible_total, "page_size": page_size, "review": review})
 
 
+@router.get("/billing-requests")
+def billing_history(request: Request, state: str = "all", page: int = Query(1, ge=1),
+                    page_size: int = Query(25, ge=10, le=100), db: Session = Depends(get_db)):
+    statement = select(BillingRequest).order_by(BillingRequest.created_at.desc(), BillingRequest.id.desc())
+    if state == "review":
+        statement = statement.where(BillingRequest.state != "authorized")
+    elif state != "all":
+        raise HTTPException(422, "Elegí un estado válido")
+    return templates.TemplateResponse(request=request, name="billing_history.html", context={
+        "attempts": paginate(db, statement, page, page_size), "state": state})
+
+
+@router.get("/payments")
+def payment_history(request: Request, status: str = "all", fecha_desde: str | None = None, fecha_hasta: str | None = None,
+                    page: int = Query(1, ge=1), page_size: int = Query(25, ge=10, le=100), db: Session = Depends(get_db)):
+    if status != "all" and status not in STATUSES:
+        raise HTTPException(422, "Elegí un estado de cobro válido")
+    filters = filters_or_error("todo", fecha_desde, fecha_hasta, default_today=False)
+    from datetime import datetime, time
+    timestamp = func.coalesce(Payment.date_approved, Payment.created_at)
+    statement = select(Payment)
+    if status != "all":
+        statement = statement.where(Payment.status == status)
+    if filters.start:
+        statement = statement.where(timestamp >= datetime.combine(filters.start, time.min))
+    if filters.end:
+        statement = statement.where(timestamp <= datetime.combine(filters.end, time.max))
+    statement = statement.order_by(timestamp.desc(), Payment.id.desc())
+    return templates.TemplateResponse(request=request, name="payments.html", context={"payments": paginate(db, statement, page, page_size),
+        "status": status, "statuses": sorted(STATUSES), "filters": filters, "page_size": page_size})

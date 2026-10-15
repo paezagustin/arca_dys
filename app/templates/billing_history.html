@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% from "components.html" import attempt_table with context %}{% block title %}Historial de facturación{% endblock %}{% block content %}
+<a href="/page/invoice">← Volver a facturación</a><h1>Historial de facturación</h1><form method="get" class="card"><div class="field"><label for="state">Mostrar</label><select id="state" name="state"><option value="all" {% if state == 'all' %}selected{% endif %}>Todas las solicitudes</option><option value="review" {% if state == 'review' %}selected{% endif %}>Solicitudes sin autorización confirmada</option></select></div><div class="actions"><button>Buscar</button></div></form>
+<section class="card">{{ attempt_table(attempts) }}</section>{% endblock %}

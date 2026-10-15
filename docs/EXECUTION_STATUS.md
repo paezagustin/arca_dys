@@ -2,9 +2,25 @@
 
 Actualizado: 2026-10-15, America/Buenos_Aires.
 
-## Estado vigente: H2-H4 validados, continuar H5-H8
+## Estado vigente: H2-H5 validados, continuar H6-H8
 El usuario pidió completar TODO el roadmap sin detenerse entre hitos y avisar al
-final. Objetivo activo: continuar H5, H6, H7 y H8 de forma autónoma.
+final. Objetivo activo: continuar H6, H7 y H8 de forma autónoma.
+H4 publicado como e3228d77c75633ed4de40c4869bdcdb9964f4ff3; CI success:
+https://github.com/paezagustin/arca_dys/actions/runs/38820685646.
+
+H5 implementado: filtros/paginación SQL independientes, límites de página y orden
+estable; auditoría paginada y URL heredada compatible. TODO define los IDs de todo
+el filtro en servidor; seleccionados rechaza IDs fuera del filtro. Ambas opciones
+revisan cantidad/total antes de confirmar. Cola fiscal durable: HTTP no espera al
+proveedor; la pantalla muestra el resultado y permite consultar incertidumbres.
+Protección del resultado autorizado ante pérdida del ACK del commit; principal de
+sesión inmutable para mostrar errores tras rollback. Sin CDN, con CSP y logo local.
+Validación H5: 132 passed, 70 warnings HTTPX heredados, 34.39s; backup/restauración
+con revisión 0006_listings. Navegador: desde página 2 de 31 pagos, TODO confirmó
+31 por 31000 y generó factura SIM id5. En móvil 390x844, seleccionar todos marcó
+dos pagos por 6000, confirmación y factura SIM id6. Auditoría página 2 y ancho de
+documento comprobados sin desbordamiento exterior. Capturas ignoradas en artifacts/.
+Continuar H6 sin detenerse. Ninguna operación real de ARCA/MP ni acceso a Raspberry.
 H3 publicado como 8bc2a3f8200c68354d95046cd7ff5b0b7ffedd19; CI success:
 https://github.com/paezagustin/arca_dys/actions/runs/38818564439.
 

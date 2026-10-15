@@ -53,6 +53,8 @@ Unificar generadores PDF; medir costo de Chromium y elegir la alternativa más s
 que conserve impresión y QR. Validación visual y lectura del QR en pruebas.
 
 ## H5 · UI y paginación
+- [x] Listados SQL, filtros independientes, confirmación del filtro completo,
+  cola fiscal persistente, mensajes y selección verificados en navegador móvil.
 U01-U02/F02. Logo en navegación, formularios accesibles/mobile, mensajes claros,
 POST/redirect/GET y enlaces de descarga. Filtros, totales del filtro y paginación SQL
 estable independiente por listado; TODO mantiene alcance completo del filtro.

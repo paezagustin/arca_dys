@@ -12,6 +12,15 @@ def counts():
                      for table in ["payments", "invoices", "payment_invoice"])
 
 
+def confirm_and_process(client, response):
+    from app.services.billing import BillingService
+    preview_id = response.url.path.rsplit("/", 1)[-1]
+    queued = client.post(f"/ARCA/previews/{preview_id}/confirm")
+    assert queued.status_code == 200 and "Factura en proceso" in queued.text
+    assert BillingService().process_one_queued()
+    return client.get(queued.url)
+
+
 def test_startup_health_and_logo(client):
     assert client.get("/health").json() == {"status": "ok", "environment": "test", "integrations": "mock"}
     assert "Modo simulado" in client.get("/dev").text
@@ -22,9 +31,10 @@ def test_examples_are_repeatable_and_complete_invoice_downloads(client):
     client.post("/dev/examples")
     client.post("/dev/examples")
     assert counts() == (3, 0, 0)
-    assert "50000" in client.get("/page/invoice").text
+    assert "50.000,00" in client.get("/page/invoice").text
     response = client.post("/ARCA/invoice/selected", data={"payment_ids": ["1", "2"]})
     assert response.status_code == 200
+    confirm_and_process(client, response)
     assert counts() == (3, 1, 2)
     with engine.connect() as connection:
         assert connection.execute(text("SELECT total_amount FROM invoices")).scalar_one() == 25000
@@ -44,8 +54,8 @@ def test_examples_are_repeatable_and_complete_invoice_downloads(client):
 
 def test_single_checkbox_and_total_preserve_current_contract(client):
     client.post("/dev/examples")
-    assert client.post("/ARCA/invoice/selected", data={"payment_ids": "1"}).status_code == 200
-    assert client.post("/ARCA/invoice", data={"visible_payment_ids": ["2", "3"]}).status_code == 200
+    confirm_and_process(client, client.post("/ARCA/invoice/selected", data={"payment_ids": "1"}))
+    confirm_and_process(client, client.post("/ARCA/invoice", data={"visible_payment_ids": ["2", "3"]}))
     assert counts() == (3, 2, 3)
 
 
