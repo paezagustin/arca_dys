@@ -95,17 +95,6 @@ def get_payments_by_ids_to_bill(db: Session, payment_ids: Iterable[int]) -> list
         .all()
     )
 
-def mark_payment_as_registered(db: Session, payment_id: int):
-    """
-    Update en registered_arca para marcar como facturado el pago
-    """
-    payment = db.query(Payment).filter(Payment.id == payment_id).first()
-    if payment:
-        payment.registered_arca = True
-        db.commit()
-        db.refresh(payment)
-    return payment
-
 def get_duplicated_mp_ids(db: Session) -> list:
     """
     Devuelve solo los pagos cuyo id_payment_mp aparece más de una vez.

@@ -4,7 +4,7 @@
 Python 3.11, FastAPI, SQLAlchemy 2, Jinja2 y PostgreSQL 17. Un monolito modular con
 adaptadores sustituibles, sin infraestructura de colas ni frontend compilado.
 Rutas web -> casos de uso -> repositorios/adaptadores. El caso de uso no retorna HTML.
-La separación completa de la ruta heredada de facturación corresponde al siguiente hito.
+BillingService implementa los casos de uso fiscales sin HTML; las rutas presentan el resultado.
 
 Módulos: facturación; cobros/integración MP; gestión (ventas y movimientos);
 proveedores; reportes; web; configuración. Compartir transacciones de PostgreSQL
@@ -57,10 +57,29 @@ La ausencia de filas en el dump no demuestra ausencia de uso de ninguna columna.
 `scripts/audit-legacy.sql` devuelve cantidades antes de la limpieza, sin exponer
 contenidos de clientes. Las facturas históricas no se rellenan con datos inventados.
 
-## Garantías aún por implementar
-Actualmente la ruta fiscal heredada sigue teniendo varios commits y no resuelve
-concurrencia ni un CAE autorizado cuya respuesta se perdió. No publicar este hito
-como una refactorización fiscal terminada ni ensayarlo con emisiones reales.
+## Facturación duradera (H2)
+0003_billing agrega solicitudes, reservas exclusivas de pagos y proveedor simulado
+persistente. Un bloqueo de sesión PostgreSQL por punto/tipo se conserva entre commits
+y llamadas externas; se libera explícitamente antes de devolver la conexión al pool.
+Antes del envío se confirman identidad, snapshot, reservas, payload y número intentado.
+Una respuesta incierta/sending bloquea nuevas emisiones del mismo punto/tipo.
+Una transacción confirma factura, JSON fiscal, vínculos, todas las marcas sí/no y
+estado autorizado. Si falla después del CAE, conserva el intento y se consulta el
+número original. Un reintento explícito consulta primero y reutiliza número/payload;
+no se asigna otro número por un timeout. Una consulta fallida jamás habilita reenvío.
+No se cambian pagos o importes de solicitudes existentes. Los rechazos inequívocos
+se distinguen de errores de red/infraestructura. No se descartan reservas de intentos.
+El PDF se genera bajo demanda desde una factura persistida, sin volver al proveedor.
+Se retiraron el pipeline fiscal con HTML/commits parciales y el generador PDF remoto.
+
+El adaptador usa WebService de afip.py con extensiones de transporte acotadas:
+conexión 5s, lectura 45s, sin retries POST ni redirects. Lee certificados existentes;
+no ejecuta automatizaciones de autenticación de cuenta ni necesita su contraseña.
+Emisión/consulta retornan respuestas estructuradas antes del chequeo textual del helper.
+La consulta exige identidad fiscal e importe coincidentes; solo el código 602 se
+interpreta como ausencia. No se certificó homologación ni acceso productivo.
+
+## Garantías posteriores
 La idempotencia del cargador de ejemplos no equivale a idempotencia del webhook.
 Los escenarios de devolución actuales se descartan: M02 agrega su actualización.
 Los límites centralizados no son una interpretación de la normativa fiscal.

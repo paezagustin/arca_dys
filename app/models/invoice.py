@@ -23,5 +23,6 @@ class Invoice(Base):
     pdf_url = Column(String(300), nullable=True)
     
     raw_afip_response = Column(JSON)
+    fiscal_snapshot = Column(JSON)
 
     created_at = Column(DateTime, default=datetime.utcnow)

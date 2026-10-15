@@ -46,11 +46,20 @@ afip.py 1.2.0 con return_response=True: cabecera, detalle, CAE, vencimiento y
 observaciones disponibles. No es el sobre HTTP/SOAP ni incluye la solicitud de
 autenticación. No imprimirlo íntegro en logs o mensajes de usuario.
 Las simulaciones guardan un resultado con simulation=true y CAE textual de prueba.
+En H2 se pide el resultado estructurado mediante WebService del SDK para conservar
+también rechazos; no se utiliza el helper que convierte los errores en texto.
+Las recuperaciones guardan el resultado de consulta original bajo consultation,
+marcado recovered=true, junto con los campos normalizados de autorización.
 Las facturas históricas sin respuesta permanecen así; no se consulta al proveedor
 ni se inventa una respuesta para completarlas. La respuesta por sí sola no resuelve
-timeouts, pérdida de respuesta o fallos de DB posteriores a una autorización: H2
-sigue pendiente. Los errores que el SDK lanza antes de retornar tampoco aparecen
-automáticamente en este campo de una factura autorizada.
+timeouts por sí sola: H2 agrega solicitudes/reservas durables para esa recuperación.
+Errores sin respuesta estructurada quedan como resultado incierto. 0003_billing
+no tiene downgrade destructivo: conserva esa evidencia fiscal. Restaurar en copia
+o preparar una migración explícita si se necesita revertir el esquema.
+
+Referencias de contrato verificadas durante H2:
+- https://www.arca.gob.ar/ws/documentacion/manuales/manual-desarrollador-ARCA-COMPG-v4-0.pdf
+- https://afipsdk.com/docs/api-reference/web-services/wsfe/FECompConsultar/prod/python/
 
 ## Backup manual solicitado en el SSD
 Se prepara el respaldo lógico en /mnt/datos/docker/arca_dys/backups por defecto.

@@ -30,9 +30,10 @@ temporal y verifica un importe ficticio y la revisión de esquema. No copia dato
   falle PDF; descargas posteriores sin otra emisión. Respuesta simulada identificada.
 - Registro y consulta del historial de errores sin campos de resolución retirados.
 
-Estas pruebas NO certifican todavía idempotencia/concurrencia fiscal, recuperación
-del CAE, formato de todos los productos MP, QR real ni diseño del PDF productivo.
-Esas garantías tienen tareas obligatorias en H2-H5. Los ejemplos no sustituyen
+H2 prueba idempotencia/concurrencia fiscal y recuperación del CAE con proveedor falso
+persistente, interrupciones y fallos inyectados. Esto no certifica conexión real ni
+homologación. Quedan formato de todos los productos MP, QR y diseño PDF en H3-H5.
+Los ejemplos no sustituyen
 una importación ni una migración de registros de producción.
 
 ## Aislamiento

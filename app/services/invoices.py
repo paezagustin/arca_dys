@@ -1,6 +1,7 @@
 import os
 
-from app.services.arca.pdf import TEMPLATES_DIR
+from pathlib import Path
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
 from jinja2 import Environment, FileSystemLoader, Template
 from app.models.invoice import Invoice
 from app.core.config import (

@@ -107,7 +107,7 @@ def test_cleanup_preserves_schema_and_data_if_unexpected_information_exists(scra
 
 
 def test_cleanup_downgrade_restores_empty_structures_and_can_upgrade_again(scratch_database):
-    migrate(scratch_database)
+    migrate(scratch_database, "0002_cleanup")
     migrate(scratch_database, "0001_legacy", downgrade=True)
     with scratch_database.connect() as connection:
         assert compare_metadata(MigrationContext.configure(connection), legacy_metadata()) == []

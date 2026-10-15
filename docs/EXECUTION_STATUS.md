@@ -2,7 +2,25 @@
 
 Actualizado: 2026-10-15, America/Buenos_Aires.
 
-## Hito actual
+## Estado vigente: H2 validado, continuar H3-H8
+El usuario pidió completar TODO el roadmap sin detenerse entre hitos y avisar al
+final. Objetivo activo: continuar H3, H4, H5, H6, H7 y H8 de forma autónoma.
+H2 implementado: BillingService sin HTML, solicitudes/reservas/snapshots persistentes,
+bloqueo PostgreSQL por punto/tipo, resultado incierto y consulta/reenvío del mismo
+número; persistencia local atómica y PDF independiente. Migración 0003_billing.
+Adaptador SDK con timeout, sin reintentos automáticos ni automatizaciones de cuenta.
+
+Validación H2: 76 tests passed, 56 warnings heredados, 8.55s; backup SHA256 y
+restauración comprobados con revisión 0003_billing. Casos ejecutados: concurrencia
+igual/solapada/distinta, respuesta perdida, interrupción de proceso, fallo de commit
+después del CAE, rechazo explícito, consulta fallida, reenvío del mismo payload,
+autenticación no disponible, número incorrecto y PDF fallido sin reemisión.
+Navegador IAB: crear pago ficticio de 10000, seleccionarlo y emitir; pantalla de
+resultado con aviso SIN VALIDEZ FISCAL, importe correcto y enlace PDF.
+Captura ignorada: artifacts/h2-facturacion.jpg. No se accedió a Raspberry ni proveedores.
+Publicar este hito y registrar su CI; continuar H3 sin esperar aprobación humana.
+
+## Antecedentes: H0/H1 y preparación de H2
 H0 y H1 completados. Base publicada en main como `bc5ef9c2c33d06ff5f1e8bfa7334c0ac90377fa6`.
 CI de ese commit: [Pruebas aisladas, ejecución 38810887827](https://github.com/paezagustin/arca_dys/actions/runs/38810887827), success.
 Imagen productiva construida en amd64, sin desplegarla. El sistema completo NO está refactorizado
@@ -86,13 +104,12 @@ no fueron tratados como verificaciones omitidas. Su limpieza acompaña H2/H5.
 Capturas locales no versionadas: artifacts/facturacion-simulada.jpg y artifacts/pruebas-locales.jpg.
 
 ## Próximo hito
-Continuar H2 del roadmap: extraer caso de uso fiscal y resolver persistencia, atomicidad local,
-concurrencia y resultado incierto. Luego H3 idempotencia/estados de MP y H4 configuración,
+Continuar H3 idempotencia/estados de MP y H4 configuración,
 factura independiente y comprobante. No ampliar la limpieza a otros campos sin
 evidencia; los retirados en esta entrega fueron confirmados por el usuario.
 
 ## Límites pendientes
 Build/funcionamiento ARM y configuración efectiva de la Raspberry no comprobados.
 Diseño PDF productivo, QR, emisor, autenticación, idempotencia del webhook y demás
-hitos H2-H8 pendientes. El Compose productivo requiere adopción/migración coordinada;
+hitos H3-H8 pendientes. El Compose productivo requiere adopción/migración coordinada;
 no ejecutar up ni ALLOW_LIVE_OPERATIONS=true para probar cambios de desarrollo.

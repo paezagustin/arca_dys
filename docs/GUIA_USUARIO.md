@@ -52,3 +52,12 @@ Factura independiente; pagos completos de MP; ventas diarias manuales con efecti
 ingresos/egresos; proveedores simples; importación histórica del Excel y dashboard.
 Se documentarán sus pantallas a medida que cada hito esté probado. Sin sueldos,
 facturación parcial, cuentas corrientes de proveedores ni saldos pendientes en métricas.
+
+## Recuperación de facturación
+Después de facturar se abre el resultado de la solicitud. Si está autorizada,
+descargar el PDF; un error de descarga permite repetirla sin emitir otra factura.
+Si quedó "Por verificar", conservar la solicitud y usar "Consultar comprobante".
+No facturar esos pagos con otra selección. Si no se encuentra autorización,
+"Reintentar esta solicitud" vuelve a consultar y usa el mismo número e importe.
+Si la consulta falla, el sistema conserva el estado y no reenvía. El soporte puede
+identificar la operación con el número de solicitud mostrado en la pantalla.

@@ -57,7 +57,7 @@ def test_invalid_form_ids_never_create_an_invoice(client, ids):
 
 
 def test_empty_selection_does_not_emit(client):
-    assert client.post("/ARCA/invoice/selected").status_code == 200
+    assert client.post("/ARCA/invoice/selected").status_code == 422
     assert counts() == (0, 0, 0)
 
 

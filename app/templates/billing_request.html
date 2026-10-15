@@ -1,0 +1,15 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resultado de facturación</title></head>
+<body><main style="max-width:50rem;margin:2rem auto;font:1.1rem system-ui;padding:1rem">
+<a href="/page/invoice">← Volver a facturación</a>
+{% if request.app.state.integrations_mode == 'mock' %}<p><strong>Modo simulado · SIN VALIDEZ FISCAL</strong></p>{% endif %}
+{% if operation.state == 'authorized' %}
+<h1>Factura generada correctamente</h1><p>Importe: ${{ '%.2f'|format(operation.total) }}</p>
+<p><a href="/ARCA/invoice/{{ operation.invoice_id }}/pdf">Descargar comprobante PDF</a></p>
+<p>Si falla la descarga, podés volver a intentarla desde aquí.</p>
+{% else %}<h1>Facturación por revisar</h1>
+<p role="alert">{{ operation.error or 'La solicitud quedó guardada para verificar.' }}</p>
+<p>Importe: ${{ '%.2f'|format(operation.total) }} · Estado: {{ {'prepared':'Sin enviar','sending':'Por verificar','uncertain':'Por verificar','rejected':'Rechazada'}.get(operation.state,operation.state) }}</p>
+<form method="post" action="/ARCA/requests/{{ operation.id }}/recover"><button>Consultar comprobante</button></form>
+<form method="post" action="/ARCA/requests/{{ operation.id }}/retry"><p>Antes de reintentar se consultará el mismo comprobante.</p><button>Reintentar esta solicitud</button></form>
+{% endif %}
+<p><small>Solicitud: {{ operation.id }}</small></p></main></body></html>
