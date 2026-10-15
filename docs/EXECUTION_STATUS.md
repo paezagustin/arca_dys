@@ -2,9 +2,23 @@
 
 Actualizado: 2026-10-15, America/Buenos_Aires.
 
-## Estado vigente: H2-H5 validados, continuar H6-H8
+## Estado vigente: H2-H6 validados, continuar H7-H8
 El usuario pidió completar TODO el roadmap sin detenerse entre hitos y avisar al
-final. Objetivo activo: continuar H6, H7 y H8 de forma autónoma.
+final. Objetivo activo: continuar H7 y H8 de forma autónoma.
+H5 publicado como 89dc110c087495520e86c700eb4561526c53454c; CI success:
+https://github.com/paezagustin/arca_dys/actions/runs/38823737655.
+
+H6 implementado: ventas manuales, ingresos/egresos con categoría/medio/proveedor,
+listados paginados, proveedores simples y correcciones auditadas con versión/motivo.
+Anulación recuperable, unicidad de venta vigente por fecha y UUID de formulario.
+0007_business convierte Float a NUMERIC con prevalidación, representación original
+por fila y conciliación posterior; rechaza valores inesperados con rollback íntegro.
+Validación: 150 passed, 75 warnings HTTPX, 41.60s. Incluye concurrencia de venta diaria,
+independencia de MP/facturas, edición obsoleta, anulación/recuperación, proveedor
+archivado, decimales, migración con NULL y rechazo atómico por precisión/NaN/infinito.
+Backup/restauración revision 0007_business aprobados. Navegador: venta ficticia
+180000.35 y egreso 45000.15 con proveedor elegido; mensajes y persistencia correctos.
+Captura artifacts/h6-gestion.jpg. Continuar importación H7 sin tocar originales.
 H4 publicado como e3228d77c75633ed4de40c4869bdcdb9964f4ff3; CI success:
 https://github.com/paezagustin/arca_dys/actions/runs/38820685646.
 

@@ -62,6 +62,8 @@ Pruebas de selección, navegación y errores desde navegador. Mantener URL hered
 reports-stadistics compatible si se corrige el nombre público.
 
 ## H6 · Gestión y proveedores
+- [x] Gestión independiente, proveedores, correcciones/anulación recuperable y
+  conversión monetaria auditada; suite, navegador y restauración ejecutados.
 G01-G02. Ventas diarias manuales independientes; movimientos con categorías y medio,
 proveedor opcional/seleccionable y altas simples. Fechas e importes validados,
 correcciones trazables. Decimal/NUMERIC; migración del Float heredado con conciliación.

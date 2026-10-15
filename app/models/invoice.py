@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, JSON, Index
+from sqlalchemy import Column, Integer, String, Numeric, Date, DateTime, JSON, Index
 from datetime import datetime
 from app.core.database import Base
 
@@ -10,7 +10,7 @@ class Invoice(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     invoice_number = Column(String(300), nullable=True)
-    total_amount = Column(Float, nullable=True)
+    total_amount = Column(Numeric(18, 2), nullable=True)
 
     status = Column(String(100), default="pending")  # pending / success / failed
     error_message = Column(String(200), nullable=True)

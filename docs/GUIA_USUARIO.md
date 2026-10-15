@@ -94,3 +94,19 @@ actualiza el resultado. Podés volver al historial si cerraste la ventana. Repet
 la misma confirmación no genera otra factura.
 Auditoría muestra coincidencias de identificadores e importes en listas separadas.
 Dos importes iguales no demuestran un pago duplicado y no se borran automáticamente.
+
+## Gestión del negocio
+En Gestión, “Registrar venta del día” guarda lo realmente vendido en esa fecha,
+sumando efectivo y Mercado Pago. No copiar facturas ni sumar otra vez los cobros:
+esas pantallas son independientes. Si no hubo ventas, registrar 0; dejar un día sin
+cargar significa que no hay información. Solo puede existir una venta vigente por día.
+
+“Registrar ingreso o egreso” sirve para compras, gastos y otros ingresos. Elegir
+tipo, fecha, importe, categoría y medio; el proveedor es opcional para egresos.
+Registrar antes sus datos desde Proveedores y luego seleccionarlo en el pago.
+No se calculan deudas ni se controla stock.
+
+Para corregir, abrir “Ver / corregir”, cambiar los datos y explicar el motivo.
+El historial conserva los valores anteriores. Elegir “Anulado” para quitar un
+registro de los totales sin borrarlo; se puede recuperar desde el filtro Anulados.
+Archivar un proveedor impide seleccionarlo en pagos nuevos y conserva los anteriores.

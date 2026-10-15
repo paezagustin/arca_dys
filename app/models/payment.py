@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, JSON, Index
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, JSON, Index
 from datetime import datetime
 from app.core.database import Base
 from zoneinfo import ZoneInfo
@@ -16,7 +16,7 @@ class Payment(Base):
     status = Column(String(50), nullable=False)
     status_detail = Column(String(150))
 
-    mont = Column(Float)
+    mont = Column(Numeric(18, 2))
     type_of_paid = Column(String(50))
 
     date_approved = Column(DateTime, nullable=True)
