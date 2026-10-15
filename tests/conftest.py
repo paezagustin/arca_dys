@@ -1,6 +1,7 @@
 import os
 import pytest
 import requests
+import re
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 
@@ -31,4 +32,13 @@ def isolated_data(monkeypatch):
 @pytest.fixture
 def client():
     with TestClient(app) as instance:
+        page = instance.get("/login")
+        nonce = re.search(r'name="login_csrf" value="([^"]+)"', page.text).group(1)
+        response = instance.post("/login", data={"username": "admin", "password": "pruebas-locales", "login_csrf": nonce}, follow_redirects=False)
+        assert response.status_code == 303
+        from sqlalchemy.orm import Session
+        from app.services.access import lookup_session, COOKIE
+        with Session(engine) as db:
+            session, _ = lookup_session(db, instance.cookies.get(COOKIE))
+            instance.headers["x-csrf-token"] = session.csrf_token
         yield instance

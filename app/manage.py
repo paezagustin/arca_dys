@@ -31,10 +31,25 @@ def adopt_legacy(target_engine=engine):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["adopt-legacy"])
-    parser.parse_args()
-    adopt_legacy()
-    print("Baseline adoptado; no se borraron tablas ni registros")
+    parser.add_argument("action", choices=["adopt-legacy", "create-user"])
+    parser.add_argument("--username")
+    parser.add_argument("--role", choices=["admin", "operator"], default="admin")
+    args = parser.parse_args()
+    if args.action == "adopt-legacy":
+        adopt_legacy()
+        print("Baseline adoptado; no se borraron tablas ni registros")
+    else:
+        from getpass import getpass
+        from sqlalchemy.orm import Session
+        from app.services.access import create_user
+        if not args.username:
+            parser.error("create-user requiere --username")
+        password = getpass("Contraseña (al menos 12 caracteres): ")
+        if password != getpass("Repetir contraseña: "):
+            raise ValueError("Las contraseñas no coinciden")
+        with Session(engine) as db:
+            create_user(db, args.username, password, args.role)
+        print("Usuario creado. No se iniciaron operaciones con proveedores.")
 
 
 if __name__ == "__main__":

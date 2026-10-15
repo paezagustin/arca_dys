@@ -270,6 +270,7 @@
     <div class="card">
 
     <h2>ARCA DYS</h2>
+    <p><a class="btn-link" href="/page/invoice/manual">Factura por importe</a> · <a href="/settings">Configuración</a></p>
 
     <!-- Mensaje de éxito (si viene de facturar) -->
     {% if request.query_params.get('success') == 'true' %}
@@ -310,6 +311,7 @@
     </form>
 
     <form method="post" onsubmit="return mostrarCarga()">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         {% for pago in pagos %}
             <input type="hidden" name="visible_payment_ids" value="{{ pago.id }}">
         {% endfor %}

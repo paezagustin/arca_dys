@@ -5,8 +5,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 FROM base AS production
-# Conserva el generador actual de producción hasta la etapa de comprobantes.
-RUN pip install --no-cache-dir playwright==1.56.0 && playwright install --with-deps chromium
+# PDF local con ReportLab: sin navegador ni servicio remoto.
 COPY . .
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 

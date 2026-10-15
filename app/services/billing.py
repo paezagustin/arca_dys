@@ -17,6 +17,7 @@ from app.models.payment import Payment
 from app.models.payment_invoice import PaymentInvoice
 from app.services.arca.billing import validate_amount
 from app.services.fiscal_gateway import gateway_for, voucher_payload, authorization, FiscalRejected
+from app.services.settings import fiscal_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class BillingService:
                 connection.execute(text("SELECT pg_advisory_unlock(72421, :key)"), {"key": point * 100 + 11})
                 connection.commit()
 
-    def issue(self, payment_ids=(), *, manual_amount=None, idempotency_key=None):
+    def issue(self, payment_ids=(), *, manual_amount=None, idempotency_key=None, expected_total=None, settings_version=None):
         ids = sorted(set(payment_ids))
         if manual_amount is None and not ids:
             raise ValueError("Seleccioná al menos un pago")
@@ -68,13 +69,21 @@ class BillingService:
         key = ("payments:" + sha256(",".join(map(str, ids)).encode()).hexdigest()) if ids else ("manual:" + str(idempotency_key or uuid4()))
         if len(key) > 100:
             raise ValueError("Identificador de operación inválido")
-        point = config.ARCA_PTO_VTA
+        with Session(self.engine) as read:
+            snapshot, version = fiscal_configuration(read)
+        point = snapshot["point"]
         with self._locked(point) as db:
             prior = db.scalar(select(BillingRequest).where(BillingRequest.idempotency_key == key))
             if prior:
                 if manual_amount is not None and prior.total != Decimal(str(manual_amount)):
                     raise BillingConflict("La operación ya existe con otro importe")
                 return result(prior)
+            db.execute(text("SELECT pg_advisory_xact_lock_shared(72422,1)"))
+            snapshot, version = fiscal_configuration(db)
+            if snapshot["point"] != point:
+                raise BillingConflict("El punto de venta cambió. Actualizá y volvé a confirmar.")
+            if settings_version is not None and version != settings_version:
+                raise BillingConflict("La configuración cambió. Volvé a revisar y confirmar la factura.")
             unresolved = db.scalar(select(BillingRequest.id).where(BillingRequest.point == point,
                 BillingRequest.voucher_type == 11, BillingRequest.state.in_(["sending", "uncertain"])))
             if unresolved:
@@ -86,10 +95,10 @@ class BillingService:
                         or db.scalar(select(PaymentInvoice.id).where(PaymentInvoice.payment_id.in_(ids))) is not None):
                 raise BillingConflict("Algún pago ya está vinculado a una factura o a un intento previo")
             total = sum((Decimal(str(p.mont)) for p in payments), Decimal("0")) if ids else Decimal(str(manual_amount))
-            validate_amount(total)
+            validate_amount(total, Decimal(snapshot["minimum"]), Decimal(snapshot["maximum"]))
+            if expected_total is not None and total != expected_total:
+                raise BillingConflict("Los importes cambiaron. Volvé a revisar la selección.")
             today = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires")).date()
-            snapshot = {"cuit": config.ARCA_CUIT, "point": point, "voucher_type": 11,
-                        "simulation": config.INTEGRATIONS_MODE == "mock"}
             row = BillingRequest(id=str(uuid4()), idempotency_key=key, state="prepared", total=total,
                 invoice_date=today, point=point, voucher_type=11, payment_ids=ids,
                 payment_snapshot=[{"id": p.id, "external_id": p.id_payment_mp, "amount": str(p.mont)} for p in payments],
@@ -103,10 +112,11 @@ class BillingService:
 
     def _send(self, db, row, gateway=None):
         try:
-            gateway = gateway or self.gateway_factory(self.engine)
+            gateway = gateway or self._gateway(row)
             if row.payload is None:
                 row.voucher_number = gateway.last_number(row.point, row.voucher_type) + 1
                 row.payload = voucher_payload(row.total, row.invoice_date, row.point, row.voucher_number)
+                row.fiscal_snapshot = dict(row.fiscal_snapshot, number=row.voucher_number)
             row.state, row.error = "sending", None
             db.commit()  # Incluye el número exacto: un reinicio obliga a consultar ESTE comprobante.
         except Exception:
@@ -166,7 +176,7 @@ class BillingService:
             if row.state == "authorized":
                 return result(row)
             try:
-                gateway = self.gateway_factory(self.engine)
+                gateway = self._gateway(row)
                 if row.payload is not None:
                     response = gateway.lookup(row.payload)
                     if response is not None:
@@ -190,6 +200,11 @@ class BillingService:
                 row.error = "No se pudo verificar el comprobante; la solicitud se conserva sin reemitir."
                 db.commit()
                 return result(row)
+
+    def _gateway(self, row):
+        if config.INTEGRATIONS_MODE == "production" and row.fiscal_snapshot.get("cuit") != config.ARCA_CUIT:
+            raise ValueError("El emisor del intento no coincide con los certificados configurados")
+        return self.gateway_factory(self.engine)
 
 
 def get_billing_service():

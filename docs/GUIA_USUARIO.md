@@ -67,3 +67,18 @@ En Pruebas locales, cargar un pago con ID SIM-ejemplo y luego elegir "Pago devue
 con el mismo ID e importe. Se actualiza ese pago, sin duplicarlo. Si ya tenía una
 factura, esa factura sigue guardada; no se emite una nota de crédito por esta prueba.
 Las notificaciones con error se conservan para revisar y reintentar, sin facturar.
+
+## Ingresar y emitir por importe
+En pruebas locales, usar admin / pruebas-locales. En la instalación real, usar la
+cuenta creada por el administrador; la cuenta de prueba no existe allí.
+En Facturación elegir "Factura por importe", ingresar total, revisar y confirmar.
+Esta factura es independiente: no cambia cobros de Mercado Pago ni ventas diarias.
+La confirmación vence a los 15 minutos y no se emite nada hasta aceptarla.
+Al terminar se muestra el resultado con enlace PDF. Para cerrar la sesión, elegir Salir.
+
+## Configuración y Mercado Pago
+Solo la cuenta administradora puede cambiar los datos del emisor y límites de la
+aplicación. Comprobar los datos antes de facturar; cambios posteriores se aplican a
+nuevos comprobantes. Las claves de conexión se administran en la instalación.
+Mercado Pago muestra las notificaciones y permite reintentar las que tienen error.
+Consultar un pago por ID lo actualiza desde la cuenta, sin facturarlo automáticamente.

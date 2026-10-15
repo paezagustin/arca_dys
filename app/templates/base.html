@@ -1,0 +1,7 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Mi negocio{% endblock %} · ARCA DYS</title><link rel="stylesheet" href="/assets/app.css"></head>
+<body><header class="site-header"><a class="brand" href="/"><img src="/assets/logo-dulce-salado.jpg" alt="Logo del negocio"><span>Mi negocio<small>Facturación y gestión</small></span></a>
+{% if request.state.user is defined %}<nav aria-label="Principal"><a href="/page/invoice">Facturación</a><a href="/business">Gestión</a><a href="/dashboard">Resumen</a><a href="/page/reports-stadistics">Auditoría</a>{% if request.state.user.role == 'admin' %}<a href="/settings">Configuración</a><a href="/settings/mp">Mercado Pago</a>{% endif %}{% if request.app.state.integrations_mode == 'mock' %}<a href="/dev">Pruebas</a>{% endif %}</nav>
+<form action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><button class="quiet">Salir</button></form>{% endif %}</header>
+{% if request.app.state.integrations_mode == 'mock' %}<aside class="simulation" role="status">Modo simulado · Datos ficticios · Sin validez fiscal · No se envían facturas a ARCA</aside>{% endif %}
+<main id="main">{% block content %}{% endblock %}</main><footer>ARCA DYS · Una herramienta para tu negocio</footer></body></html>

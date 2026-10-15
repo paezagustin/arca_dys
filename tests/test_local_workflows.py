@@ -36,7 +36,7 @@ def test_examples_are_repeatable_and_complete_invoice_downloads(client):
     assert pdf.headers["content-type"] == "application/pdf"
     content = PdfReader(BytesIO(pdf.content)).pages[0].extract_text()
     assert "SIN VALIDEZ FISCAL" in content
-    assert "25000" in content
+    assert "25.000,00" in content
     # Repetir la misma selección no crea otra factura.
     client.post("/ARCA/invoice/selected", data={"payment_ids": ["1", "2"]})
     assert counts() == (3, 1, 2)

@@ -15,6 +15,13 @@ templates = Jinja2Templates(directory="app/templates")
 
 logger = logging.getLogger(__name__)
 
+
+@router.get("/invoice/manual", response_class=HTMLResponse)
+def manual_invoice(request: Request, db: Session = Depends(get_db)):
+    from app.services.settings import read_settings
+    values, _ = read_settings(db)
+    return templates.TemplateResponse(request=request, name="manual_invoice.html", context={"values": values})
+
 @router.get("/invoice", response_class=HTMLResponse)
 def pageInvoice(
     request: Request,

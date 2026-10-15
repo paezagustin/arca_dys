@@ -7,8 +7,8 @@
 {% if request.query_params.get('result') == 'created' %}<p role="status">Evento de prueba procesado. Solo los pagos aprobados sin devolución están disponibles para facturar.</p>{% endif %}
 {% if request.query_params.get('result') == 'simulated_error' %}<p role="status">Escenario ejecutado: no se agregó un pago aprobado. Podés repetir la prueba con otro escenario.</p>{% endif %}
 <nav><a href="/page/invoice">Facturación</a> · <a href="/page/reports-stadistics">Auditoría de pagos</a></nav>
-<form action="/dev/examples" method="post"><button>Cargar tres pagos de ejemplo</button><p>Podés repetirlo sin duplicar estos ejemplos.</p></form>
-<form action="/dev/payments" method="post"><label for="amount">Importe del pago ficticio</label><input id="amount" name="amount" type="number" min="0.01" max="2000000" step="0.01" value="10000" required>
+<form action="/dev/examples" method="post"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><button>Cargar tres pagos de ejemplo</button><p>Podés repetirlo sin duplicar estos ejemplos.</p></form>
+<form action="/dev/payments" method="post"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><label for="amount">Importe del pago ficticio</label><input id="amount" name="amount" type="number" min="0.01" max="2000000" step="0.01" value="10000" required>
 <label for="payment_id">ID existente (opcional)</label><input id="payment_id" name="payment_id" maxlength="40" placeholder="SIM-example-1"><p>Dejalo vacío para crear otro pago. Para probar cambios, usá el mismo ID e importe.</p>
 <label for="scenario">Escenario</label><select id="scenario" name="scenario"><option value="approved">Pago aprobado</option><option value="pending">Pago pendiente</option><option value="rejected">Pago rechazado</option><option value="refunded">Pago devuelto</option><option value="api_error">Falla al consultar Mercado Pago</option></select><p><button>Ejecutar escenario</button></p></form>
 <p>Un cambio de estado no emite facturas ni notas de crédito. Las notificaciones y los cambios quedan registrados.</p>

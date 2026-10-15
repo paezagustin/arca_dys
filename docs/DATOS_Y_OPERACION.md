@@ -79,8 +79,8 @@ verifica además la restauración real y el contenido de un registro ficticio.
 No se agregó CRON, política de borrado ni copia a otro dispositivo.
 
 ## Antes de usar el nuevo Compose en producción
-Este primer hito habilita desarrollo; H2-H5 tienen correcciones fiscales/de acceso
-pendientes. No actualizar la Raspberry por el solo hecho de recibir un commit.
+El desarrollo continúa en los hitos H5-H8. No actualizar la Raspberry por el solo
+hecho de recibir un commit: faltan la verificación operativa y el ensayo en copia.
 No ejecutar este compose contra producción para probarlo.
 
 1. Identificar compose/proyecto de Portainer efectivos, nombres, mountpoints,
@@ -92,7 +92,8 @@ No ejecutar este compose contra producción para probarlo.
    crear silenciosamente otra instancia sobre /mnt.
 4. Respaldar, restaurar en copia y ensayar adopt-legacy + futuras migraciones.
 5. En publicación coordinada, detener web anterior, aplicar la adopción/migraciones
-   comprobadas y levantar la nueva web. No usar down --volumes ni recrear la base.
+   comprobadas y crear la cuenta administradora (ACCESO_Y_COMPROBANTES.md) antes de
+   habilitar el acceso público. No usar down --volumes ni recrear la base.
 6. Revisar integridad/estado sin emitir una factura real como prueba automática.
 
 Se conserva PostgreSQL major 17. Prod usa imagen Debian, evitando cambiar a Alpine

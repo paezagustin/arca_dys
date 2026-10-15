@@ -11,7 +11,7 @@ async def receive(request, legacy_token=None):
         if not config.MP_COLLECTOR_ID:
             raise HTTPException(503, "Falta configurar la cuenta receptora")
         if legacy_token is not None:
-            if len(config.MP_LEGACY_WEBHOOK_TOKEN) < 32 or not hmac.compare_digest(legacy_token, config.MP_LEGACY_WEBHOOK_TOKEN):
+            if len(config.MP_LEGACY_WEBHOOK_TOKEN) < 32 or not hmac.compare_digest(legacy_token.encode(), config.MP_LEGACY_WEBHOOK_TOKEN.encode()):
                 raise HTTPException(401, "Entrada no autorizada")
         elif not validate_signature(request.headers.get("x-signature"), request.headers.get("x-request-id"),
                                     request.query_params.get("data.id"), config.MP_WEBHOOK_SECRET):

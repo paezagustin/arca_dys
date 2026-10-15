@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}Configuración{% endblock %}{% block content %}
+<h1>Configuración del negocio</h1><p class="muted">Los cambios se aplican a nuevas facturas. Cada comprobante conserva los datos con los que se emitió.</p>
+{% if saved %}<div class="notice" role="status">Configuración guardada correctamente.</div>{% endif %}
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<form method="post" action="/settings" class="card"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><input type="hidden" name="version" value="{{ version }}">
+<h2>Datos del emisor</h2><div class="fields">
+{% for field,label,maxlength in [('name','Nombre o razón social',100),('address','Domicilio comercial',180),('cuit','CUIT (11 dígitos)',13),('gross_income','Ingresos Brutos',60)] %}
+<div class="field"><label for="{{ field }}">{{ label }}</label><input id="{{ field }}" name="{{ field }}" value="{{ values[field] }}" maxlength="{{ maxlength }}" required></div>{% endfor %}
+<div class="field"><label for="tax_condition">Condición fiscal del emisor</label><select id="tax_condition" name="tax_condition" required><option value="">Seleccionar</option>{% for option in ['Monotributista','IVA Exento'] %}<option {% if values.tax_condition == option %}selected{% endif %}>{{ option }}</option>{% endfor %}</select></div>
+<div class="field"><label for="start_date">Inicio de actividades</label><input id="start_date" type="date" name="start_date" value="{{ values.start_date }}" required></div>
+<div class="field"><label for="point">Punto de venta</label><input id="point" name="point" type="number" min="1" max="99998" value="{{ values.point }}" required></div></div>
+<p>Comprobante: <strong>Factura C</strong> · Condición de venta: <strong>Efectivo</strong> · Cotillón y repostería: <strong>50 % / 50 %</strong>.</p>
+<h2>Límites de la aplicación</h2><p class="muted">Son controles configurables del sistema; no se presentan como límites legales.</p><div class="fields">
+<div class="field"><label for="minimum">Importe mínimo</label><input id="minimum" name="minimum" type="number" min="0.01" step="0.01" value="{{ values.minimum }}" required></div>
+<div class="field"><label for="maximum">Importe máximo</label><input id="maximum" name="maximum" type="number" min="0.01" step="0.01" value="{{ values.maximum }}" required></div></div><div class="actions"><button>Guardar configuración</button></div></form>
+<p><a href="/settings/mp">Configurar y revisar Mercado Pago</a></p>{% endblock %}

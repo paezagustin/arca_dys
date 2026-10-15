@@ -42,6 +42,9 @@ Actualizar estados y conservar cambios; ignorar eventos viejos de manera definid
 Pruebas de reentrega/concurrencia/fallos/reinicio y refunds sin emisión automática.
 
 ## H4 · Configuración y comprobantes
+- [x] Sesiones/roles/CSRF, configuración auditable, factura independiente con
+  confirmación, snapshot inmutable, PDF local sin Chromium y QR leído desde PDF.
+
 F04-F07/O04. Acceso autenticado y formularios protegidos; emisor configurable y límites
 editables con validación; mantener Factura C y condición de venta fija. Factura
 independiente por importe, sin vínculo obligatorio con ventas/MP. Conservar 50/50

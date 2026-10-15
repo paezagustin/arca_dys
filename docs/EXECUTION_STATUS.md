@@ -2,9 +2,24 @@
 
 Actualizado: 2026-10-15, America/Buenos_Aires.
 
-## Estado vigente: H2/H3 validados, continuar H4-H8
+## Estado vigente: H2-H4 validados, continuar H5-H8
 El usuario pidió completar TODO el roadmap sin detenerse entre hitos y avisar al
-final. Objetivo activo: continuar H4, H5, H6, H7 y H8 de forma autónoma.
+final. Objetivo activo: continuar H5, H6, H7 y H8 de forma autónoma.
+H3 publicado como 8bc2a3f8200c68354d95046cd7ff5b0b7ffedd19; CI success:
+https://github.com/paezagustin/arca_dys/actions/runs/38818564439.
+
+H4 implementado: 0005_settings, sesiones revocables/roles/CSRF/login limitado,
+configuración con auditoría/versionado, snapshot fiscal, factura independiente con
+confirmación persistente y generador ReportLab unificado sin Chromium/PDF remoto.
+112 pruebas aprobadas (74 warnings heredados), QR decodificado desde PDF rasterizado;
+backup/restauración comprobados con revisión 0005_settings. Suite final tras ajustes
+de bloqueo/CSRF: 112 passed, 74 warnings, 27.22s; ninguna omitida.
+Navegador: login real local, importe 12345.67, revisión y confirmación; factura SIM id4
+guardada sin pagos nuevos. Captura artifacts/h4-factura-independiente.jpg.
+PDF simulado revisado visualmente: 14076 bytes, una página; artifacts/comprobante-simulado.pdf
+y PNG de revisión (ignorados en Git). Imagen prod amd64 construida sin iniciarla:
+328861983 bytes. Consumo instantáneo del dev amd64/reloader 109.8 MiB; no es medida Pi.
+Publicar H4 y continuar H5 sin detenerse ni pedir permiso.
 H2 publicado como d7eb9a8253024cd008b13dd6840faab28494c0f5; CI success:
 https://github.com/paezagustin/arca_dys/actions/runs/38817262006.
 
@@ -118,12 +133,12 @@ no fueron tratados como verificaciones omitidas. Su limpieza acompaña H2/H5.
 Capturas locales no versionadas: artifacts/facturacion-simulada.jpg y artifacts/pruebas-locales.jpg.
 
 ## Próximo hito
-Continuar H4 configuración,
-factura independiente y comprobante. No ampliar la limpieza a otros campos sin
+Continuar H5 UI/paginación, H6 gestión, H7 importación y H8 métricas/operación.
+No ampliar la limpieza a otros campos sin
 evidencia; los retirados en esta entrega fueron confirmados por el usuario.
 
 ## Límites pendientes
 Build/funcionamiento ARM y configuración efectiva de la Raspberry no comprobados.
 Diseño PDF productivo, QR, emisor, autenticación, idempotencia del webhook y demás
-hitos H4-H8 pendientes. El Compose productivo requiere adopción/migración coordinada;
+hitos H5-H8 pendientes. El Compose productivo requiere adopción/migración coordinada;
 no ejecutar up ni ALLOW_LIVE_OPERATIONS=true para probar cambios de desarrollo.
