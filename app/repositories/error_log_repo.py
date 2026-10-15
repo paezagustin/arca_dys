@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from app.models.error_log import ErrorLog
-from datetime import datetime
 
 def create_error_log(
     db: Session,
@@ -28,36 +27,13 @@ def create_error_log(
     return error_log
 
 
-def mark_error_resolved(
-    db: Session,
-    error_log_id: int,
-    resolved_by: str,
-    notes: str = None
-) -> ErrorLog:
+def get_errors(db: Session, source: str = None):
     """
-    Marca un error como resuelto.
+    Obtiene el historial de errores, opcionalmente filtrado por fuente.
     """
-    error_log = db.query(ErrorLog).filter(ErrorLog.id == error_log_id).first()
-    
-    if error_log:
-        error_log.resolved = True
-        error_log.resolved_at = datetime.utcnow()
-        error_log.resolved_by = resolved_by
-        error_log.resolution_notes = notes
-        
-        db.commit()
-        db.refresh(error_log)
-    
-    return error_log
-
-
-def get_unresolved_errors(db: Session, source: str = None):
-    """
-    Obtiene errores sin resolver, opcionalmente filtrados por fuente.
-    """
-    query = db.query(ErrorLog).filter(ErrorLog.resolved == False)
+    query = db.query(ErrorLog)
     
     if source:
         query = query.filter(ErrorLog.source == source)
     
-    return query.order_by(ErrorLog.created_at.desc()).all()
+    return query.order_by(ErrorLog.created_at.desc(), ErrorLog.id.desc()).all()

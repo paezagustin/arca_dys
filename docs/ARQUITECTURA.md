@@ -34,22 +34,28 @@ el recorrido, no el diseño ni la validez del comprobante productivo.
 ## Esquema heredado
 La exportación Adminer adjunta informa PostgreSQL 17.8 y cinco tablas; no incluye filas.
 Baseline `0001_legacy`: payments, invoices, payment_invoice, error_logs, logs_invoice.
-Se conservan tipos, columnas, vínculos e índices. No se deduplican ni borran datos.
+El baseline conserva tipos, columnas, vínculos e índices originales.
 Los metadatos de adopción en migrations/baseline.py están congelados e independientes
 del ORM futuro. El arranque no usa create_all ni adopta/migra bases productivas.
 
-## Revisión de campos antes de otra migración
-| Campo/tabla | Evidencia en código | Decisión inicial |
+## Revisión de campos y limpieza autorizada
+El usuario confirmó qué estructuras no contienen información útil. 0002_cleanup
+las retira del esquema y de los modelos/repositorios/creadores de pagos, comprobando
+primero el contenido real bajo bloqueo transaccional. El baseline sigue intacto.
+
+| Campo/tabla | Evidencia en código | Decisión vigente |
 | --- | --- | --- |
 | payments.bill | Se escribe; un filtro heredado lo usa. El listado principal usa status/registered_arca. | Candidato a simplificación tras revisar valores y retirar dependencias. |
-| payments.id_arca | Se inicializa vacío; el vínculo real está en payment_invoice. | Candidato; no eliminar sin comprobar datos. |
-| logs_invoice | Existe helper con parámetro incorrecto, pero el flujo usa error_logs. | Auditar contenido y conservar/migrar el histórico antes de retirar. |
-| invoices.raw_afip_response | No se puebla en el flujo revisado. | Conservar: útil para recuperación y evidencia de emisión. |
+| payments.id_arca | El vínculo real está en payment_invoice. | Retirado en 0002; relaciones conservadas. |
+| logs_invoice | El flujo activo usa error_logs. | Retirada en 0002 junto con helper e importaciones. |
+| error_logs.resolved/resolved_at/resolved_by/resolution_notes | Sin uso confirmado; resolution_by no existe. | Retirados en 0002; historial de errores conservado. |
+| invoices.raw_afip_response | El adaptador pide el resultado completo del SDK. | Conservado y poblado en nuevas facturas; simulación identificada. |
 | invoices.error_message | Sin escritura actual relevante. | Evaluar dentro del nuevo modelo de estados. |
 | imports de módulos/schemas vacíos | Sin responsabilidad definida. | Limpiar durante extracción de casos de uso. |
 
 La ausencia de filas en el dump no demuestra ausencia de uso de ninguna columna.
-`scripts/audit-legacy.sql` devuelve cantidades, sin exponer contenidos de clientes.
+`scripts/audit-legacy.sql` devuelve cantidades antes de la limpieza, sin exponer
+contenidos de clientes. Las facturas históricas no se rellenan con datos inventados.
 
 ## Garantías aún por implementar
 Actualmente la ruta fiscal heredada sigue teniendo varios commits y no resuelve

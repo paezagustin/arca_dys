@@ -1,14 +1,15 @@
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, JSON
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, JSON, Index
 from datetime import datetime
 from app.core.database import Base
 
 
 class Invoice(Base):
     __tablename__ = "invoices"
+    __table_args__ = (Index("invoices_invoice_number_key", "invoice_number", unique=True),)
 
     id = Column(Integer, primary_key=True, index=True)
 
-    invoice_number = Column(String(300), unique=True, nullable=True)
+    invoice_number = Column(String(300), nullable=True)
     total_amount = Column(Float, nullable=True)
 
     status = Column(String(100), default="pending")  # pending / success / failed

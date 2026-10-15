@@ -19,6 +19,10 @@ no marcarlo por existir código. Se permiten commits pequeños dentro de cada hi
 
 
 ## H2 · Facturación confiable y separación de casos de uso
+- [x] Preparación: limpieza autorizada mediante 0002_cleanup y respuesta completa
+  del SDK guardada; pruebas de conservación/rollback y restauración ejecutadas.
+- [ ] Completar el caso de uso y las garantías fiscales que se describen a continuación.
+
 Requisitos F01-F03/F08. Extraer lógica de las rutas; unificar resultado y errores;
 operación local atómica; solicitud persistente antes de emisión; identidad y snapshot
 de solicitud; serialización por punto/tipo y exclusión del mismo pago concurrente.

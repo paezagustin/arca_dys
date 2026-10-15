@@ -53,9 +53,17 @@ solo con una necesidad comprobada. No reemplazar el stack ni sumar SPA/ERP.
 Cambiar esquema exclusivamente con migraciones Alembic versionadas y revisadas.
 No editar una migración ya publicada ni el baseline congelado.
 No borrar columnas por ausencia de INSERT en un dump: comprobar referencias y datos.
+El usuario confirmó sin uso los campos de resolución de error_logs, logs_invoice
+y payments.id_arca. Se retiran con 0002_cleanup, que rechaza información inesperada.
+resolution_by no existe en el esquema entregado; no crear una columna para retirarla.
+Conservar invoices.raw_afip_response y guardar el resultado completo de emisión
+devuelto por el SDK, sin añadir la solicitud ni credenciales. No inventar respuestas
+históricas ni consultar ARCA en producción para rellenarlas durante el desarrollo.
 Antes de adoptar/migrar producción: backup lógico y prueba en copia. El respaldo
 inicial se almacena en el mismo SSD; CRON y copia externa quedan para el usuario.
-No ejecutar DROP/TRUNCATE ni importar fixtures sobre la base productiva.
+No ejecutar DROP/TRUNCATE manual ni importar fixtures sobre la base productiva.
+Los retiros de esquema autorizados solo se aplican mediante su migración probada,
+durante una actualización coordinada con backup; esta sesión no despliega en Raspberry.
 Conservar originales del Excel fuera de Git; lote/hoja/fila y problemas trazables.
 Dinero nuevo: Decimal/NUMERIC. Migrar Float heredado en una tarea con conciliación.
 Idempotencia basada en identidad externa, nunca en igualdad de importes.

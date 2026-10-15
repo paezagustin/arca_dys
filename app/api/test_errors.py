@@ -59,9 +59,9 @@ async def list_test_errors(
     """
     Lista los últimos errores de test para verificar.
     """
-    from app.repositories.error_log_repo import get_unresolved_errors
+    from app.repositories.error_log_repo import get_errors
     
-    errors = get_unresolved_errors(db, source="test_endpoint")
+    errors = get_errors(db, source="test_endpoint")
     
     return {
         "count": len(errors),
@@ -70,8 +70,7 @@ async def list_test_errors(
                 "id": e.id,
                 "created_at": e.created_at,
                 "error_type": e.error_type,
-                "message": e.message,
-                "resolved": e.resolved
+                "message": e.message
             }
             for e in errors[:limit]
         ]

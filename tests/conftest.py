@@ -20,7 +20,7 @@ def isolated_data(monkeypatch):
     def blocked(*args, **kwargs):
         raise AssertionError("Las pruebas no pueden realizar llamadas HTTP externas")
     monkeypatch.setattr(requests.sessions.Session, "request", blocked)
-    statement = text("TRUNCATE payment_invoice, payments, invoices, error_logs, logs_invoice RESTART IDENTITY CASCADE")
+    statement = text("TRUNCATE payment_invoice, payments, invoices, error_logs RESTART IDENTITY CASCADE")
     with engine.begin() as connection:
         connection.execute(statement)
     yield

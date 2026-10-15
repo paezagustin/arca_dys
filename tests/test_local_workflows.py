@@ -29,6 +29,9 @@ def test_examples_are_repeatable_and_complete_invoice_downloads(client):
     with engine.connect() as connection:
         assert connection.execute(text("SELECT total_amount FROM invoices")).scalar_one() == 25000
         assert connection.execute(text("SELECT COUNT(*) FROM payments WHERE registered_arca")).scalar_one() == 2
+        raw = connection.execute(text("SELECT raw_afip_response FROM invoices")).scalar_one()
+        assert raw["simulation"] is True
+        assert raw["FeDetResp"]["FECAEDetResponse"]["CAE"] == "SIMULADO-SIN-VALIDEZ"
     pdf = client.get("/ARCA/invoice/1/pdf")
     assert pdf.headers["content-type"] == "application/pdf"
     content = PdfReader(BytesIO(pdf.content)).pages[0].extract_text()
@@ -74,6 +77,15 @@ def test_payment_page_and_audit_render_with_data(client):
 
 def test_missing_pdf_is_a_404(client):
     assert client.get("/ARCA/invoice/999/pdf").status_code == 404
+
+
+def test_error_history_works_without_resolution_fields(client):
+    created = client.post("/test/error-log", params={"error_type": "pdf", "message": "SIM-PDF"})
+    assert created.status_code == 200
+    history = client.get("/test/error-logs").json()
+    assert history["count"] == 1
+    assert history["errors"][0]["message"] == "SIM-PDF"
+    assert "resolved" not in history["errors"][0]
 
 
 @pytest.mark.parametrize("amount", ["NaN", "Infinity", "-1", "0", "1.001"])

@@ -2,13 +2,8 @@ from datetime import date
 from app.services.arca.auth import get_afip_client
 from app.services.arca.billing import generate_invoice
 from app.services.arca.pdf import generate_invoice_pdf
-from app.repositories.log_invoice_repo import create_log_invoice
 from sqlalchemy.orm import Session
 import logging
-import os
-
-from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +111,7 @@ def pipeline_invoice(
             "cae": datos_factura.get("cae"),
             "vencimiento_cae": datos_factura.get("vencimiento_cae")
         },
+        "raw_afip_response": datos_factura["raw_afip_response"],
         "pdf_url": pdf_url,
         "pdf_error": pdf_error,  # Para loguear si falló
         "error": None,

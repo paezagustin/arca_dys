@@ -7,9 +7,23 @@ y omite el comando de selección de base. Se usa únicamente en bases de prueba.
 No es un backup de las ventas/cobros actuales y nunca debe importarse sobre producción:
 incluye DROP TABLE propios de una exportación destinada a restauración.
 
-`0001_legacy` reproduce el esquema inicial y conserva TODOS los campos. Los posibles
-campos obsoletos se documentan en ARQUITECTURA y se auditan con scripts/audit-legacy.sql.
-No eliminar hasta comprobar el contenido real, referencias y forma de preservar histórico.
+`0001_legacy` reproduce el esquema inicial y permanece congelada. `0002_cleanup`
+retira los campos sin uso confirmados por el usuario: error_logs.resolved,
+resolved_at, resolved_by, resolution_notes; la tabla logs_invoice y payments.id_arca.
+El nombre resolution_by no existe en el esquema exportado.
+
+La migración bloquea brevemente las tres tablas dentro de la misma transacción,
+comprueba su contenido y recién entonces modifica el esquema. Acepta null/blancos
+y resolved=false; si hay resoluciones, IDs o registros en logs_invoice, se detiene
+sin modificar el esquema ni borrar esa información. No vaciarla para forzar el paso:
+conservarla y revisar el caso. Ensayar con la web detenida para no bloquear operaciones.
+Requiere conexión a PostgreSQL: no se permite generar SQL offline que omita el control.
+scripts/audit-legacy.sql es una consulta previa para el esquema original/0001_legacy;
+no ejecutarla luego de 0002 porque esas columnas ya no existen.
+
+El downgrade a 0001 repone estructuras vacías, sin reconstruir valores antiguos.
+No cambia pagos, facturas ni relaciones. Se probó también volver a subir a head.
+Un rollback de aplicación/esquema debe ser coordinado, no con la web funcionando.
 
 ## Base nueva de desarrollo
 Compose dev aplica `alembic upgrade head` antes de iniciar. El arranque web solo
@@ -21,7 +35,22 @@ El comando `python -m app.manage adopt-legacy` compara tablas, tipos, nullabilit
 índices y relaciones contra el baseline congelado. Si coincide, crea únicamente
 alembic_version y marca 0001_legacy; no ejecuta el CREATE inicial sobre tablas existentes.
 Si hay diferencias o ya existe versionado, se detiene. No usar stamp manual para
-silenciar una diferencia. Las futuras migraciones deben ser incrementales.
+silenciar una diferencia. Después de adoptar, aplicar `alembic upgrade head` en la
+copia de ensayo: ejecuta 0002_cleanup y conserva registros y relaciones. Una base
+ya versionada en 0001 se actualiza directamente, sin repetir adopt-legacy.
+Todas las siguientes migraciones también deben ser incrementales.
+
+## Respuesta fiscal conservada
+invoices.raw_afip_response almacena FECAESolicitarResult completo retornado por
+afip.py 1.2.0 con return_response=True: cabecera, detalle, CAE, vencimiento y
+observaciones disponibles. No es el sobre HTTP/SOAP ni incluye la solicitud de
+autenticación. No imprimirlo íntegro en logs o mensajes de usuario.
+Las simulaciones guardan un resultado con simulation=true y CAE textual de prueba.
+Las facturas históricas sin respuesta permanecen así; no se consulta al proveedor
+ni se inventa una respuesta para completarlas. La respuesta por sí sola no resuelve
+timeouts, pérdida de respuesta o fallos de DB posteriores a una autorización: H2
+sigue pendiente. Los errores que el SDK lanza antes de retornar tampoco aparecen
+automáticamente en este campo de una factura autorizada.
 
 ## Backup manual solicitado en el SSD
 Se prepara el respaldo lógico en /mnt/datos/docker/arca_dys/backups por defecto.

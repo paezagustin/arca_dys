@@ -23,6 +23,12 @@ temporal y verifica un importe ficticio y la revisión de esquema. No copia dato
 - Pagos ficticios -> factura simulada -> PDF parseable con aviso sin validez fiscal.
 - Escenarios approved/pending/rejected/refunded/api_error sin conexiones de proveedores.
 - Nueva base migrada, exportación heredada adoptada sin perder filas y drift rechazado.
+- Limpieza 0002: conserva pagos/facturas/vínculos/errores; rechaza campos o tabla
+  con información y deja esquema, datos y versión intactos. Downgrade y upgrade probados.
+- Contrato de respuesta completa del SDK, con detalle único o lista, observaciones y
+  vencimiento. Cliente falso; ningún contacto con ARCA. Respuesta guardada aunque
+  falle PDF; descargas posteriores sin otra emisión. Respuesta simulada identificada.
+- Registro y consulta del historial de errores sin campos de resolución retirados.
 
 Estas pruebas NO certifican todavía idempotencia/concurrencia fiscal, recuperación
 del CAE, formato de todos los productos MP, QR real ni diseño del PDF productivo.

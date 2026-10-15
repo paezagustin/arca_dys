@@ -75,6 +75,7 @@ def test_web_refuses_stale_schema():
     from app.main import app
     from fastapi.testclient import TestClient
     with engine.begin() as connection:
+        revision = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
         connection.execute(text("UPDATE alembic_version SET version_num='stale'"))
     try:
         with pytest.raises(RuntimeError, match="revisión esperada"):
@@ -82,4 +83,4 @@ def test_web_refuses_stale_schema():
                 pass
     finally:
         with engine.begin() as connection:
-            connection.execute(text("UPDATE alembic_version SET version_num='0001_legacy'"))
+            connection.execute(text("UPDATE alembic_version SET version_num=:revision"), {"revision": revision})

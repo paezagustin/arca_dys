@@ -63,7 +63,6 @@ def process_webhook(mp_payment: dict) -> dict:
         "bill": mp_payment.get("status") == "approved",
 
         "registered_arca": False,
-        "id_arca": '',
         "raw_json": mp_payment
     }
     logger.info('Payment processed successfully')

@@ -1,6 +1,6 @@
 from datetime import datetime
 from app.core.config import ARCA_PTO_VTA, LIMITE_FACTURACION_MINIMA, LIMITE_FACTURACION_MAXIMA
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 from afip import Afip
 
 class AFIPBillingError(Exception):
@@ -58,15 +58,30 @@ def generate_invoice(
     }
 
     try:
-        res = afip_client.ElectronicBilling.createVoucher(data)
+        # afip.py 1.2.0 devuelve por defecto solo CAE/vencimiento. Pedir el
+        # FECAESolicitarResult completo, sin la solicitud ni su autenticación.
+        res = afip_client.ElectronicBilling.createVoucher(data, return_response=True)
     except Exception as e:
-        raise AFIPBillingError(str(e))
+        raise AFIPBillingError(str(e)) from e
+
+    try:
+        detail = res["FeDetResp"]["FECAEDetResponse"]
+        if isinstance(detail, (list, tuple)):
+            if len(detail) != 1:
+                raise ValueError("Se esperaba la respuesta de un comprobante")
+            detail = detail[0]
+        if res["FeCabResp"]["Resultado"] != "A" or detail["Resultado"] != "A" or not detail["CAE"]:
+            raise ValueError("El comprobante no está autorizado")
+        due_date = datetime.strptime(str(detail["CAEFchVto"]), "%Y%m%d").date().isoformat()
+    except (KeyError, TypeError, ValueError) as e:
+        raise AFIPBillingError("Respuesta de emisión sin autorización válida") from e
 
     return {
         "numero_factura": nro_factura,
-        "cae": res["CAE"],
-        "vencimiento_cae": res["CAEFchVto"],
-        "fecha": fecha_hoy
+        "cae": detail["CAE"],
+        "vencimiento_cae": due_date,
+        "fecha": fecha_hoy,
+        "raw_afip_response": res,
     }
 
 def validate_amount(monto: float) -> float:

@@ -1,5 +1,4 @@
 import logging
-from venv import logger
 
 from sqlalchemy.orm import Session
 from datetime import date
@@ -13,7 +12,8 @@ def create_invoice(
     invoice_date: date,
     cae: str | None = None,
     cae_due_date: date | None = None,
-    pdf_url: str | None = None
+    pdf_url: str | None = None,
+    raw_afip_response: dict | None = None,
 ) -> Invoice:
 
     invoice = Invoice(
@@ -22,7 +22,8 @@ def create_invoice(
         invoice_date=invoice_date,
         cae=cae,
         cae_due_date=cae_due_date,
-        pdf_url=pdf_url
+        pdf_url=pdf_url,
+        raw_afip_response=raw_afip_response,
     )
 
     db.add(invoice)

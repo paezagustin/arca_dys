@@ -14,9 +14,11 @@ printf '%s\n' "$output"
 dump_file="$(printf '%s\n' "$output" | sed -n 's/^Backup guardado: //p')"
 sha256sum -c "$dump_file.sha256"
 createdb "$restore_db"
+source_revision="$(psql -At -v ON_ERROR_STOP=1 -c 'SELECT version_num FROM alembic_version')"
+[ -n "$source_revision" ]
 pg_restore --exit-on-error --no-owner --no-acl --dbname="$restore_db" "$dump_file"
 restored="$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c "SELECT mont::numeric(12,2) FROM payments WHERE id_payment_mp = '$sentinel'")"
 [ "$restored" = "12345.67" ]
 revision="$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT version_num FROM alembic_version')"
-[ "$revision" = "0001_legacy" ]
-printf 'Restauración comprobada: importe 12345.67 y baseline %s\n' "$revision"
+[ "$revision" = "$source_revision" ]
+printf 'Restauración comprobada: importe 12345.67 y revisión %s\n' "$revision"

@@ -33,12 +33,21 @@ def simulated_payment(resource):
 
 
 def simulated_invoice(amount, invoice_date: date):
+    due_date = invoice_date + timedelta(days=10)
     return {
         "ok": True,
         "datos_factura": {
             "numero_factura": f"SIM-{uuid4().hex[:20]}",
             "cae": "SIMULADO-SIN-VALIDEZ",
-            "vencimiento_cae": (invoice_date + timedelta(days=10)).isoformat(),
+            "vencimiento_cae": due_date.isoformat(),
+        },
+        "raw_afip_response": {
+            "simulation": True,
+            "FeCabResp": {"Resultado": "A"},
+            "FeDetResp": {"FECAEDetResponse": {
+                "Resultado": "A", "CAE": "SIMULADO-SIN-VALIDEZ",
+                "CAEFchVto": due_date.strftime("%Y%m%d"),
+            }},
         },
         "pdf_url": None, "pdf_error": None,
         "error": None, "tipo": None, "retryable": False,

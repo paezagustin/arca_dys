@@ -104,6 +104,7 @@ def _facturar_pagos(
             cae=datos_factura["cae"],
             cae_due_date = parser.parse(datos_factura['vencimiento_cae']).date(),
             pdf_url=pdf_url,
+            raw_afip_response=resultado["raw_afip_response"],
         )
 
         from app.core.config import INTEGRATIONS_MODE

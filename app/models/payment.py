@@ -22,7 +22,6 @@ class Payment(Base):
 
     bill = Column(Boolean, default=False)
     registered_arca = Column(Boolean, default=False)
-    id_arca = Column(String(200), default="")
 
     raw_json = Column(JSON)
 

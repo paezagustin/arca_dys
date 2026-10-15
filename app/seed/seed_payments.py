@@ -15,7 +15,6 @@ def seed_payments():
             date_approved=datetime.now() - timedelta(minutes=2),
             bill=False,
             registered_arca=False,
-            id_arca="",
             raw_json={"fake": "data"}
         ),
         Payment(
@@ -27,7 +26,6 @@ def seed_payments():
             date_approved=datetime.now() - timedelta(hours=2),
             bill=False,
             registered_arca=False,
-            id_arca="",
             raw_json={"fake": "data"}
         )
     ]
