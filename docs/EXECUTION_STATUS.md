@@ -10,7 +10,9 @@ todavía y este hito no se despliega sobre la Raspberry.
 
 Preparación de H2 implementada y validada localmente: limpieza solicitada de
 estructuras sin uso y persistencia de respuesta fiscal completa. H2 NO está completo.
-Publicación/CI de esta entrega: pendiente de registrar después del push.
+Código publicado en main: `ddb345b803fff2910605ce796b2fbb4f63f5c750`.
+CI: [Pruebas aisladas, ejecución 38814927347](https://github.com/paezagustin/arca_dys/actions/runs/38814927347), success.
+El push no despliega ni aplica la migración sobre la Raspberry.
 
 ## Limpieza de esquema y respuesta de emisión
 - Nueva migración 0002_cleanup; 0001, comparador de adopción y exportación intactos.
@@ -38,6 +40,7 @@ Evidencia nueva ejecutada en Windows/Docker:
 | Backup/restauración | SHA256 OK; restauración separada conserva 12345.67 y revisión 0002_cleanup. |
 | Desarrollo local | Web healthy, modo mock, revisión 0002_cleanup; volumen ficticio conservado: 4 pagos, 1 factura y 2 vínculos. |
 | Interfaz | No cambia un flujo visual en esta entrega; regresión de endpoints con TestClient. No se repitió QA visual ni se lo afirma. |
+| GitHub | Push directo a main confirmado; tests y backup/restauración del commit ddb345b exitosos. |
 
 ## Alcance incorporado
 Factura C, pagos completos con facturado sí/no y factura independiente futura.
@@ -58,7 +61,7 @@ No hubo rotación de claves, operación en proveedores, backup productivo ni acc
 - Backup manual custom/checksum y ensayo de restauración con datos ficticios.
 - Workflow de GitHub Actions sin secretos ni despliegue automático.
 
-## Evidencia ejecutada
+## Evidencia inicial (H0/H1)
 | Verificación | Resultado |
 | --- | --- |
 | Docker Desktop/Linux en Windows | Disponible; entornos con nombres propios, sin usar el PostgreSQL ajeno que ya ocupaba 5432. |
