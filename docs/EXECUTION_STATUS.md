@@ -3,8 +3,9 @@
 Actualizado: 2026-10-15, America/Buenos_Aires.
 
 ## Hito actual
-H0 documentado. H1 implementado y validado localmente; publicación/CI en verificación
-final. Imagen productiva construida en amd64, sin desplegarla. El sistema completo NO está refactorizado
+H0 y H1 completados. Código publicado en main como `bc5ef9c2c33d06ff5f1e8bfa7334c0ac90377fa6`.
+CI de ese commit: [Pruebas aisladas, ejecución 38810887827](https://github.com/paezagustin/arca_dys/actions/runs/38810887827), success.
+Imagen productiva construida en amd64, sin desplegarla. El sistema completo NO está refactorizado
 todavía y este hito no se despliega sobre la Raspberry.
 
 ## Alcance incorporado
@@ -39,13 +40,16 @@ No hubo rotación de claves, operación en proveedores, backup productivo ni acc
 | PDF | Parseado con pypdf; texto SIN VALIDEZ FISCAL e importe comprobados. |
 | Compose prod | config --no-env-resolution --quiet validado con valores de ejemplo; NO iniciado. |
 | Imagen prod | Build target production en amd64 completado, Chromium instalado; sin montar credenciales ni iniciar servicios productivos. ARM pendiente. |
+| Tamaño de imágenes amd64 | Dev 297307718 bytes; prod 2216024526 bytes. La optimización del PDF/Chromium está pendiente en H4; no son mediciones de RAM. |
 | Aislamiento local | API solo en arca-dys-dev_isolated; network internal=true; puerto publicado únicamente por proxy en 127.0.0.1. |
+| Salida externa de API | Prueba de socket desde el contenedor sin ruta externa: bloqueada. |
+| GitHub | Push directo a main confirmado; workflow de tests y backup/restauración exitoso. Sin PR ni despliegue automático. |
 | Exclusiones Git | Variables privadas, claves, backups, Excel, logs, cachés y capturas ignorados. |
 | Sintaxis | 45 archivos Python parseados sin errores; diff --check limpio. |
 
 Los warnings corresponden a APIs heredadas de TestClient/Jinja y consultas SQLAlchemy;
 no fueron tratados como verificaciones omitidas. Su limpieza acompaña H2/H5.
-Capturas locales no versionadas: artifacts/facturacion-simulada.jpg.
+Capturas locales no versionadas: artifacts/facturacion-simulada.jpg y artifacts/pruebas-locales.jpg.
 
 ## Próximo hito
 H2 del roadmap: extraer caso de uso fiscal y resolver persistencia, atomicidad local,

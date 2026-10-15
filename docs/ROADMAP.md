@@ -15,7 +15,7 @@ no marcarlo por existir código. Se permiten commits pequeños dentro de cada hi
 - [x] Baseline Alembic desde exportación 17.8; adopción de esquema existente validada.
 - [x] Ensayo de adopción con datos ficticios, rechazo de drift y conservación de registros.
 - [x] Backup lógico y restauración comprobados en entorno descartable.
-- [ ] Suite aislada, verificación de navegador y CI; push directo a GitHub.
+- [x] Suite aislada, verificación de navegador y CI; push directo a GitHub.
 
 
 ## H2 · Facturación confiable y separación de casos de uso
