@@ -4,11 +4,12 @@
 <style>body{font:18px system-ui;max-width:760px;margin:32px auto;padding:20px;color:#17212b;background:#f4f6f8}main{background:white;padding:28px;border-radius:12px}label{display:block;margin-top:16px}input,select,button{font:inherit;padding:10px;margin-top:8px}button,a{cursor:pointer}nav{margin:20px 0}img{width:100px}aside{padding:16px;background:#fff1bd;border:1px solid #8d6400}form{margin:24px 0}</style></head>
 <body><main><img src="/assets/logo-dulce-salado.jpg" alt="Logo del negocio"><h1>Pruebas locales</h1>
 <aside>Modo simulado. Los pagos son ficticios y las facturas no se envían a ARCA. No se usa dinero real.</aside>
-{% if request.query_params.get('result') == 'created' %}<p role="status">Pago de prueba creado. Ya podés verlo en Facturación.</p>{% endif %}
+{% if request.query_params.get('result') == 'created' %}<p role="status">Evento de prueba procesado. Solo los pagos aprobados sin devolución están disponibles para facturar.</p>{% endif %}
 {% if request.query_params.get('result') == 'simulated_error' %}<p role="status">Escenario ejecutado: no se agregó un pago aprobado. Podés repetir la prueba con otro escenario.</p>{% endif %}
 <nav><a href="/page/invoice">Facturación</a> · <a href="/page/reports-stadistics">Auditoría de pagos</a></nav>
 <form action="/dev/examples" method="post"><button>Cargar tres pagos de ejemplo</button><p>Podés repetirlo sin duplicar estos ejemplos.</p></form>
 <form action="/dev/payments" method="post"><label for="amount">Importe del pago ficticio</label><input id="amount" name="amount" type="number" min="0.01" max="2000000" step="0.01" value="10000" required>
-<label for="scenario">Escenario</label><select id="scenario" name="scenario"><option value="approved">Pago aprobado</option><option value="pending">Pago pendiente</option><option value="rejected">Pago rechazado</option><option value="refunded">Pago devuelto (no aprobado)</option><option value="api_error">Falla al consultar Mercado Pago</option></select><p><button>Ejecutar escenario</button></p></form>
-<p>En esta primera etapa la devolución prueba la respuesta actual. Su actualización sobre un pago existente pertenece a la etapa de idempotencia.</p>
+<label for="payment_id">ID existente (opcional)</label><input id="payment_id" name="payment_id" maxlength="40" placeholder="SIM-example-1"><p>Dejalo vacío para crear otro pago. Para probar cambios, usá el mismo ID e importe.</p>
+<label for="scenario">Escenario</label><select id="scenario" name="scenario"><option value="approved">Pago aprobado</option><option value="pending">Pago pendiente</option><option value="rejected">Pago rechazado</option><option value="refunded">Pago devuelto</option><option value="api_error">Falla al consultar Mercado Pago</option></select><p><button>Ejecutar escenario</button></p></form>
+<p>Un cambio de estado no emite facturas ni notas de crédito. Las notificaciones y los cambios quedan registrados.</p>
 </main></body></html>

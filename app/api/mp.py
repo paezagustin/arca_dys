@@ -1,80 +1,39 @@
-from fastapi import APIRouter, Request, Depends
-from sqlalchemy.orm import Session
+import hmac
+from fastapi import APIRouter, Request, HTTPException
+from app.core import config
+from app.services.mp_inbox import MPInbox, validate_signature
 
-from app.core.database import get_db
-from app.services.payments import process_webhook
-from app.repositories.payment_repo import create_payment
-from app.repositories.error_log_repo import create_error_log
-from app.services.mp import call_api_mp
-
-import logging
-
-router = APIRouter(prefix="/mp", tags=["MercadoPago"])
-logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/mp", tags=["Mercado Pago"])
 
 
-
+async def receive(request, legacy_token=None):
+    if config.INTEGRATIONS_MODE != "mock":
+        if not config.MP_COLLECTOR_ID:
+            raise HTTPException(503, "Falta configurar la cuenta receptora")
+        if legacy_token is not None:
+            if len(config.MP_LEGACY_WEBHOOK_TOKEN) < 32 or not hmac.compare_digest(legacy_token, config.MP_LEGACY_WEBHOOK_TOKEN):
+                raise HTTPException(401, "Entrada no autorizada")
+        elif not validate_signature(request.headers.get("x-signature"), request.headers.get("x-request-id"),
+                                    request.query_params.get("data.id"), config.MP_WEBHOOK_SECRET):
+            raise HTTPException(401, "Firma de notificación inválida")
+    content = await request.body()
+    if len(content) > 262144:
+        raise HTTPException(413, "Notificación demasiado grande")
+    try:
+        payload = await request.json() if content else {}
+        event_id = MPInbox().receive(payload, dict(request.query_params))
+    except (ValueError, TypeError):
+        raise HTTPException(400, "Notificación inválida")
+    # No se devuelve 200 hasta confirmar la recepción en PostgreSQL. El worker
+    # retoma pendientes tras reinicios y nunca emite documentos fiscales.
+    return {"status": "accepted", "event_id": event_id}
 
 
 @router.post("/webhook")
-async def mp_webhook(request: Request, db: Session = Depends(get_db)):
-    try:
-        logger.info("Received MP webhook")
-        payload = await request.json()
-        #logger.info(f"Webhook payload received: {payload}")
-        resource = payload.get('resource', {})
-        #logger.info(f"Webhook payload: {resource}")
-        if not resource:
-            return {"status": "ignored", "reason": "no_resource"}
-        
-        # Llamar a API de MP
-        payment_data = call_api_mp(resource)
-        #logger.info(f"MP API response : {payment_data}")
-        if payment_data is None:
-            # Error consultando MP
-            create_error_log(
-                db=db,
-                source="webhook_mp",
-                error_type="api_error",
-                message=f"Error calling MP API for resource.",
-                resource_id=str(resource),
-                raw_data=payload,
-            )
-            return {"status": "error", "reason": "mp_api_error"}
-        
-        # Procesar el pago
-        resultado = process_webhook(payment_data)
-        
-        if not resultado["ok"]:
-            # Error de validación
-            create_error_log(
-                db=db,
-                source="webhook_mp",
-                error_type=resultado["tipo"],
-                message=resultado["error"],
-                resource_id=str(payment_data.get("id")),
-                raw_data=payment_data
-            )
-            return {"status": "ignored", "reason": resultado["error"]}
-        logger.info(f"Webhook processed")
-        # Todo OK - guardar el pago
-        
-        logger.info(f"Creating payment in DB with data")
-        payment = create_payment(db, resultado["datos"])
-        logger.info(f"Payment created in BBDD correctly")
-        
-        return {"status": "ok", "payment_id": payment.id}
-        
-    except Exception as e:
-        # Error inesperado (bug nuestro)
-        logger.error(f"Error in webhook: {e}", exc_info=True)
-        
-        create_error_log(
-            db=db,
-            source="webhook_mp",
-            error_type="system",
-            message=f"Error: {str(e)}",
-            raw_data={"payload": str(request)} if request else None
-        )
-        
-        return {"status": "error", "reason": "internal_error"}
+async def webhook(request: Request):
+    return await receive(request)
+
+
+@router.post("/webhook/legacy/{token}")
+async def legacy_webhook(token: str, request: Request):
+    return await receive(request, token)

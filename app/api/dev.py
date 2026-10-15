@@ -5,10 +5,9 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.repositories.payment_repo import create_payment, payment_exists
-from app.services.mp import call_api_mp
-from app.services.payments import process_webhook
 from app.services.simulation import payment_resource
+from app.services.mp_inbox import MPInbox
+from app.models.mp_event import MPEvent
 
 router = APIRouter(prefix="/dev", tags=["Simulación local"])
 templates = Jinja2Templates(directory="app/templates")
@@ -26,20 +25,24 @@ async def add_payment(request: Request, db: Session = Depends(get_db)):
         amount = Decimal(form.get("amount", "10000"))
         if not amount.is_finite() or amount <= 0 or amount > Decimal("2000000") or amount != amount.quantize(Decimal("0.01")):
             raise ValueError()
-        resource = payment_resource(amount, form.get("scenario", "approved"))
+        identifier = str(form.get("payment_id") or "").removeprefix("SIM-") or None
+        if identifier and (len(identifier) > 36 or not all(c.isalnum() or c in "_-" for c in identifier)):
+            raise ValueError()
+        resource = payment_resource(amount, form.get("scenario", "approved"), payment_id=identifier)
     except (ValueError, ArithmeticError):
         raise HTTPException(422, "Importe o escenario inválido")
-    result = process_webhook(call_api_mp(resource))
-    if result["ok"]:
-        create_payment(db, result["datos"])
-    return RedirectResponse("/dev?result=" + ("created" if result["ok"] else "simulated_error"), status_code=303)
+    inbox = MPInbox()
+    event_id = inbox.receive({"resource": resource})
+    inbox.process_one(event_id)
+    row = db.get(MPEvent, event_id)
+    return RedirectResponse("/dev?result=" + ("simulated_error" if row.state == "error" else "created"), status_code=303)
 
 
 @router.post("/examples")
 def examples(db: Session = Depends(get_db)):
     for index, amount in enumerate([10000, 15000, 25000], 1):
         external_id = f"example-{index}"
-        if not payment_exists(db, f"SIM-{external_id}"):
-            result = process_webhook(call_api_mp(payment_resource(amount, payment_id=external_id)))
-            create_payment(db, result["datos"])
+        inbox = MPInbox()
+        event_id = inbox.receive({"resource": payment_resource(amount, payment_id=external_id)})
+        inbox.process_one(event_id)
     return RedirectResponse("/page/invoice", status_code=303)

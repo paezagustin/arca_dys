@@ -61,3 +61,9 @@ No facturar esos pagos con otra selección. Si no se encuentra autorización,
 "Reintentar esta solicitud" vuelve a consultar y usa el mismo número e importe.
 Si la consulta falla, el sistema conserva el estado y no reenvía. El soporte puede
 identificar la operación con el número de solicitud mostrado en la pantalla.
+
+## Probar cambios de Mercado Pago
+En Pruebas locales, cargar un pago con ID SIM-ejemplo y luego elegir "Pago devuelto"
+con el mismo ID e importe. Se actualiza ese pago, sin duplicarlo. Si ya tenía una
+factura, esa factura sigue guardada; no se emite una nota de crédito por esta prueba.
+Las notificaciones con error se conservan para revisar y reintentar, sin facturar.

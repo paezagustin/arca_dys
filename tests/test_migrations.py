@@ -123,3 +123,15 @@ def test_schema_drift_prevents_stamp(scratch_database):
     with pytest.raises(RuntimeError, match="difiere"):
         adopt_legacy(scratch_database)
     assert "alembic_version" not in inspect(scratch_database).get_table_names()
+
+
+def test_mp_unique_identity_migration_stops_without_deleting_legacy_duplicates(scratch_database):
+    migrate(scratch_database, "0003_billing")
+    with scratch_database.begin() as connection:
+        connection.execute(text("INSERT INTO payments(id_payment_mp,status,mont) VALUES ('SIM-DUP','approved',10000),('SIM-DUP','approved',10000)"))
+    with pytest.raises(RuntimeError, match="duplicados heredados"):
+        migrate(scratch_database)
+    with scratch_database.connect() as connection:
+        assert connection.execute(text("SELECT count(*) FROM payments")).scalar_one() == 2
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0003_billing"
+        assert "mp_events" not in inspect(connection).get_table_names()

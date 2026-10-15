@@ -23,11 +23,13 @@ def simulated_payment(resource):
             return None
     except (ValueError, ArithmeticError):
         return None
+    now = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires")).isoformat()
     return {
         "id": f"SIM-{payment_id}", "status": scenario,
         "status_detail": "accredited" if scenario == "approved" else scenario,
         "transaction_amount": str(value), "payment_type_id": "bank_transfer",
-        "date_approved": datetime.now(ZoneInfo("America/Argentina/Buenos_Aires")).isoformat(),
+        "date_approved": now if scenario in {"approved", "refunded"} else None,
+        "date_last_updated": now,
         "live_mode": False,
     }
 

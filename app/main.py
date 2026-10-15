@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 import logging
+from threading import Thread, Event
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,7 +27,18 @@ async def lifespan(app):
     if revision != expected:
         raise RuntimeError("La base no está en la revisión esperada; aplicar las migraciones antes de iniciar")
     logger.info("Inicio | entorno=%s | integraciones=%s | migración=%s", ENV, INTEGRATIONS_MODE, revision)
-    yield
+    stop = Event()
+    thread = None
+    if ENV != "test":
+        from app.services.mp_inbox import worker
+        thread = Thread(target=worker, args=(stop,), daemon=True, name="mp-inbox")
+        thread.start()
+    try:
+        yield
+    finally:
+        stop.set()
+        if thread:
+            thread.join(timeout=2)
 
 
 app = FastAPI(lifespan=lifespan)

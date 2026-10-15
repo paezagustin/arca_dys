@@ -80,6 +80,7 @@ La consulta exige identidad fiscal e importe coincidentes; solo el código 602 s
 interpreta como ausencia. No se certificó homologación ni acceso productivo.
 
 ## Garantías posteriores
-La idempotencia del cargador de ejemplos no equivale a idempotencia del webhook.
-Los escenarios de devolución actuales se descartan: M02 agrega su actualización.
+H3 implementa inbox/worker y actualización idempotente, incluido historial de
+devoluciones sin cambios fiscales automáticos. Ver MERCADO_PAGO.md para contratos
+y limitaciones del contraste contra la cuenta efectiva.
 Los límites centralizados no son una interpretación de la normativa fiscal.

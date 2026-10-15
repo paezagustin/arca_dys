@@ -1,73 +1,45 @@
-from datetime import datetime, timedelta
-from dateutil import parser
+from datetime import timezone
+from decimal import Decimal
+from dateutil.parser import isoparse
 from zoneinfo import ZoneInfo
-import logging
+
+STATUSES = {"approved", "pending", "authorized", "in_process", "in_mediation", "rejected",
+            "cancelled", "refunded", "charged_back", "partially_refunded"}
 
 
-logger = logging.getLogger(__name__)
+def provider_date(value):
+    timestamp = isoparse(value)
+    if timestamp.tzinfo is None:
+        raise ValueError("La fecha MP debe tener zona horaria")
+    return timestamp.astimezone(timezone.utc)
 
-def process_webhook(mp_payment: dict) -> dict:
 
-    """Procesa el pago recibido desde el webhook de MercadoPago.
+def normalize_payment(raw):
+    if not isinstance(raw, dict) or not raw.get("id"):
+        raise ValueError("Pago sin identidad")
+    identifier = str(raw["id"])
+    if len(identifier) > 50:
+        raise ValueError("Identidad de pago demasiado larga")
+    status = raw.get("status")
+    amount = Decimal(str(raw["transaction_amount"]))
+    if status not in STATUSES or not amount.is_finite() or not 0 < amount < Decimal("10000000000000000") or amount != amount.quantize(Decimal("0.01")):
+        raise ValueError("Estado o importe MP inválido")
+    refund = Decimal(str(raw.get("transaction_amount_refunded", 0)))
+    if not refund.is_finite() or refund < 0 or refund > amount:
+        raise ValueError("Importe de devolución inválido")
+    if status == "approved" and refund > 0:
+        status = "refunded" if refund == amount else "partially_refunded"
+    approved_at = raw.get("date_approved")
+    if status == "approved" and approved_at is None:
+        raise ValueError("Pago aprobado sin fecha de aprobación")
+    return {"id_payment_mp": identifier, "status": status, "status_detail": str(raw.get("status_detail", status))[:150],
+        "mont": amount, "type_of_paid": str(raw.get("payment_type_id", "unknown"))[:50],
+        "date_approved": provider_date(approved_at).astimezone(ZoneInfo("America/Argentina/Buenos_Aires")).replace(tzinfo=None) if approved_at else None,
+        "bill": status == "approved", "provider_updated_at": provider_date(raw["date_last_updated"]), "raw_json": raw}
 
-    Args:
-        mp_payment (dict): Diccionario con la información del pago desde MercadoPago.
 
-    Returns:
-        {
-            "ok": True/False,
-            "datos": {...} si ok=True,
-            "error": "mensaje" si ok=False,
-            "tipo": "validation|business_rule|system"
-        }
-    """
-    if not mp_payment:
-        logger.warning("No payment data to process")
-        return {
-            "ok": False,
-            "error": "Data empty",
-            "tipo": "validation"
-        }
-    status = mp_payment.get("status")
-    if status != "approved":
-        return {
-            "ok": False,
-            "error": f"Payment not approved: {status}",
-            "tipo": "business_rule"
-        }
+def process_webhook(raw):
     try:
-        fecha_pago_utc = parser.isoparse(mp_payment["date_approved"]) if mp_payment["date_approved"] != None else datetime(9999,12,31)
-        fecha_pago_ba = fecha_pago_utc.astimezone(ZoneInfo("America/Argentina/Buenos_Aires"))
-    except Exception as e:
-        logger.error(f"Error parsing date_approved: {e}")
-        fecha_pago_ba = datetime(9999,12,31)
-        return {
-            "ok": False,
-            "error": f"Error parsing date_approved: {e}",
-            "tipo": "validation"
-        }   
-    
-    paid_json = {
-        "id_payment_mp": mp_payment.get("id") if mp_payment.get("id") != None else 'Without_id',
-
-        "status": mp_payment.get("status"),
-
-        "status_detail": mp_payment.get("status"),
-
-        "mont": float(mp_payment["transaction_amount"]) if mp_payment.get("transaction_amount") else -999.0,
-
-        "type_of_paid": mp_payment.get("payment_type_id") if mp_payment.get("status") == 'approved' else "N/A",
-
-        "date_approved": fecha_pago_ba if mp_payment.get("status") == 'approved' else datetime(9999,12,31),
-
-        "bill": mp_payment.get("status") == "approved",
-
-        "registered_arca": False,
-        "raw_json": mp_payment
-    }
-    logger.info('Payment processed successfully')
-    return {
-        "ok": True,
-        "datos": paid_json
-    }
-
+        return {"ok": True, "datos": normalize_payment(raw)}
+    except (ValueError, TypeError, KeyError, ArithmeticError):
+        return {"ok": False, "tipo": "validation", "error": "Pago incompleto o inválido"}

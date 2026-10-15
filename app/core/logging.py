@@ -8,7 +8,18 @@ LOG_DIR.mkdir(exist_ok=True)
 
 LOG_LEVEL = logging.DEBUG if ENV == "development" else logging.INFO
 
+
+class RedactWebhookPath(logging.Filter):
+    def filter(self, record):
+        if isinstance(record.args, tuple) and len(record.args) >= 3:
+            values = list(record.args)
+            if isinstance(values[2], str) and values[2].startswith("/mp/webhook/legacy/"):
+                values[2] = "/mp/webhook/legacy/[REDACTED]"
+                record.args = tuple(values)
+        return True
+
 def setup_logging():
+    logging.getLogger("uvicorn.access").addFilter(RedactWebhookPath())
     formatter = logging.Formatter(
         "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
     )

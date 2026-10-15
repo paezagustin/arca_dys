@@ -10,7 +10,7 @@ class Payment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    id_payment_mp = Column(String(50), nullable=False, index=True)
+    id_payment_mp = Column(String(50), nullable=False, index=True, unique=True)
 
     status = Column(String(50), nullable=False)
     status_detail = Column(String(150))
@@ -24,5 +24,6 @@ class Payment(Base):
     registered_arca = Column(Boolean, default=False)
 
     raw_json = Column(JSON)
+    provider_updated_at = Column(DateTime(timezone=True))
 
     created_at = Column(DateTime, default=now_argentina)

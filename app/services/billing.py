@@ -80,7 +80,7 @@ class BillingService:
             if unresolved:
                 raise BillingConflict("Hay una emisión por verificar. Resolvela antes de emitir otra: " + unresolved)
             payments = list(db.scalars(select(Payment).where(Payment.id.in_(ids)).order_by(Payment.id).with_for_update())) if ids else []
-            if len(payments) != len(ids) or any(p.status != "approved" or p.registered_arca or p.mont is None or p.mont <= 0 for p in payments):
+            if len(payments) != len(ids) or any(p.status != "approved" or p.registered_arca is not False or p.date_approved is None or p.mont is None or p.mont <= 0 for p in payments):
                 raise BillingConflict("Algún pago ya fue facturado o dejó de estar disponible. Actualizá el listado.")
             if ids and (db.scalar(select(BillingReservation.payment_id).where(BillingReservation.payment_id.in_(ids))) is not None
                         or db.scalar(select(PaymentInvoice.id).where(PaymentInvoice.payment_id.in_(ids))) is not None):

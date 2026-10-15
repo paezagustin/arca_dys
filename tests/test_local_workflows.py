@@ -61,12 +61,14 @@ def test_empty_selection_does_not_emit(client):
     assert counts() == (0, 0, 0)
 
 
-@pytest.mark.parametrize("scenario,expected", [("approved", "ok"), ("pending", "ignored"),
-    ("refunded", "ignored"), ("rejected", "ignored"), ("api_error", "error")])
-def test_webhook_without_remote_api(client, scenario, expected):
+@pytest.mark.parametrize("scenario", ["approved", "pending", "refunded", "rejected", "api_error"])
+def test_webhook_without_remote_api(client, scenario):
+    from app.services.mp_inbox import MPInbox
     response = client.post("/mp/webhook", json={"resource": payment_resource("10000", scenario)})
-    assert response.json()["status"] == expected
-    assert counts()[0] == (1 if scenario == "approved" else 0)
+    assert response.json()["status"] == "accepted"
+    assert counts() == (0, 0, 0)  # ACK durable antes de consultar al proveedor.
+    MPInbox().process_one(response.json()["event_id"])
+    assert counts()[0] == (0 if scenario == "api_error" else 1)
 
 
 def test_payment_page_and_audit_render_with_data(client):

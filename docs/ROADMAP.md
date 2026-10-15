@@ -32,6 +32,9 @@ Pruebas: doble envío, concurrencia, respuesta perdida, DB falla después del CA
 rechazo y PDF fallido. Sin entorno productivo. Conservar facturado sí/no.
 
 ## H3 · Integración MP idempotente
+- [x] Inbox persistente, worker local, identidad única con auditoría previa,
+  historial/orden temporal, firmas y adaptadores de lectura probados con fixtures.
+
 M01-M03. Contratos por origen basados en ejemplos anonimizados; recepción persistente,
 validación por producto y respuestas HTTP correctas. Restricción de identidad externa
 solo después de auditar duplicados heredados. No borrar por importe repetido.
