@@ -1,27 +1,23 @@
-import mercadopago
 import logging
+from app.core.config import INTEGRATIONS_MODE, MP_ACCESS_TOKEN
+from app.core.safety import require_live_integrations
 
 logger = logging.getLogger(__name__)
-def call_api_mp(resource) -> dict:
-    
 
+
+def call_api_mp(resource) -> dict | None:
+    if INTEGRATIONS_MODE == "mock":
+        from app.services.simulation import simulated_payment
+        return simulated_payment(str(resource))
+    require_live_integrations()
+    if not MP_ACCESS_TOKEN:
+        raise RuntimeError("MP_ACCESS_TOKEN no está configurado")
+    import mercadopago
     try:
-        
-        sdk = mercadopago.SDK("APP_USR-2170308863522747-122910-dd6487377aa91decd0d6181626e61da3-427540214")
-        payment_info = sdk.payment().get(resource)
-        if not payment_info:
-            logger.error(f"MP API returned no data for resource {resource}")
-            return None
-        if "response" not in payment_info:
-            logger.error(f"MP API response missing 'response' key for resource {resource}")
-            return None
-        if payment_info.get("status") != 200:
-            logger.error(f"MP API error for resource {resource}: {payment_info.get('response')}")
-            return None
-        
-  
-        return payment_info["response"]
-
-    except Exception as e:
-        logger.error(f"Error calling MP API for resource {resource}: {type(e).__name__}: {e}")
-        return None
+        result = mercadopago.SDK(MP_ACCESS_TOKEN).payment().get(resource)
+        if result and result.get("status") == 200:
+            return result.get("response")
+        logger.warning("Mercado Pago no devolvió un pago válido")
+    except Exception:
+        logger.exception("Falló la consulta a Mercado Pago")
+    return None

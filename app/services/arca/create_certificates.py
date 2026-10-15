@@ -15,6 +15,8 @@ class AFIPAuthError(Exception):
     pass
 
 def create_certificates(afip: Afip) -> dict:
+    from app.core.safety import require_live_integrations
+    require_live_integrations()
 
     data_create_cert = {
         "cuit": ARCA_CUIT,
@@ -37,7 +39,7 @@ def create_certificates(afip: Afip) -> dict:
     cert = cert_response["data"].get("cert")
     key = cert_response["data"].get("key")
 
-    
+
     return {
         "cert": cert,
         "key": key
@@ -54,4 +56,4 @@ def save_certificates_to_files(cert: str, key: str, cert_path: str, key_path: st
             key_file.write(key)
     except Exception as e:
         raise AFIPAuthError(f"Error guardando certificados en archivos: {str(e)}")
-    
+

@@ -30,6 +30,12 @@ def pipeline_invoice(
             "retryable": True/False
         }
     """
+    from app.core.config import INTEGRATIONS_MODE
+    if INTEGRATIONS_MODE == "mock":
+        from app.services.arca.billing import validate_amount
+        from app.services.simulation import simulated_invoice
+        validate_amount(monto_total)
+        return simulated_invoice(monto_total, fecha_hoy)
     # 1ra etapa: Autenticación con AFIP
     try:
         

@@ -1,76 +1,64 @@
+name: arca-dys-dev
 services:
   postgres:
-    image: postgres:17
-    container_name: pg_dys_dev
+    image: postgres:17.8-alpine
     environment:
-      POSTGRES_USER: arca_user
-      POSTGRES_PASSWORD: arca_db_dys26
-      POSTGRES_DB: arca_dys
+      POSTGRES_DB: arca_dys_dev
+      POSTGRES_USER: arca_dev
+      POSTGRES_PASSWORD: local-development-only
       TZ: America/Argentina/Buenos_Aires
-    ports:
-      - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
-    # Healthcheck para asegurar que Postgres esté listo antes de iniciar FastAPI
+      - pg_dev:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arca_user -d arca_dys"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-  adminer:
-    image: adminer
-    container_name: adminer_dev
-    ports:
-      - "8081:8080"
-    depends_on:
-      - postgres
-    restart: unless-stopped
+      test: [CMD-SHELL, pg_isready -U arca_dev -d arca_dys_dev]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    networks: [isolated]
   fastapi:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: fastapi_app_dev
-    # Comando de desarrollo con hot-reload
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      # Monta el código local para desarrollo en vivo
-      - ./:/app
-      # Evita que el __pycache__ del contenedor sobreescriba el local
-      - /app/__pycache__
-    ports:
-      - "8001:8000"
+      target: development
+    command: [sh, -c, "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
     environment:
-      DATABASE_URL: postgresql://arca_user:arca_db_dys26@postgres:5432/arca_dys
-      # Variable para indicar modo desarrollo
-      ENVIRONMENT: development
+      ENV: development
+      INTEGRATIONS_MODE: mock
+      ALLOW_LIVE_OPERATIONS: "false"
+      DATABASE_URL: postgresql://arca_dev:local-development-only@postgres:5432/arca_dys_dev
+    volumes:
+      - .:/app
     depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped  # Opcional: descomentar si quieres auto-restart
-
-  # LO COMENTE PARA CORRERLO EN WINDOWS.
-  # como ngrok esta corriendo en la raspy no me permite lvantarlo tmb en mi pc.
-  #ngrok:
-  #  image: ngrok/ngrok:latest
-  #  container_name: ngrok_dev
-  #  environment:
-  #    NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-33QqKy97HNepS56yT1L2wX72X71_Udz91Cxapbu9XDkvNAtG}
-  #  command: http http://fastapi_app_dev:8000  # Usa el nombre del servicio en lugar de host network
-  #  ports:
-  #    - "4040:4040"  # Dashboard de ngrok
-  #  depends_on:
-  #    - fastapi
-  #  restart: unless-stopped
-  uptime-kuma:
-    image: louislam/uptime-kuma:latest
-    container_name: uptime_kuma_dev
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).read()"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
+    networks: [isolated]
+  web:
+    image: nginx:1.28-alpine
     volumes:
-      - uptime_kuma_data:/app/data
+      - ./scripts/dev-proxy.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "3001:3001"
-    restart: unless-stopped
-
+      - 127.0.0.1:8001:80
+    depends_on:
+      fastapi:
+        condition: service_healthy
+    networks: [edge, isolated]
+  adminer:
+    image: adminer:5
+    profiles: [tools]
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - 127.0.0.1:8082:8080
+    depends_on: [postgres]
+    networks: [edge, isolated]
 volumes:
-  pg_data:
-  uptime_kuma_data:
+  pg_dev:
+networks:
+  isolated:
+    internal: true
+  edge:

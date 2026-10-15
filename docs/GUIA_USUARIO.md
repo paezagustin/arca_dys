@@ -1,0 +1,54 @@
+# Guía de pruebas locales
+
+Esta versión es el primer paso de la refactorización. No sustituye todavía al
+sistema de la Raspberry y no emite comprobantes reales.
+
+## Abrir el sistema en Windows
+Con Docker Desktop iniciado, abrir PowerShell en la carpeta del repositorio:
+
+```powershell
+docker compose -f docker-compose.dev.yml up --build -d
+```
+
+Abrir http://localhost:8001/dev. No hay que configurar NGROK, ARCA ni Mercado Pago.
+La primera construcción descarga dependencias. Los siguientes arranques conservan
+los pagos ficticios en el volumen local de desarrollo.
+
+## Probar una factura
+1. Pulsar **Cargar tres pagos de ejemplo**. Se abre Facturación.
+2. Seleccionar un pago o varios y pulsar **FACTURAR SELECCIONADOS**.
+3. Ver el resultado y descargar el PDF desde la tabla de facturas.
+4. El archivo debe indicar **SIMULACION - SIN VALIDEZ FISCAL**.
+
+Se pueden cargar más pagos ficticios ingresando importe y escenario desde /dev.
+Pending/rejected/refunded y falla de API permiten verificar respuestas sin pagos reales.
+La actualización de una devolución sobre un pago existente se hará en el hito MP.
+El PDF de ejemplo es sencillo y no representa aún el diseño fiscal definitivo.
+
+**FACTURAR TODO** conserva por ahora el contrato heredado del listado. La aplicación
+de TODO al filtro completo junto con paginación se implementa en H5. La factura
+independiente por importe pertenece a H4; todavía no se muestra como disponible.
+
+## Detener y retomar
+```powershell
+docker compose -f docker-compose.dev.yml stop
+docker compose -f docker-compose.dev.yml up -d
+```
+
+No usar `down --volumes` para detener desarrollo: eliminaría sus datos ficticios.
+Los datos de la Raspberry no se montan en este entorno.
+
+## Si no abre
+```powershell
+docker compose -f docker-compose.dev.yml ps
+docker compose -f docker-compose.dev.yml logs --tail 60 fastapi
+```
+
+Comprobar Docker Desktop y que el puerto 8001 esté libre. No pegar claves ni cambiar
+a modo production para resolver un error local.
+
+## Funcionalidades del sistema final
+Factura independiente; pagos completos de MP; ventas diarias manuales con efectivo+MP;
+ingresos/egresos; proveedores simples; importación histórica del Excel y dashboard.
+Se documentarán sus pantallas a medida que cada hito esté probado. Sin sueldos,
+facturación parcial, cuentas corrientes de proveedores ni saldos pendientes en métricas.

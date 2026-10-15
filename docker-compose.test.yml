@@ -1,0 +1,50 @@
+name: arca-dys-test
+services:
+  postgres:
+    image: postgres:17.8-alpine
+    environment:
+      POSTGRES_DB: arca_dys_test
+      POSTGRES_USER: arca_test
+      POSTGRES_PASSWORD: local-test-only
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U arca_test -d arca_dys_test]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    networks: [isolated]
+  test:
+    build:
+      context: .
+      target: development
+    command: [sh, -c, "alembic upgrade head && pytest"]
+    environment:
+      ENV: test
+      INTEGRATIONS_MODE: mock
+      ALLOW_LIVE_OPERATIONS: "false"
+      DATABASE_URL: postgresql://arca_test:local-test-only@postgres:5432/arca_dys_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [isolated]
+  backup-test:
+    image: postgres:17.8-alpine
+    profiles: [backup-test]
+    environment:
+      PGHOST: postgres
+      PGDATABASE: arca_dys_test
+      PGUSER: arca_test
+      PGPASSWORD: local-test-only
+    volumes:
+      - ./scripts:/scripts:ro
+    tmpfs:
+      - /backups
+    entrypoint: [sh, /scripts/test-backup.sh]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [isolated]
+networks:
+  isolated:
+    internal: true

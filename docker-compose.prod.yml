@@ -1,73 +1,76 @@
+name: arca-dys-prod
 services:
   postgres:
-   image: postgres:17
-   container_name: pg_dys
-   environment:
-     POSTGRES_USER: arca_user
-     POSTGRES_PASSWORD: arca_db_dys26
-     POSTGRES_DB: arca_dys
-     TZ: America/Argentina/Buenos_Aires
-     POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_AR.UTF-8 --data-checksums"
-   ports:
-     - "5432:5432"
-   volumes:
-     - /mnt/datos/docker/arca_dys/postgres:/var/lib/postgresql/data
-   healthcheck:
-     test: ["CMD-SHELL", "pg_isready -U arca_user -d arca_dys"]
-     interval: 5s
-     timeout: 5s
-     retries: 5
-   restart: unless-stopped
-
-  adminer:
-    image: adminer
-    container_name: adminer
-    ports:
-      - "8081:8080"
-    depends_on:
-      - postgres
+    image: postgres:17.8
+    container_name: pg_dys
+    environment:
+      POSTGRES_DB: arca_dys
+      POSTGRES_USER: arca_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configurar POSTGRES_PASSWORD}
+      TZ: America/Argentina/Buenos_Aires
+    volumes:
+      - ${POSTGRES_DATA_PATH:-/mnt/datos/docker/arca_dys/postgres}:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U arca_user -d arca_dys]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
-
   fastapi:
+    container_name: fastapi_app
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: fastapi_app
-    # Comando de desarrollo con hot-reload
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      # Monta el código local para desarrollo en vivo
-      - ./:/app
-      # Evita que el __pycache__ del contenedor sobreescriba el local
-      - /app/__pycache__
-    ports:
-      - "8001:8000"
+      target: production
+    env_file: .env.prod
     environment:
-      DATABASE_URL: postgresql://arca_user:arca_db_dys26@postgres:5432/arca_dys
-      # Variable para indicar modo desarrollo
-      ENVIRONMENT: production
+      ENV: production
+      INTEGRATIONS_MODE: production
+      ALLOW_LIVE_OPERATIONS: ${ALLOW_LIVE_OPERATIONS:?Configurar explícitamente ALLOW_LIVE_OPERATIONS}
+    volumes:
+      - ${ARCA_CERTIFICATES_PATH:-/mnt/datos/docker/arca_dys/certificates}:/run/arca:ro
+      - ${APP_LOGS_PATH:-/mnt/datos/docker/arca_dys/logs}:/app/logs
+    ports:
+      - 127.0.0.1:8001:8000
     depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped  # Opcional: descomentar si quieres auto-restart
-
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: ngrok
-    environment:
-      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-33QqKy97HNepS56yT1L2wX72X71_Udz91Cxapbu9XDkvNAtG}
-    command: http http://fastapi_app:8000  # Usa el nombre del servicio en lugar de host network
-    ports:
-      - "4040:4040"  # Dashboard de ngrok
-    depends_on:
-      - fastapi
     restart: unless-stopped
-
+  ngrok:
+    container_name: ngrok
+    image: ngrok/ngrok:3
+    profiles: [public]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    command: [http, http://fastapi:8000]
+    depends_on: [fastapi]
+    restart: unless-stopped
+  adminer:
+    container_name: adminer
+    image: adminer:5
+    profiles: [tools]
+    ports:
+      - 127.0.0.1:8081:8080
+  backup:
+    image: postgres:17.8-alpine
+    profiles: [backup]
+    environment:
+      PGHOST: postgres
+      PGDATABASE: arca_dys
+      PGUSER: arca_user
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Configurar POSTGRES_PASSWORD}
+    volumes:
+      - ${BACKUP_PATH:-/mnt/datos/docker/arca_dys/backups}:/backups
+      - ./scripts/backup-db.sh:/usr/local/bin/backup-db.sh:ro
+    entrypoint: [sh, /usr/local/bin/backup-db.sh]
+    depends_on:
+      postgres:
+        condition: service_healthy
   uptime-kuma:
     image: louislam/uptime-kuma:latest
     container_name: uptime_kuma
+    profiles: [monitoring]
     volumes:
-      - /mnt/datos/docker/uptime-kuma/data:/app/data
+      - ${UPTIME_KUMA_DATA_PATH:-/mnt/datos/docker/uptime-kuma/data}:/app/data
     ports:
-      - "3001:3001"
+      - 127.0.0.1:3001:3001
     restart: unless-stopped

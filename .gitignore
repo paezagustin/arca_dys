@@ -36,3 +36,22 @@ docker-compose-dev-window.yml
 #afipsdk
 *.crt
 *.key
+
+# Configuración privada, datos y resultados locales
+.env.*
+!.env.example
+!.env.prod.example
+*.pem
+*.p12
+*.pfx
+*.sql
+!tests/fixtures/legacy_schema.sql
+!scripts/audit-legacy.sql
+*.dump
+*.backup
+*.xlsx
+backups/
+artifacts/
+.pytest_cache/
+.coverage
+htmlcov/

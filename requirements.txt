@@ -19,7 +19,8 @@ colorama==0.4.6
 anyio==4.3.0
 h11==0.14.0
 typing-inspection==0.4.0
-psycopg2-binary
+psycopg2-binary==2.9.10
 mercadopago==2.3.0
 afip.py==1.2.0
 python-multipart==0.0.9
+alembic==1.13.3

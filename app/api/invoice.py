@@ -1,5 +1,5 @@
 from datetime import datetime
-from http.client import HTTPException
+from fastapi import HTTPException
 import logging
 
 from requests import Response
@@ -105,6 +105,12 @@ def _facturar_pagos(
             cae_due_date = parser.parse(datos_factura['vencimiento_cae']).date(),
             pdf_url=pdf_url,
         )
+
+        from app.core.config import INTEGRATIONS_MODE
+        if INTEGRATIONS_MODE == "mock":
+            pdf_url = f"/ARCA/invoice/{invoice.id}/pdf"
+            invoice.pdf_url = pdf_url
+            db.commit()
 
         for pago in pagos:
             mark_payment_as_registered(db, pago.id)

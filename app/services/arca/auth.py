@@ -18,6 +18,8 @@ def get_afip_client() -> Afip:
     """
     Autentica contra AFIP y devuelve un cliente Afip listo para usar
     """
+    from app.core.safety import require_live_integrations
+    require_live_integrations()
     if not all([ARCA_CUIT, ARCA_PASSWORD, ARCA_ACCESS_TOKEN]):
         raise AFIPAuthError("Credenciales AFIP incompletas en config")
 

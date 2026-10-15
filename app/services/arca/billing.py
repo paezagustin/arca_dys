@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.core.config import ARCA_PTO_VTA
+from app.core.config import ARCA_PTO_VTA, LIMITE_FACTURACION_MINIMA, LIMITE_FACTURACION_MAXIMA
 from decimal import Decimal, ROUND_HALF_UP
 from afip import Afip
 
@@ -34,7 +34,7 @@ def generate_invoice(
     )
 
     nro_factura = last_voucher + 1
-    fecha_cbte = int(datetime.today().strftime("%Y%m%d"))
+    fecha_cbte = int(fecha_hoy.strftime("%Y%m%d"))
 
     data = {
         "CantReg": 1,
@@ -74,10 +74,12 @@ def validate_amount(monto: float) -> float:
     Valida monto para AFIP:
     - entre 1000 y 2.000.000
     """
-    if monto < 1000:
-        raise AFIPBillingError("Monto menor al mínimo permitido (1000)")
-
-    if monto > 2000000:
-        raise AFIPBillingError("Monto mayor al máximo permitido (2.000.000)")
-
-    return monto
+    try:
+        value = Decimal(str(monto))
+        if not value.is_finite() or value != value.quantize(Decimal("0.01")):
+            raise ValueError()
+    except (ValueError, ArithmeticError):
+        raise AFIPBillingError("El importe debe ser válido con hasta dos decimales")
+    if not LIMITE_FACTURACION_MINIMA <= value <= LIMITE_FACTURACION_MAXIMA:
+        raise AFIPBillingError(f"El importe debe estar entre {LIMITE_FACTURACION_MINIMA} y {LIMITE_FACTURACION_MAXIMA}")
+    return float(value)  # Float se conserva hasta la migración específica del esquema.

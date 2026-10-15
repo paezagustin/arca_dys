@@ -256,6 +256,9 @@
     </style>
 </head>
 <body>
+    {% if request.app.state.integrations_mode == 'mock' %}
+    <p role="status" style="padding:12px;background:#fff1bd;border:1px solid #8d6400">Modo simulado: estos pagos y comprobantes son de prueba. No se envían facturas a ARCA.</p>
+    {% endif %}
     <!-- Mensaje de carga (oculto por defecto) -->
     <div id="mensajeCarga">
         <h2>⏳ Generando factura...</h2>

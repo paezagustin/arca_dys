@@ -1,44 +1,56 @@
-from fastapi import FastAPI
-from app.core.database import engine, Base
-from app.api import invoice, mp, page, test_errors, page_reports_statistics
-import app.models
-from app.core.logging import setup_logging
+from contextlib import asynccontextmanager
+from pathlib import Path
 import logging
-from sqlalchemy.exc import OperationalError
-import time
-
-
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
+from alembic.config import Config
+from alembic.script import ScriptDirectory
+from app.core.config import ENV, INTEGRATIONS_MODE
+from app.core.database import engine
+from app.core.logging import setup_logging
+from app.api import invoice, mp, page, page_reports_statistics
 
 setup_logging()
 logger = logging.getLogger(__name__)
-logger.info("🚀 ARCA API iniciando...")
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app):
+    # El esquema se cambia exclusivamente mediante Alembic.
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
+        revision = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+    expected = ScriptDirectory.from_config(Config("alembic.ini")).get_current_head()
+    if revision != expected:
+        raise RuntimeError("La base no está en la revisión esperada; aplicar las migraciones antes de iniciar")
+    logger.info("Inicio | entorno=%s | integraciones=%s | migración=%s", ENV, INTEGRATIONS_MODE, revision)
+    yield
 
 
-
-@app.on_event("startup")
-def startup_db():
-    retries = 10
-    while retries > 0:
-        try:
-            logger.info("📦 Intentando conectar a la DB...")
-            Base.metadata.create_all(bind=engine)
-            logger.info("✅ DB conectada y tablas creadas")
-            return
-        except OperationalError as e:
-            retries -= 1
-            logger.warning("⏳ DB no lista, reintentando en 2s...")
-            time.sleep(2)
-
-    logger.error("❌ No se pudo conectar a la DB")
-    raise RuntimeError("Database not available")
-
-
-# Routers
+app = FastAPI(lifespan=lifespan)
+app.state.integrations_mode = INTEGRATIONS_MODE
 app.include_router(mp.router)
 app.include_router(page.router)
 app.include_router(invoice.router)
 app.include_router(page_reports_statistics.router)
-app.include_router(test_errors.router)
+assets = Path(__file__).resolve().parent / "assets"
+if assets.is_dir():
+    app.mount("/assets", StaticFiles(directory=assets), name="assets")
+if ENV in {"development", "test"} and INTEGRATIONS_MODE == "mock":
+    from app.api import dev, test_errors
+    app.include_router(dev.router)
+    app.include_router(test_errors.router)
+
+
+@app.get("/", include_in_schema=False)
+def home():
+    return RedirectResponse("/dev" if ENV != "production" and INTEGRATIONS_MODE == "mock" else "/page/invoice")
+
+
+@app.get("/health", include_in_schema=False)
+def health():
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
+    return {"status": "ok", "environment": ENV, "integrations": INTEGRATIONS_MODE}
