@@ -21,7 +21,7 @@ class Principal:
 
 def public_path(path):
     return path in {"/", "/logout"} or path in {"/page/invoice", "/page/invoice/manual", "/page/billing-requests"} or any(
-        path == prefix or path.startswith(prefix + "/") for prefix in ("/ARCA", "/business", "/dashboard"))
+        path == prefix or path.startswith(prefix + "/") for prefix in ("/ARCA", "/business", "/dashboard", "/salaries", "/fiados"))
 
 
 async def require_web_access(request: Request, db: Session = Depends(get_db)):

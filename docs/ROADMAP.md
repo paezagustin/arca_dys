@@ -1,5 +1,12 @@
 # Roadmap y condiciones de salida
 
+## H10 · Caja desglosada, Sueldos y Fiados
+- [x] Alineación centrada de las tablas.
+- [x] Efectivo/MP sugerido editable, suma validada, conservación de históricos.
+- [x] Sueldos con ENUM PostgreSQL, reporte mensual, filtros y métricas por empleado.
+- [x] Fiados con formulario simple, listado y marcado de pago.
+- [ ] Resumen/exportación, migración, pruebas, navegador, documentación y push.
+
 ## H9 · Ajustes solicitados el 16/10/2026
 - [x] Formularios simples de ventas y egresos, proveedores buscables y sin cambios auditados.
 - [x] Acceso local anónimo con CSRF; resto de módulos solo para admin.

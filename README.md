@@ -16,15 +16,19 @@ esta carpeta:
 docker compose -f docker-compose.dev.yml up --build -d
 ```
 
-Abrir **http://localhost:8001** sin login para Facturación, Gestión y Resumen.
+Abrir **http://localhost:8001** sin login para Facturación, Gestión, Resumen, Sueldos y Fiados.
 Para Pruebas y administración, ingresar con **admin / pruebas-locales**,
 cuenta exclusiva del entorno simulado. Cargar pagos ficticios y recorrer Facturación,
 selección de uno o varios pagos y descarga del PDF simulado. No requiere .env,
 certificados, tokens, NGROK ni un pago real. Los comprobantes dicen SIN VALIDEZ FISCAL.
 El importe del cargador es el de un pago ficticio. Para una factura independiente,
 usar **Factura por importe**, revisar el importe y confirmar. No crea otro ingreso.
-En **Gestión** registrar ventas del día y egresos En Blanco/En Negro; en
-**Resumen** consultar métricas por mes/año y exportar Excel con las seis columnas originales. La carga del Excel muestra una vista
+En **Gestión** registrar efectivo y Mercado Pago del día (MP sugerido editable),
+y egresos En Blanco/En Negro. **Sueldos** registra pagos de Francisco/Juan Cruz;
+**Fiados** permite anotar clientes y marcar pagos. En **Resumen** consultar por
+día/período/mes/año, ventas por medio, sueldos por empleado y Ganancia después de
+egresos y sueldos. Exportar Excel conserva las seis columnas originales y añade
+hojas Ventas y Sueldos. La carga del Excel muestra una vista
 previa antes de incorporar registros y conserva las filas ambiguas para revisión.
 
 ```powershell

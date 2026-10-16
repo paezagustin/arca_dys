@@ -31,6 +31,7 @@ flowchart LR
 | Comprobantes | services/invoices.py | ReportLab local, QR dinámico, total exacto 50/50, sin reemisión. |
 | MP | services/mp.py, mp_inbox.py, payments.py | Inbox antes de ACK, GET canónico con timeout, identidad externa e historial. |
 | Gestión | services/business.py | Ventas manuales independientes, egresos En Blanco/En Negro y proveedores. |
+| Sueldos/Fiados | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión y CSRF; Fiados independiente. |
 | Excel | services/excel_reader.py, excel_import.py | Lectura acotada, originales, decisiones, identidad por origen y conciliación. |
 | Reportes | services/metrics.py | SQL/Decimal, datos vigentes, fuentes separadas y gráficos SVG. |
 | Configuración | services/settings.py, access.py | Roles, sesiones revocables, límites/emisor versionados. |
@@ -73,8 +74,9 @@ comparten hilo con prioridades acotadas, sin sumar infraestructura.
 Los contratos efectivos y sus límites están en MERCADO_PAGO.md.
 
 ## Gestión y originales
-BusinessEntry no depende de pagos/facturas. Ventas diarias registran manualmente el
-total real; no se impone igualdad con otras fuentes. UUID de formulario, venta
+BusinessEntry conserva cierres independientes de pagos/facturas. day_closing.py
+consulta solo la DB para sugerir MP aprobado sin facturar de la fecha; la usuaria
+puede modificarlo. business.py valida efectivo/MP y calcula la suma en servidor; no se impone igualdad con otras fuentes. UUID de formulario, venta
 vigente única por fecha y bloqueo/versión en ediciones sin historial.
 Las anulaciones heredadas siguen excluidas; se pueden archivar proveedores. Proveedores sin stock ni cuenta corriente.
 Importación confirma filas listas, conserva ambiguas y mantiene ambos históricos
@@ -98,6 +100,7 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0008_import | Lotes/orígenes/celdas y decisiones del Excel. |
 | 0009_reports | Índices de agregación por período. |
 | 0010_simple_business | Egresos white/black, retiro de campos/historiales, sesiones anónimas y propietario de confirmaciones. |
+| 0011_sales_payroll_credits | Desglose nullable de ventas, ENUM de empleados/medios, Sueldos y Fiados; sin alterar totales previos. |
 
 Se conserva payments.bill por compatibilidad histórica; la elegibilidad usa estado,
 registered_arca, reservas y vínculos. Otros campos históricos no se eliminan por
@@ -114,10 +117,15 @@ dev expone 127.0.0.1:8001; no sirve de proxy genérico. Suite x86 y ARM usan pro
 distintos y DB descartables. La simulación persiste comprobantes propios identificados
 SIM/SIN VALIDEZ FISCAL y permite probar pérdida de respuestas y reinicios.
 
-Sesiones opacas hasheadas, expiración, roles y CSRF; Facturación, Gestión y Resumen
+Sesiones opacas hasheadas, expiración, roles y CSRF; Facturación, Gestión, Resumen, Sueldos y Fiados
 permiten uso anónimo; las demás secciones requieren admin. Health/assets públicos; webhooks usan su propio contrato. CSP sin
 CDN ni scripts inline, límites de cuerpo y carga XLSX, salidas HTML escapadas y
 errores sin SQL/credenciales. CSS/JS versionados evitan estilos antiguos al actualizar.
 No se agregan exportadores de telemetría ni servicios externos de observabilidad.
 Dependencias directas en requirements.in y resolución fijada en requirements.txt;
 se conserva SQLAlchemy 2.0 y se eliminan pymysql/SDK MP que ya no se utilizan.
+
+Los sueldos se agregan por fecha/empleado en metrics.py y reducen Ganancia una sola
+vez; no se insertan también en business_entries. customer_credits es independiente:
+marcar pagado no produce movimientos. Excel añade hojas de desglose y sueldos sin
+alterar las seis columnas originales. No hay nuevas dependencias/procesos/servicios.

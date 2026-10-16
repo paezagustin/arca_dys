@@ -107,3 +107,47 @@ document.querySelectorAll('[data-supplier-picker]').forEach(picker => {
   });
   input.addEventListener('blur', close);
 });
+
+document.querySelectorAll('[data-daily-sale]').forEach(form => {
+  const cash = form.querySelector('[name=cash_amount]');
+  const mp = form.querySelector('[name=mp_amount]');
+  const date = form.querySelector('[name=entry_date]');
+  const total = form.querySelector('[data-sale-total]');
+  const status = form.querySelector('[data-mp-status]');
+  let version = 0, controller;
+  const format = new Intl.NumberFormat('es-AR', {style: 'currency', currency: 'ARS'});
+  function cents(input) {
+    if (!/^\d+(\.\d{1,2})?$/.test(input.value)) return null;
+    const [whole, fraction = ''] = input.value.split('.');
+    return BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0'));
+  }
+  function update() {
+    const a = cents(cash), b = cents(mp);
+    if (a !== null && b !== null) {
+      const sum = a + b;
+      total.value = format.formatToParts(sum / 100n).map(part => part.type === 'fraction' ? String(sum % 100n).padStart(2, '0') : part.value).join('');
+    }
+    else if (cash.value || mp.value) total.value = '';
+  }
+  cash.addEventListener('input', update);
+  mp.addEventListener('input', () => { ++version; controller?.abort(); status.textContent = ''; update(); });
+  date.addEventListener('change', async () => {
+    const current = ++version;
+    controller?.abort(); controller = new AbortController();
+    if (!date.value || !date.validity.valid) return;
+    status.textContent = ''; status.classList.add('sr-only'); status.setAttribute('role', 'status');
+    try {
+      const response = await fetch('/business/sales/mp-total?date=' + encodeURIComponent(date.value), {signal: controller.signal});
+      if (!response.ok) throw new Error('total');
+      const data = await response.json();
+      if (current !== version) return;
+      mp.value = data.total; status.textContent = 'Monto de Mercado Pago actualizado para la fecha elegida.'; update();
+    } catch (error) {
+      if (current === version && error.name !== 'AbortError') {
+        status.classList.remove('sr-only'); status.setAttribute('role', 'alert');
+        status.textContent = 'No se pudo consultar Mercado Pago. Ingresá el monto manualmente.';
+      }
+    }
+  });
+  update();
+});

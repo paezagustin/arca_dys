@@ -7,6 +7,7 @@ from app.models.mp_event import MPEvent, PaymentChange
 from app.models.settings import User, WebSession, LoginThrottle, BusinessSettings, BillingPreview
 from app.models.business import Supplier, BusinessEntry, MoneyMigrationAudit
 from app.models.imports import ImportBatch, ImportRow, ImportSupplierMap
+from app.models.registers import SalaryPayment, CustomerCredit
 __all__ = [
     "Payment",
     "Invoice",

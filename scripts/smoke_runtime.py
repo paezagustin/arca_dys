@@ -5,6 +5,7 @@ import resource
 import subprocess
 import sys
 import time
+from decimal import Decimal
 from http.cookiejar import CookieJar
 from urllib.request import build_opener, HTTPCookieProcessor
 from urllib.error import URLError
@@ -14,6 +15,7 @@ from sqlalchemy import create_engine, text
 from alembic import command
 from alembic.config import Config
 from app.core.database import engine
+from app.services.listings import business_today
 
 
 def run():
@@ -59,9 +61,25 @@ def run():
                 time.sleep(.25)
         else:
             raise RuntimeError("El servidor no inició dentro del tiempo previsto")
-        for path in ("/page/invoice", "/business", "/dashboard"):
+        for path in ("/page/invoice", "/business", "/dashboard", "/salaries", "/fiados"):
             with get(path) as response:
                 assert response.status == 200 and "/login" not in response.url
+        with get("/business/entries/new?kind=sale") as response:
+            page = response.read().decode()
+        day = str(business_today())
+        with post("/business/entries/new", {"csrf_token": hidden(page, "csrf_token"),
+                "entry_key": hidden(page, "entry_key"), "kind": "sale", "entry_date": day,
+                "cash_amount": "1000.10", "mp_amount": "500.20"}) as response:
+            assert response.status == 200
+        for path, fields in (("/salaries", {"employee": "Francisco", "medium": "mercado pago", "amount": "100.05"}),
+                ("/fiados", {"customer": "Cliente ficticio runtime", "observation": "Prueba", "paid": "0", "amount": "20.25"})):
+            with get(path) as response:
+                page = response.read().decode()
+            with post(path, dict(fields, csrf_token=hidden(page, "csrf_token"), entry_key=hidden(page, "entry_key"), entry_date=day)) as response:
+                assert response.status == 200
+        with get("/dashboard?fecha_desde=" + day + "&fecha_hasta=" + day) as response:
+            page = response.read().decode()
+            assert "$ 1.400,25" in page and "Pago de sueldos" in page
         with get("/login") as response:
             csrf = hidden(response.read().decode(), "login_csrf")
         with post("/login", {"username": "admin", "password": "pruebas-locales", "login_csrf": csrf}) as response:
@@ -97,10 +115,13 @@ def run():
         with scratch.connect() as db:
             assert db.execute(text("SELECT count(*) FROM invoices")).scalar_one() == 1
             assert db.execute(text("SELECT count(*) FROM payments")).scalar_one() == 0
+            assert db.execute(text("SELECT cash_amount,mp_amount,amount FROM business_entries")).one() == (Decimal("1000.10"), Decimal("500.20"), Decimal("1500.30"))
+            assert db.execute(text("SELECT count(*) FROM salary_payments")).scalar_one() == 1
+            assert db.execute(text("SELECT paid FROM customer_credits")).scalar_one() is False
         process.terminate()
         process.wait(timeout=60)
         rss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-        print("Imagen de ejecución: acceso anónimo, login, CSRF, confirmación, worker, factura simulada, PDF y dashboard: OK.")
+        print("Imagen de ejecución: caja, sueldos, fiados, resumen anónimo, login, CSRF, confirmación, worker, factura simulada y PDF: OK.")
         print(f"Medición del entorno de ensayo: RSS máximo hijo {rss} KiB; health promedio {sum(durations)/len(durations)*1000:.1f} ms.")
         print("Sin accesos externos; base efímera propia eliminada al terminar.")
     finally:

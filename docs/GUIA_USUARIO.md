@@ -7,7 +7,7 @@ Con Docker Desktop iniciado, desde la carpeta del proyecto:
 docker compose -f docker-compose.dev.yml up --build -d
 ```
 
-Abrir http://localhost:8001. Facturación, Gestión y Resumen funcionan sin ingresar.
+Abrir http://localhost:8001. Facturación, Gestión, Resumen, Sueldos y Fiados funcionan sin ingresar.
 Para ver el menú completo, pulsar Administración e ingresar con admin / pruebas-locales
 solo en este entorno simulado. La cuenta de prueba no se crea en producción.
 Pruebas permite cargar cobros ficticios sin NGROK, claves ni operaciones reales.
@@ -28,8 +28,11 @@ permite volver al resultado. No se cargan ventas ni egresos al facturar.
 
 ## Registrar ventas del día
 En Gestión pulsar Registrar ventas del día. La fecha empieza en hoy y se puede
-cambiar. Ingresar el total de la caja: efectivo más Mercado Pago. Guardar.
-Para modificarlo, pulsar el lápiz de ese registro, cambiar fecha/total y guardar.
+cambiar. Ingresar el monto en efectivo. Mercado Pago propone los cobros aprobados
+sin facturar de esa fecha; se puede modificar. Total vendido muestra la suma. Guardar.
+Para modificarlo, pulsar el lápiz y cambiar fecha/efectivo/MP. Al abrir una edición
+se conservan los importes guardados. Los cierres anteriores sin desglose requieren
+completar ambos importes reales para editarlos.
 No se pide motivo ni se muestra historial. Solo hay una venta por día; cero es
 válido y un día sin registrar no se interpreta como cero.
 
@@ -57,16 +60,17 @@ Los proveedores se pueden asociar a las etiquetas antes de confirmar.
 No reordenar filas del libro entre versiones: el origen usa hoja, fila y columna.
 
 ## Resumen
-Elegir año/mes o Todo el año. Se muestran Ventas, Egresos en blanco, Egresos en negro,
-Total Egresos y Ganancia (ventas menos egresos, como estimación). Promedio diario,
+Elegir año/mes, Todo el año o completar ambas fechas para consultar un día/período. Se muestran Ventas, Egresos en blanco, Egresos en negro,
+Total Egresos, Pago de sueldos y Ganancia (ventas menos egresos y sueldos).
+También muestra efectivo/MP y cuánto se pagó a cada empleado. Promedio diario,
 gráfico y detalle mensual ayudan a comparar. Los cobros y facturas están separados.
 Exportar Excel descarga la hoja de ingresos y egresos del período, con sus seis
-columnas originales. Varias compras de un día ocupan filas adicionales sin repetir
+columnas originales, además de las hojas Ventas y Sueldos del mismo período. Varias compras de un día ocupan filas adicionales sin repetir
 la venta. Si un egreso antiguo no tiene tipo, editarlo antes de exportar.
 
 ## Administración
 Solo admin ve Cobros MP, Auditoría, Configuración, Conexión MP y Pruebas (esta última
-solo en simulación). Al salir vuelve el menú de tres secciones de uso diario.
+solo en simulación). Al salir vuelve el menú de cinco secciones de uso diario.
 Cambios del emisor/límites afectan nuevas facturas; las emitidas conservan sus datos.
 Las notificaciones MP se revisan/reintentan sin facturación automática.
 
@@ -81,3 +85,15 @@ docker compose -f docker-compose.dev.yml up -d
 No usar down --volumes para detener desarrollo. Si no abre, comprobar Docker y el
 puerto 8001 y consultar los logs de fastapi. La actualización de la Raspberry se
 hace por separado siguiendo OPERACION_RASPBERRY.md; ningún push la despliega.
+
+## Sueldos
+Elegir fecha, empleado y monto. Tipo empieza en Mercado Pago y se puede cambiar
+a Efectivo. Guardar. El reporte debajo muestra el mes actual; modificar empleado,
+Fecha desde y Fecha hasta y pulsar Buscar para ver otro período. El total incluye
+todas las páginas del filtro. Usar el lápiz para editar. Se descuenta en Ganancia.
+
+## Fiados
+Ingresar nombre, monto y, si hace falta, observación. Fecha empieza en hoy y Pagó
+en No. Guardar. El listado muestra todos los no pagados; permite buscar por nombre,
+fechas o pago. Pulsar Marcar pagado cuando corresponda; el lápiz permite corregir
+cualquiera de los campos. El registro no suma ventas ni modifica la caja automáticamente.

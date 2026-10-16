@@ -9,22 +9,55 @@ from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from sqlalchemy import select
 from app.models.business import BusinessEntry, Supplier
+from app.models.registers import SalaryPayment
 
 HEADERS = ("FECHA", "VENTAS DEL DIA", "COMPRAS EN BLANCO", "MONTO", "COMPRAS EN NEGRO", "MONTO2")
 
 
+def check_precision(amount):
+    if abs(amount * 100) >= Decimal("1000000000000000"):
+        raise ValueError("Un importe supera la precisión de Excel; no se exportó para evitar pérdida de centavos.")
+
+
+def detail_sheet(workbook, title, headers, rows, money_columns):
+    sheet = workbook.create_sheet(title)
+    sheet.append(headers)
+    for row in rows:
+        sheet.append(row)
+    for cells in sheet:
+        for cell in cells:
+            cell.font = Font(name="Calibri", size=11, bold=cell.row == 1, color="192C3D")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            if cell.row == 1:
+                cell.fill = PatternFill("solid", fgColor="ADC5E7")
+                sheet.column_dimensions[cell.column_letter].width = 23
+            elif cell.column == 1:
+                cell.number_format = "dd/mm/yyyy"
+            elif cell.column in money_columns and cell.value is not None:
+                check_precision(cell.value)
+                cell.number_format = '"$ "#,##0.00'
+            elif isinstance(cell.value, str):
+                cell.value = ILLEGAL_CHARACTERS_RE.sub("", cell.value)
+                cell.data_type = "s"
+    sheet.freeze_panes = "A2"
+    sheet.auto_filter.ref = sheet.dimensions
+
+
 def export_business(db, start, end):
+    if (end-start).days > 1048573:
+        raise ValueError("El período supera la cantidad de filas admitida por Excel")
     entries = db.execute(select(BusinessEntry, Supplier.name).outerjoin(Supplier, Supplier.id == BusinessEntry.supplier_id).where(
         BusinessEntry.active.is_(True), BusinessEntry.entry_date.between(start, end)).order_by(BusinessEntry.entry_date, BusinessEntry.id))
     days = defaultdict(lambda: {"sale": None, "white": [], "black": []})
+    sales = []
     for entry, supplier in entries:
         if entry.kind == "expense" and entry.expense_type not in {"white", "black"}:
             raise ValueError("Hay egresos anteriores sin tipo. Editalos en Gestión y elegí En Blanco o En Negro antes de exportar.")
         # Excel solo conserva 15 cifras significativas. Rechazar pérdida silenciosa.
-        if abs(entry.amount * 100) >= Decimal("1000000000000000"):
-            raise ValueError("Un importe supera la precisión de Excel; no se exportó para evitar pérdida de centavos.")
+        check_precision(entry.amount)
         if entry.kind == "sale":
             days[entry.entry_date]["sale"] = entry.amount
+            sales.append((entry.entry_date, entry.cash_amount, entry.mp_amount, entry.amount))
         else:
             label = " · ".join(value for value in (supplier, entry.description) if value) or "Sin proveedor"
             days[entry.entry_date][entry.expense_type].append((label, entry.amount))
@@ -69,6 +102,10 @@ def export_business(db, start, end):
     sheet.page_setup.orientation = "landscape"
     sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
     sheet.page_setup.fitToWidth = 1
+    detail_sheet(workbook, "Ventas", ("FECHA", "EFECTIVO", "MERCADO PAGO", "TOTAL"), sales, {2, 3, 4})
+    salaries = db.scalars(select(SalaryPayment).where(SalaryPayment.entry_date.between(start, end)).order_by(SalaryPayment.entry_date, SalaryPayment.id))
+    detail_sheet(workbook, "Sueldos", ("FECHA", "EMPLEADO", "MONTO", "TIPO"),
+        ((item.entry_date, item.employee, item.amount, item.medium) for item in salaries), {3})
     output = BytesIO()
     workbook.save(output)
     return output.getvalue()

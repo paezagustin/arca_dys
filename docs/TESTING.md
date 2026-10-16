@@ -93,3 +93,13 @@ migración sin pérdida y rechazo de income heredado. La exportación se reabre 
 concilia al centavo: fechas, seis columnas, varias compras, cero/blanco, fórmulas
 tratadas como texto y precisión de Excel. Navegador separado para diseño, búsqueda,
 ayudas, descarga y móvil. Los datos privados no son fixtures ni se publican.
+
+## Ampliación H10
+test_closing_registers.py cubre suma en servidor ignorando un total manipulado,
+desglose editable, límites de día/aprobados/sin facturar, importe guardado estable,
+precisión/negativos/desborde, ENUM nativos y migración sin inventar históricos.
+Verifica acceso anónimo/CSRF, mes actual y filtros/paginación de sueldos, empleados,
+doble envío/edición obsoleta, Fiados antiguos no pagados/marcado idempotente/texto
+escapado, métricas por empleado, Ganancia con sueldos sin doble cómputo y rangos
+cruzando años. Reabre el Excel de tres hojas y concilia importes. Las pruebas
+anteriores se conservan con el contrato nuevo del cierre de caja.

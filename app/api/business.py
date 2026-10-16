@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.models.business import BusinessEntry, Supplier
-from app.services.business import KINDS, EXPENSE_TYPES, snapshot, save_entry, save_supplier
+from app.services.business import KINDS, EXPENSE_TYPES, snapshot, save_entry, save_supplier, record_date
+from app.services.day_closing import unbilled_mp_total
 from app.services.listings import paginate, parse_filters, business_today
 from app.web import templates
 
@@ -45,11 +46,23 @@ def entry_form(request, db, row=None, values=None, error=None):
     data = values if values is not None else (dict(snapshot(row), entry_key=row.entry_key) if row else {
         "kind": kind, "entry_date": business_today().isoformat(), "entry_key": str(uuid4())})
     data["kind"] = kind
+    if kind == "sale" and values is not None:
+        # Un total enviado por el navegador no participa ni del guardado ni del error.
+        data.pop("amount", None)
+    if not row and values is None and kind == "sale":
+        data.update(cash_amount="0.00", mp_amount=str(unbilled_mp_total(db, record_date(data["entry_date"]))))
     selected = db.get(Supplier, int(data["supplier_id"])) if str(data.get("supplier_id", "")).isdigit() else None
     return templates.TemplateResponse(request=request, name="business_entry.html", context={"row": row,
         "values": data, "selected_supplier": selected, "expense_types": EXPENSE_TYPES,
         "error": error}, status_code=422 if error else 200)
 
+@router.get("/sales/mp-total")
+def mp_total(date: str, db: Session = Depends(get_db)):
+    try:
+        total = unbilled_mp_total(db, record_date(date))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return {"total": str(total)}
 
 
 @router.get("/entries/new")

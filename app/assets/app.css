@@ -349,6 +349,9 @@ td {
   background:#e7f5ff;
   border-color:#a3d7f0;
 }
+.dashboard-metrics {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
 .dashboard-metrics .card:last-child .metric {
   color:var(--brand);
 }
@@ -576,7 +579,7 @@ dialog .actions {
 }
 @media(min-width:1500px) {
   .dashboard-metrics {
-    grid-template-columns:repeat(5,minmax(0,1fr));
+    grid-template-columns:repeat(6,minmax(0,1fr));
   }
 }
 @media(max-width:900px) {
@@ -669,7 +672,7 @@ dialog .actions {
     font-size:20px;
   }
   .dashboard-metrics .card:last-child {
-    grid-column:1/-1;
+    grid-column:auto;
   }
   .actions {
     gap:10px;
@@ -721,3 +724,9 @@ dialog .actions {
   margin:0;
   flex-shrink:0;
 }
+
+/* Cabeceras y valores de reportes comparten alineación. */
+table th, table td, table .money { text-align: center; vertical-align: middle; }
+input[readonly] { background: var(--ground) !important; font-weight: 600; }
+.legend-salaries::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: #8a62b9; }
+.bar-salaries { fill: #8a62b9; rx: 3; }

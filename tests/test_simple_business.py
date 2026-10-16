@@ -38,7 +38,7 @@ def test_guest_can_save_sale_edit_and_export_without_login():
         assert guest.post("/business/entries/new", data=data).status_code == 200
         with Session(engine) as db:
             identifier = db.scalar(select(BusinessEntry.id))
-        data.update(version="1", amount="3200.23")
+        data.update(version="1", cash_amount="3200.23")
         assert guest.post(f"/business/entries/{identifier}", data=data).status_code == 200
         assert guest.get("/dashboard?year=2026").status_code == 200
         exported = guest.get("/dashboard/export?year=2026&month=1")

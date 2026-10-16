@@ -35,7 +35,7 @@ def record_date(value):
 
 
 def snapshot(row):
-    fields = ("kind", "entry_date", "amount", "expense_type", "supplier_id", "description", "version") if isinstance(row, BusinessEntry) else ("name", "contact", "notes", "active", "version")
+    fields = ("kind", "entry_date", "amount", "cash_amount", "mp_amount", "expense_type", "supplier_id", "description", "version") if isinstance(row, BusinessEntry) else ("name", "contact", "notes", "active", "version")
     return {key: str(getattr(row, key)) if isinstance(getattr(row, key), (date, Decimal)) else getattr(row, key) for key in fields}
 
 
@@ -71,8 +71,11 @@ def save_entry(db, values, actor, entry_id=None):
         supplier = db.get(Supplier, supplier_id)
         if kind != "expense" or supplier is None or (not supplier.active and (row is None or row.supplier_id != supplier_id)):
             raise ValueError("El proveedor debe estar activo y solo se usa para egresos")
+    cash = money(values.get("cash_amount"), allow_zero=True) if kind == "sale" else None
+    mp = money(values.get("mp_amount"), allow_zero=True) if kind == "sale" else None
     data = {"kind": kind, "entry_date": record_date(values.get("entry_date")),
-        "amount": money(values.get("amount"), allow_zero=kind == "sale"),
+        "amount": money(cash + mp, allow_zero=True) if kind == "sale" else money(values.get("amount")),
+        "cash_amount": cash, "mp_amount": mp,
         "expense_type": expense_type, "supplier_id": supplier_id,
         "description": clean_text(values.get("description"), "la descripción", 2000) if kind == "expense" else ""}
     if row is None:

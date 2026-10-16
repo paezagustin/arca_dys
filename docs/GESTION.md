@@ -4,9 +4,14 @@ Se usa sin login en la red local. Ventas y egresos son independientes de MP y de
 las facturas. No se crean ventas al emitir un comprobante ni al recibir un pago.
 
 ## Ventas del día
-Fecha (hoy en Buenos Aires, editable) y total vendido, incluyendo efectivo y MP.
+Fecha (hoy en Buenos Aires, editable), monto en efectivo y monto de Mercado Pago.
+MP se sugiere desde los cobros locales aprobados sin facturar de esa fecha y se
+puede modificar. No realiza llamadas externas. El servidor suma ambos importes;
+el total visible es de solo lectura. Al cambiar la fecha vuelve a sugerir MP.
+Una edición ya abierta conserva los importes guardados, sin recalcularlos por
+posteriores facturas o cambios de estado del pago.
 Una venta por fecha; cero es válido, un día sin registrar sigue sin información.
-El icono de lápiz abre Editar con los mismos dos campos. No exige motivo.
+El icono de lápiz abre Editar con fecha y ambos importes. No exige motivo.
 
 ## Egresos
 Fecha, importe positivo, tipo En Blanco o En Negro, proveedor opcional y descripción
@@ -50,3 +55,29 @@ Acepta --aliases para variantes confirmadas; las abreviaturas o conceptos dudoso
 se conservan separados para que la usuaria los edite/elimine. El INSERT usa
 ON CONFLICT (name_key) DO NOTHING, no pisa proveedores existentes. Originales,
 equivalencias privadas y SQL generado permanecen fuera de Git.
+
+## Sueldos
+Acceso local sin login. Fecha (hoy por defecto), empleado Francisco/Juan Cruz,
+monto positivo y tipo Efectivo/Mercado Pago (Mercado Pago por defecto). El reporte
+debajo empieza en el mes actual; permite filtrar empleado, desde y hasta y pagina
+25 filas. El total corresponde a todo el filtro. El lápiz permite editar sin motivo.
+Los pagos reducen Ganancia una sola vez; no crean también un egreso en Gestión.
+No calcula nóminas ni importa la hoja de sueldos/adelantos del Excel.
+
+## Fiados
+Nombre, monto positivo, observación opcional, fecha (hoy) y Pagó (No por defecto).
+Se listan primero los no pagados de cualquier fecha para no perder los anteriores.
+Se puede buscar por nombre, pago y fechas. Marcar pagado sirve para resolverlo de
+un clic; el lápiz permite editar o volver a No si hubo un error. No genera un
+ingreso ni modifica ventas, caja, MP o Ganancia automáticamente.
+
+## Migración 0011_sales_payroll_credits
+Agrega cash_amount/mp_amount NUMERIC nullable y exige pares completos cuya suma
+coincida con amount. Conserva los totales anteriores con ambos campos NULL; se
+muestran como Sin desglose en Resumen y celdas vacías en Excel. Al editarlos se
+completan importes reales; no se inventan proporciones. Importar Excel sigue
+conservando el total sin desglose. Crea salary_payments con ENUM nativos
+salary_employee (Francisco, Juan Cruz) y salary_medium (efectivo, mercado pago),
+y customer_credits con paid booleano. UUID/versión/bloqueos impiden duplicados y
+ediciones perdidas; no hay historial ni motivos. Respaldo antes de migrar y ensayo
+en copia; para retroceder se restaura el backup con su código compatible.

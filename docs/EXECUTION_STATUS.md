@@ -3,12 +3,51 @@
 Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
+H10 implementado y verificado localmente: caja por efectivo/MP editable, Sueldos
+con Francisco/Juan Cruz, Fiados, tablas centradas y ampliación de Resumen/Excel.
+Publicación y CI pendientes en este punto; la evidencia final se registra abajo.
+Las secciones H8/H9 siguientes conservan sus resultados históricos.
+
 H0-H8 publicados. H9 incorpora las correcciones solicitadas: gestión simple,
 acceso local sin login, diseño según PDF de Figma, ayudas mediante diálogo,
 exportación de Resumen y generación privada del INSERT de proveedores.
 H9 completado y publicado: implementación 20c8acf y ensayo final b849534.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38942781766.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
+
+## Evidencia H10
+- Suite completa: 203 passed, 1 warning conocido de Starlette/TestClient, 60.94s,
+  sin pruebas omitidas. Incluye migración desde 0010 con total conservado y
+  efectivo/MP NULL, comparación ORM/Alembic y ENUM nativos; suite fiscal/MP intacta.
+- Caja: sugerencia local limitada a aprobados sin facturar de la fecha, límites
+  de día, edición manual, suma exclusivamente en servidor, negativos/precisión/
+  desborde rechazados y cierre guardado independiente de la facturación posterior.
+- Sueldos: acceso anónimo/CSRF, mes actual, empleado/fechas/paginación, valores ENUM,
+  doble envío y ediciones obsoletas; Ganancia resta sueldos una sola vez incluso
+  con un período sin ventas. Totales por Francisco y Juan Cruz en Resumen.
+- Fiados: todos los no pagados sin límite de fecha por defecto; nombre, monto,
+  observación, fecha y pagó. Doble envío, marcado repetido, versiones y texto
+  escapado comprobados. No crea ventas ni egresos ni altera Ganancia.
+- Resumen diario/rango que cruza años y Excel de tres hojas reabierto y conciliado;
+  primera hoja conserva seis columnas. Históricos sin desglose no se distribuyen.
+- Backup previo de desarrollo: artifacts/dev-before-h10.dump (privado e ignorado).
+  Migración local aplicada sin borrar el volumen. Backup/restore descartable aprobó
+  checksum, importe 12345.67 y revisión 0011_sales_payroll_credits.
+- Imagen final amd64: pip check aprobado; HTTP real en mock con caja, sueldos,
+  fiados, Resumen anónimo, login/CSRF, confirmación, worker, factura simulada y PDF.
+  DB temporal propia eliminada; RSS máximo hijo 112588 KiB y health promedio 3.0ms
+  en este equipo, sin certificar rendimiento físico de Raspberry.
+- Navegador anónimo: crear/editar caja 21000.10+10000.20=31000.30; sueldos de ambos
+  empleados por 8000.07, filtro por empleado/fechas y Ganancia diaria 23000.23.
+  Crear Fiado y marcar pagado, ayuda de Ganancia, navegación de cinco secciones.
+  Las tres tablas fiscales tienen cabeceras/celdas centradas; consola sin errores.
+  Móvil 390x844: Fiados y Resumen con clientWidth=scrollWidth=375, sin desborde.
+  Capturas privadas h10-resumen.png, h10-sueldos.png, h10-fiados.png, h10-movil.png
+  y h10-tablas.png en artifacts/. No se descargó por navegador el Excel en H10:
+  se verificó su contenido con pruebas automatizadas; H9 conserva su prueba visual.
+- Sin nuevas dependencias ni servicios. ARM64 no se repitió para este cambio de
+  aplicación; se conserva la evidencia H8, sin afirmar otra prueba ARM aquí.
+  No hubo acceso a servicios productivos ni despliegue o backup de la Raspberry.
 
 ## Evidencia H9
 - Suite completa de 182 casos: 182 passed, 1 warning, 49.69s, sin omitidos.

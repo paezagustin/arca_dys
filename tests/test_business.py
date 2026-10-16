@@ -16,8 +16,12 @@ from tests.test_migrations import scratch_database, migrate
 
 
 def values(**changes):
-    return dict({"entry_key": str(uuid4()), "kind": "sale", "entry_date": "2026-01-10", "amount": "1500.25",
+    data = dict({"entry_key": str(uuid4()), "kind": "sale", "entry_date": "2026-01-10", "amount": "1500.25",
         "expense_type": "white"}, **changes)
+    if data["kind"] == "sale":
+        data.setdefault("cash_amount", data["amount"])
+        data.setdefault("mp_amount", "0")
+    return data
 
 
 def test_sales_are_independent_idempotent_and_other_income_is_rejected(client):

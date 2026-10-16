@@ -22,6 +22,7 @@ class BusinessEntry(Base):
         CheckConstraint("amount >= 0 AND (kind = 'sale' OR amount > 0)", name="ck_business_amount"),
         CheckConstraint("expense_type IS NULL OR (kind='expense' AND expense_type IN ('white','black'))", name="ck_business_expense_type"),
         CheckConstraint("supplier_id IS NULL OR kind = 'expense'", name="ck_business_supplier"),
+        CheckConstraint("(cash_amount IS NULL AND mp_amount IS NULL) OR (kind='sale' AND cash_amount IS NOT NULL AND mp_amount IS NOT NULL AND cash_amount>=0 AND mp_amount>=0 AND amount=cash_amount+mp_amount)", name="ck_business_sale_breakdown"),
         Index("ix_business_date", "entry_date", "id"),
         Index("ix_business_kind_date", "kind", "active", "entry_date"),
         Index("ix_business_supplier_date", "supplier_id", "entry_date"),
@@ -33,6 +34,8 @@ class BusinessEntry(Base):
     kind = Column(String(10), nullable=False)
     entry_date = Column(Date, nullable=False)
     amount = Column(Numeric(18, 2), nullable=False)
+    cash_amount = Column(Numeric(18, 2))
+    mp_amount = Column(Numeric(18, 2))
     expense_type = Column(String(10))
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
     description = Column(Text, nullable=False, default="")

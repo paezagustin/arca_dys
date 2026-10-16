@@ -6,6 +6,21 @@ en Raspberry Pi 5. Usar FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Comp
 Leer README, docs/ALCANCE.md, docs/ROADMAP.md y docs/EXECUTION_STATUS.md al retomar.
 Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
+## Ampliación H10 solicitada el 16/10/2026 (prevalece sobre exclusiones anteriores)
+- Ventas: fecha, efectivo y MP editable sugerido desde cobros locales aprobados sin
+  facturar de esa fecha. Total calculado en servidor. Guardar desglose, no recalcular
+  cierres guardados cuando después se facture. Históricos sin desglose no se inventan.
+- Sueldos: fecha, empleado (ENUM PostgreSQL Francisco/Juan Cruz), monto y tipo
+  (ENUM efectivo/mercado pago, default mercado pago). Reporte del mes actual filtrable.
+  Sueldos reducen Ganancia y se muestran por empleado en Resumen, sin duplicar egresos.
+- Fiados: nombre, monto, observación, fecha y pagó sí/no (no por defecto), listado y
+  marcado de pago. Registro independiente, sin crear ventas ni alterar la caja automática.
+- Sueldos y Fiados accesibles sin login para uso local, en el menú junto a las otras
+  secciones públicas. Mantener CSRF, idempotencia y edición sin motivos/historial.
+- Centrar cabeceras y valores de tablas. Sin nuevos campos comerciales innecesarios.
+- La revisión 0011_sales_payroll_credits implementa H10; una vez publicada,
+  las revisiones 0001-0011 son inmutables. Agregar otra para cambios posteriores.
+
 ## Simplificación solicitada el 16/10/2026 (prevalece sobre H0-H8)
 - Acceso local sin login a Facturación, Gestión y Resumen, incluidos sus formularios.
   Sesión anónima individual y CSRF; únicamente admin ve y usa los demás módulos.
@@ -67,7 +82,7 @@ sustituibles. Mantener PostgreSQL compartido. Agregar procesos o infraestructura
 solo con una necesidad comprobada. No reemplazar el stack ni sumar SPA/ERP.
 Cambiar esquema exclusivamente con migraciones Alembic versionadas y revisadas.
 No editar una migración ya publicada ni el baseline congelado. Las revisiones
-0001-0010 se conservan; cualquier cambio posterior agrega otra migración.
+0001-0011 se conservan; cualquier cambio posterior agrega otra migración.
 No borrar columnas por ausencia de INSERT en un dump: comprobar referencias y datos.
 El usuario confirmó sin uso los campos de resolución de error_logs, logs_invoice
 y payments.id_arca. Se retiran con 0002_cleanup, que rechaza información inesperada.
