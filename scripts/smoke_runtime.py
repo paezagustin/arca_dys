@@ -59,6 +59,9 @@ def run():
                 time.sleep(.25)
         else:
             raise RuntimeError("El servidor no inició dentro del tiempo previsto")
+        for path in ("/page/invoice", "/business", "/dashboard"):
+            with get(path) as response:
+                assert response.status == 200 and "/login" not in response.url
         with get("/login") as response:
             csrf = hidden(response.read().decode(), "login_csrf")
         with post("/login", {"username": "admin", "password": "pruebas-locales", "login_csrf": csrf}) as response:
@@ -83,7 +86,8 @@ def run():
         else:
             raise RuntimeError("La cola fiscal simulada no completó la solicitud")
         with get("/dashboard") as response:
-            assert response.status == 200 and "Resumen del negocio" in response.read().decode()
+            page = response.read().decode()
+            assert response.status == 200 and "Ganancia" in page and "/dashboard/export?" in page
         durations = []
         for _ in range(10):
             started = time.perf_counter()
@@ -96,7 +100,7 @@ def run():
         process.terminate()
         process.wait(timeout=60)
         rss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-        print("Imagen de ejecución: login, CSRF, confirmación, worker, factura simulada, PDF y dashboard: OK.")
+        print("Imagen de ejecución: acceso anónimo, login, CSRF, confirmación, worker, factura simulada, PDF y dashboard: OK.")
         print(f"Medición del entorno de ensayo: RSS máximo hijo {rss} KiB; health promedio {sum(durations)/len(durations)*1000:.1f} ms.")
         print("Sin accesos externos; base efímera propia eliminada al terminar.")
     finally:

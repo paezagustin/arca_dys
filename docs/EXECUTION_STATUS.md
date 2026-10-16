@@ -12,6 +12,12 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
 ## Evidencia H9
 - Suite completa de 182 casos: 182 passed, 1 warning, 49.69s, sin omitidos.
   El warning conocido de Starlette/TestClient no afecta la ejecución y no se oculta.
+  Los módulos afectados aprobaron de nuevo después del último ajuste de ayudas.
+- Primer CI de 20c8acf: suite 182 passed en 46.09s y backup/restauración aprobados.
+  El ensayo runtime detectó una aserción desactualizada del título anterior; se
+  corrigió y amplió para recorrer las tres secciones sin login. Imagen final amd64
+  ensayada localmente: acceso anónimo, admin, CSRF, confirmación, worker, factura
+  simulada, PDF y Resumen aprobados; pip check aprobado. CI completo por confirmar.
 - Migración 0010_simple_business probada desde cero/esquema original y desde 0009
   con egresos existentes: importes conservados, tipos inequívocos migrados, egresos
   sin tipo preservados y rechazo atómico si hay otros ingresos. Historiales de cambios
