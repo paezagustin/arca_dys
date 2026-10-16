@@ -32,7 +32,7 @@ async def require_web_access(request: Request, db: Session = Depends(get_db)):
     if request.method not in {"GET", "HEAD", "OPTIONS"}:
         token = request.headers.get("x-csrf-token")
         if not token:
-            form = await request.form()
+            form = await request.form(max_files=1, max_fields=250)
             token = str(form.get("csrf_token", ""))
         if not token or not hmac.compare_digest(token.encode(), session.csrf_token.encode()):
             raise HTTPException(403, "La sesión del formulario venció. Actualizá la página e intentá otra vez.")

@@ -30,7 +30,10 @@ async def upload(request: Request, db: Session = Depends(get_db)):
         dataset = clean_text(form.get("dataset"), "el identificador del libro", 80, True)
         if workbook is None or not hasattr(workbook, "read") or not workbook.filename.lower().endswith(".xlsx"):
             raise ValueError("Elegí un archivo XLSX")
-        content = await workbook.read(MAX_UPLOAD + 1)
+        try:
+            content = await workbook.read(MAX_UPLOAD + 1)
+        finally:
+            await workbook.close()
         parsed = await run_in_threadpool(read_excel, content, dataset)
         batch = prepare_import(db, content, dataset, workbook.filename, request.state.user.username, parsed)
     except ValueError as error:

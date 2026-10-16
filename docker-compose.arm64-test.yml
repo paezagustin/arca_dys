@@ -1,0 +1,20 @@
+name: arca-dys-arm64-test
+services:
+  postgres:
+    extends:
+      file: docker-compose.test.yml
+      service: postgres
+    platform: linux/arm64
+  test:
+    extends:
+      file: docker-compose.test.yml
+      service: test
+    platform: linux/arm64
+  backup-test:
+    extends:
+      file: docker-compose.test.yml
+      service: backup-test
+    platform: linux/arm64
+networks:
+  isolated:
+    internal: true

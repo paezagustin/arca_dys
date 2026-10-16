@@ -7,7 +7,8 @@ def now_argentina():
 
 class Payment(Base):
     __tablename__ = "payments"
-    __table_args__ = (Index("ix_payments_billing_date", "status", "registered_arca", "date_approved", "id"),)
+    __table_args__ = (Index("ix_payments_billing_date", "status", "registered_arca", "date_approved", "id"),
+                      Index("ix_payments_status_date", "status", "date_approved"))
 
     id = Column(Integer, primary_key=True, index=True)
 

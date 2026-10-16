@@ -14,7 +14,7 @@ Dev/test crean exclusivamente la cuenta admin / pruebas-locales, con datos ficti
 La creación está bloqueada en producción. Después de migrar una instalación real:
 
 ```sh
-docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm fastapi python -m app.manage create-user --username administracion --role admin
+docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm --no-deps -e ALLOW_LIVE_OPERATIONS=true fastapi python -m app.manage create-user --username administracion --role admin
 ```
 
 El comando pide contraseña por entrada oculta, no por argumento ni en Git. No

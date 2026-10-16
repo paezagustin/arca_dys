@@ -2,6 +2,7 @@ name: arca-dys-test
 services:
   postgres:
     image: postgres:17.8-alpine
+    platform: linux/amd64
     environment:
       POSTGRES_DB: arca_dys_test
       POSTGRES_USER: arca_test
@@ -15,6 +16,7 @@ services:
       retries: 20
     networks: [isolated]
   test:
+    platform: linux/amd64
     build:
       context: .
       target: development
@@ -30,6 +32,7 @@ services:
     networks: [isolated]
   backup-test:
     image: postgres:17.8-alpine
+    platform: linux/amd64
     profiles: [backup-test]
     environment:
       PGHOST: postgres

@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
+from pathlib import Path
 from fastapi.templating import Jinja2Templates
 
 templates = Jinja2Templates(directory="app/templates")
@@ -34,3 +35,11 @@ def page_url(request, key, value):
 
 templates.env.filters.update(money=money, local_date=local_date)
 templates.env.globals["page_url"] = page_url
+
+
+def asset_url(name):
+    # El navegador debe renovar CSS/JS después de una actualización del sistema.
+    return f"/assets/{name}?v={(Path(__file__).parent / 'assets' / name).stat().st_mtime_ns}"
+
+
+templates.env.globals["asset_url"] = asset_url

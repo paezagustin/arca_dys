@@ -1,86 +1,122 @@
 # Arquitectura
 
-## Base actual y objetivo
-Python 3.11, FastAPI, SQLAlchemy 2, Jinja2 y PostgreSQL 17. Un monolito modular con
-adaptadores sustituibles, sin infraestructura de colas ni frontend compilado.
-Rutas web -> casos de uso -> repositorios/adaptadores. El caso de uso no retorna HTML.
-BillingService implementa los casos de uso fiscales sin HTML; las rutas presentan el resultado.
+Python 3.11, FastAPI, SQLAlchemy 2.0, Jinja2, PostgreSQL 17.8 y Docker Compose.
+Monolito modular: una aplicación y un worker del mismo proceso, sin broker, SPA,
+frontend compilado ni framework adicional. La base coordina transacciones y trabajo
+durable. Servicios de negocio sin HTML; rutas presentan resultados y validan acceso.
 
-Módulos: facturación; cobros/integración MP; gestión (ventas y movimientos);
-proveedores; reportes; web; configuración. Compartir transacciones de PostgreSQL
-cuando una operación local lo requiera. Separar emisión fiscal de generación de PDF.
-Si se necesita trabajo persistente fuera de HTTP, usar el mismo proyecto y PostgreSQL
-antes de introducir otro servicio de infraestructura.
+```mermaid
+flowchart LR
+    U[Usuaria] --> W[Web autenticada]
+    MP[Notificaciones MP] --> I[Inbox persistente]
+    I --> Q[Worker local]
+    W --> F[Solicitudes fiscales]
+    F --> Q
+    Q --> A[Adaptadores ARCA y MP]
+    Q --> C[Cobros MP]
+    W --> G[Gestión y proveedores]
+    X[Excel] --> V[Vista previa y revisión]
+    V --> G
+    G --> R[Métricas]
+    F --> P[PDF local]
+    R -. consulta separada .-> F
+    R -. consulta separada .-> C
+```
 
-## Entornos implementados
-`development` y `test` solo aceptan `INTEGRATIONS_MODE=mock`. La combinación de modo
-productivo y entorno local se rechaza aunque exista una variable de permiso.
-Producción requiere ENV=production, modo production y ALLOW_LIVE_OPERATIONS=true.
-La configuración no descubre .env automáticamente: Compose inyecta variables;
-APP_ENV_FILE solo se usa si se indica explícitamente.
-Dev/test no tienen NGROK, tokens ni certificados. API y PostgreSQL en red Docker
-`internal: true`. Docker Desktop no publica el puerto de un contenedor conectado
-solo a esa red: dev incorpora un proxy de entrada mínimo con el puerto 127.0.0.1:8001.
-Solo el proxy (y Adminer opcional) toca la red de entrada; API no tiene ruta de salida.
-No es un proxy HTTP genérico: su único destino es fastapi:8000. No se agrega a producción.
-TestClient no abre un servidor externo. pytest-socket bloquea sockets Python de red
-y las solicitudes HTTP de requests se interceptan. psycopg2 usa libpq en C, por lo
-que el aislamiento de Docker y el destino PostgreSQL comprobado siguen siendo necesarios.
-
-Simulación: respuestas de pagos con prefijo SIM; comprobantes SIM y CAE textual de
-prueba; PDF mínimo con aviso de falta de validez fiscal. El PDF de simulación verifica
-el recorrido, no el diseño ni la validez del comprobante productivo.
-
-## Esquema heredado
-La exportación Adminer adjunta informa PostgreSQL 17.8 y cinco tablas; no incluye filas.
-Baseline `0001_legacy`: payments, invoices, payment_invoice, error_logs, logs_invoice.
-El baseline conserva tipos, columnas, vínculos e índices originales.
-Los metadatos de adopción en migrations/baseline.py están congelados e independientes
-del ORM futuro. El arranque no usa create_all ni adopta/migra bases productivas.
-
-## Revisión de campos y limpieza autorizada
-El usuario confirmó qué estructuras no contienen información útil. 0002_cleanup
-las retira del esquema y de los modelos/repositorios/creadores de pagos, comprobando
-primero el contenido real bajo bloqueo transaccional. El baseline sigue intacto.
-
-| Campo/tabla | Evidencia en código | Decisión vigente |
+## Responsabilidades
+| Área | Archivos principales | Datos y garantías |
 | --- | --- | --- |
-| payments.bill | Se escribe; un filtro heredado lo usa. El listado principal usa status/registered_arca. | Candidato a simplificación tras revisar valores y retirar dependencias. |
-| payments.id_arca | El vínculo real está en payment_invoice. | Retirado en 0002; relaciones conservadas. |
-| logs_invoice | El flujo activo usa error_logs. | Retirada en 0002 junto con helper e importaciones. |
-| error_logs.resolved/resolved_at/resolved_by/resolution_notes | Sin uso confirmado; resolution_by no existe. | Retirados en 0002; historial de errores conservado. |
-| invoices.raw_afip_response | El adaptador pide el resultado completo del SDK. | Conservado y poblado en nuevas facturas; simulación identificada. |
-| invoices.error_message | Sin escritura actual relevante. | Evaluar dentro del nuevo modelo de estados. |
-| imports de módulos/schemas vacíos | Sin responsabilidad definida. | Limpiar durante extracción de casos de uso. |
+| Web | api/, web.py, templates/, assets/ | Sesión, CSRF, filtros, confirmaciones, paginación SQL y mensajes. |
+| Facturación | services/billing.py, fiscal_gateway.py, arca/ | Solicitud, snapshot, reserva exclusiva y bloqueo por punto/tipo. |
+| Comprobantes | services/invoices.py | ReportLab local, QR dinámico, total exacto 50/50, sin reemisión. |
+| MP | services/mp.py, mp_inbox.py, payments.py | Inbox antes de ACK, GET canónico con timeout, identidad externa e historial. |
+| Gestión | services/business.py | Ventas manuales independientes, movimientos, proveedores y auditoría. |
+| Excel | services/excel_reader.py, excel_import.py | Lectura acotada, originales, decisiones, identidad por origen y conciliación. |
+| Reportes | services/metrics.py | SQL/Decimal, datos vigentes, fuentes separadas y gráficos SVG. |
+| Configuración | services/settings.py, access.py | Roles, sesiones revocables, límites/emisor versionados y auditados. |
 
-La ausencia de filas en el dump no demuestra ausencia de uso de ninguna columna.
-`scripts/audit-legacy.sql` devuelve cantidades antes de la limpieza, sin exponer
-contenidos de clientes. Las facturas históricas no se rellenan con datos inventados.
+## Flujos fiscales
+La web prepara una confirmación con usuario, IDs estables, cantidad, importe,
+versión de ajustes y vencimiento. TODO resuelve todo el filtro en el servidor;
+seleccionados revalida cada ID. Confirmar crea una solicitud durable y devuelve
+rápidamente su página de estado. El worker procesa después, fuera de HTTP.
 
-## Facturación duradera (H2)
-0003_billing agrega solicitudes, reservas exclusivas de pagos y proveedor simulado
-persistente. Un bloqueo de sesión PostgreSQL por punto/tipo se conserva entre commits
-y llamadas externas; se libera explícitamente antes de devolver la conexión al pool.
-Antes del envío se confirman identidad, snapshot, reservas, payload y número intentado.
-Una respuesta incierta/sending bloquea nuevas emisiones del mismo punto/tipo.
-Una transacción confirma factura, JSON fiscal, vínculos, todas las marcas sí/no y
-estado autorizado. Si falla después del CAE, conserva el intento y se consulta el
-número original. Un reintento explícito consulta primero y reutiliza número/payload;
-no se asigna otro número por un timeout. Una consulta fallida jamás habilita reenvío.
-No se cambian pagos o importes de solicitudes existentes. Los rechazos inequívocos
-se distinguen de errores de red/infraestructura. No se descartan reservas de intentos.
-El PDF se genera bajo demanda desde una factura persistida, sin volver al proveedor.
-Se retiraron el pipeline fiscal con HTML/commits parciales y el generador PDF remoto.
+Antes de emitir se guardan snapshot, reservas, solicitud, número y payload. Un
+bloqueo de sesión PostgreSQL por punto/tipo se conserva entre commits y llamadas,
+y se libera antes de devolver la conexión al pool. La configuración se coordina
+con un bloqueo compartido/exclusivo. El worker revalida pagos por posibles devoluciones.
 
-El adaptador usa WebService de afip.py con extensiones de transporte acotadas:
-conexión 5s, lectura 45s, sin retries POST ni redirects. Lee certificados existentes;
-no ejecuta automatizaciones de autenticación de cuenta ni necesita su contraseña.
-Emisión/consulta retornan respuestas estructuradas antes del chequeo textual del helper.
-La consulta exige identidad fiscal e importe coincidentes; solo el código 602 se
-interpreta como ausencia. No se certificó homologación ni acceso productivo.
+Estados principales: queued → sending → authorized / rejected / uncertain.
+prepared conserva intentos que no pudieron enviarse; check_queued y retry_queued
+guardan acciones de recuperación. Un sending sin proceso dueño pasa a consulta;
+no se reenvía automáticamente. Una incertidumbre bloquea otra emisión del mismo punto.
+Consultar exige coincidencia de punto/tipo/número/fecha/documento/moneda/importe.
+Solo ausencia inequívoca habilita reintento explícito del MISMO payload y número.
 
-## Garantías posteriores
-H3 implementa inbox/worker y actualización idempotente, incluido historial de
-devoluciones sin cambios fiscales automáticos. Ver MERCADO_PAGO.md para contratos
-y limitaciones del contraste contra la cuenta efectiva.
-Los límites centralizados no son una interpretación de la normativa fiscal.
+Factura, raw_afip_response, vínculos, todas las marcas facturado y resultado se
+confirman juntos. Un CAE seguido de fallo DB/ACK no autoriza otra factura: se recupera
+la operación original. La idempotencia vive en DB, no en un botón deshabilitado.
+El PDF se genera de la factura y su snapshot inmutable, sin contactar al proveedor.
+Los históricos incompletos se identifican y no se rellenan con información inventada.
+
+El adaptador afip.py conserva respuestas estructuradas, con conexión 5s/lectura 45s,
+sin redirecciones ni reintentos POST automáticos. Usa certificados ya instalados;
+se retiraron automatizaciones de creación de certificados y seeds antiguos.
+
+## MP y worker
+POST firmado o entrada legacy validada confirma primero el inbox. Una clave de
+evento evita entregas idénticas; el ID canónico de pago evita duplicación de efectos.
+El worker toma filas con SKIP LOCKED, lee el proveedor y actualiza pago/historial de
+forma atómica, con orden por timestamp. Fallos se conservan y reintentan con espera.
+El procesamiento MP no importa ni invoca servicios fiscales. Worker fiscal y MP
+comparten hilo con prioridades acotadas, sin sumar infraestructura.
+Los contratos efectivos y sus límites están en MERCADO_PAGO.md.
+
+## Gestión y originales
+BusinessEntry no depende de pagos/facturas. Ventas diarias registran manualmente el
+total real; no se impone igualdad con otras fuentes. UUID de formulario, venta
+vigente única por fecha, bloqueo/versión en correcciones y auditoría transaccional.
+Anular y archivar son recuperables. Proveedores sin stock ni cuenta corriente.
+Importación confirma filas listas, conserva ambiguas y mantiene ambos históricos
+del dashboard fuera de gestión. Ver GESTION.md e IMPORTACION_EXCEL.md.
+
+## Esquema
+Las revisiones publicadas permanecen inmutables. El arranque comprueba head, sin
+create_all ni migración automática productiva. Desarrollo/test migran explícitamente
+antes del arranque. Baseline congelado independiente del ORM para adoptar el esquema
+original sin recrearlo. La exportación Adminer contiene estructura y no datos.
+
+| Revisión | Cambio |
+| --- | --- |
+| 0001_legacy | Cinco tablas originales, metadatos/exportación congelados. |
+| 0002_cleanup | Campos de resolución, logs_invoice y payments.id_arca, con rechazo si contienen información. resolution_by no existía. |
+| 0003_billing | Solicitudes, reservas y proveedor simulado persistente. |
+| 0004_mp | Auditoría de duplicados antes de unicidad, inbox e historial. |
+| 0005_settings | Acceso, configuración, auditoría y confirmaciones. |
+| 0006_listings | Índices de listados y cola. |
+| 0007_business | Gestión, proveedores y Float → NUMERIC con original y conciliación por fila. |
+| 0008_import | Lotes/orígenes/celdas y decisiones del Excel. |
+| 0009_reports | Índices de agregación por período. |
+
+Se conserva payments.bill por compatibilidad histórica; la elegibilidad usa estado,
+registered_arca, reservas y vínculos. Otros campos históricos no se eliminan por
+falta de escritura reciente. invoices.raw_afip_response queda poblado para nuevas
+autorizaciones; no se inventan respuestas previas. Los importes usan NUMERIC(18,2).
+
+## Entornos y acceso
+Dev/test solo aceptan mock. Producción exige ENV=production, modo production y
+ALLOW_LIVE_OPERATIONS=true. .env no se descubre automáticamente; APP_ENV_FILE debe
+ser explícito. Ningún import, seed o arranque llama a proveedores.
+
+API/DB de pruebas están en red interna, sin secretos ni certificados. Solo el proxy
+dev expone 127.0.0.1:8001; no sirve de proxy genérico. Suite x86 y ARM usan proyectos
+distintos y DB descartables. La simulación persiste comprobantes propios identificados
+SIM/SIN VALIDEZ FISCAL y permite probar pérdida de respuestas y reinicios.
+
+Sesiones opacas hasheadas, expiración, roles y CSRF; configuración, PDFs y gestión
+requieren acceso. Health/assets públicos; webhooks usan su propio contrato. CSP sin
+CDN ni scripts inline, límites de cuerpo y carga XLSX, salidas HTML escapadas y
+errores sin SQL/credenciales. CSS/JS versionados evitan estilos antiguos al actualizar.
+No se agregan exportadores de telemetría ni servicios externos de observabilidad.
+Dependencias directas en requirements.in y resolución fijada en requirements.txt;
+se conserva SQLAlchemy 2.0 y se eliminan pymysql/SDK MP que ya no se utilizan.

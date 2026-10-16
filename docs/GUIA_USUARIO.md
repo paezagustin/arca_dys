@@ -1,7 +1,7 @@
-# Guía de pruebas locales
+# Guía de uso
 
-Esta versión es el primer paso de la refactorización. No sustituye todavía al
-sistema de la Raspberry y no emite comprobantes reales.
+En Windows se usa la simulación, sin comprobantes reales ni pagos externos.
+La instalación de la Raspberry se actualiza por separado, siguiendo la guía de operación.
 
 ## Abrir el sistema en Windows
 Con Docker Desktop iniciado, abrir PowerShell en la carpeta del repositorio:
@@ -10,24 +10,23 @@ Con Docker Desktop iniciado, abrir PowerShell en la carpeta del repositorio:
 docker compose -f docker-compose.dev.yml up --build -d
 ```
 
-Abrir http://localhost:8001/dev. No hay que configurar NGROK, ARCA ni Mercado Pago.
+Abrir http://localhost:8001/dev e ingresar con admin / pruebas-locales.
+No hay que configurar NGROK, ARCA ni Mercado Pago.
 La primera construcción descarga dependencias. Los siguientes arranques conservan
 los pagos ficticios en el volumen local de desarrollo.
 
 ## Probar una factura
 1. Pulsar **Cargar tres pagos de ejemplo**. Se abre Facturación.
 2. Seleccionar un pago o varios y pulsar **FACTURAR SELECCIONADOS**.
-3. Ver el resultado y descargar el PDF desde la tabla de facturas.
-4. El archivo debe indicar **SIMULACION - SIN VALIDEZ FISCAL**.
+3. Revisar cantidad e importe y confirmar. La solicitud queda guardada mientras se procesa.
+4. Ver el resultado y descargar el PDF. Debe indicar **SIN VALIDEZ FISCAL**.
 
 Se pueden cargar más pagos ficticios ingresando importe y escenario desde /dev.
 Pending/rejected/refunded y falla de API permiten verificar respuestas sin pagos reales.
-La actualización de una devolución sobre un pago existente se hará en el hito MP.
-El PDF de ejemplo es sencillo y no representa aún el diseño fiscal definitivo.
-
-**FACTURAR TODO** conserva por ahora el contrato heredado del listado. La aplicación
-de TODO al filtro completo junto con paginación se implementa en H5. La factura
-independiente por importe pertenece a H4; todavía no se muestra como disponible.
+Para una devolución sobre un pago existente, repetir su ID e importe y elegir
+Pago devuelto. El estado cambia sin duplicar el cobro ni emitir otra factura.
+**FACTURAR TODO** incluye los pagos disponibles de todo el filtro, aunque haya
+otras páginas. **Factura por importe** permite crear una factura independiente.
 
 ## Detener y retomar
 ```powershell
@@ -50,7 +49,7 @@ a modo production para resolver un error local.
 ## Funcionalidades del sistema final
 Factura independiente; pagos completos de MP; ventas diarias manuales con efectivo+MP;
 ingresos/egresos; proveedores simples; importación histórica del Excel y dashboard.
-Se documentarán sus pantallas a medida que cada hito esté probado. Sin sueldos,
+Las pantallas se describen a continuación. Sin sueldos,
 facturación parcial, cuentas corrientes de proveedores ni saldos pendientes en métricas.
 
 ## Recuperación de facturación
@@ -132,3 +131,18 @@ revisar el registro existente y resolver el conflicto, sin duplicarlo.
 Sus datos no se agregan otra vez a ventas/gastos. Las fórmulas y resultados guardados
 siguen disponibles en las celdas originales. No reordenar filas en versiones posteriores
 del Excel: el origen se identifica por libro, hoja, fila y columna.
+
+## Resumen y gráficos
+En Resumen elegir año y mes, o todo el año. Se muestran ventas reales registradas,
+otros ingresos, egresos y resultado registrado. El gráfico y la tabla permiten
+comparar meses; “Ver mes” abre el detalle de ese período. Los egresos se agrupan
+por proveedor y categoría, cada lista con su propia paginación.
+
+El resultado es ventas + otros ingresos − egresos cargados. No es ganancia neta
+contable: no calcula stock ni gastos que no se hayan registrado. El promedio diario
+cuenta solo los días cargados; un cero ingresado sí cuenta y un día vacío no.
+“Sin registros” o “—” señalan falta de información, no un importe inventado.
+
+Más abajo están los cobros MP y las facturas, separados de las ventas. No sumarlos
+otra vez a la venta del día. Una devolución actualiza los cobros y conserva la factura
+existente. Los históricos del Excel se consultan con su propio enlace.

@@ -3,10 +3,9 @@
 Sistema personal para facturación sencilla y control del negocio en Raspberry Pi 5.
 FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Compose.
 
-La refactorización se desarrolla por hitos. Están preparados Windows 11, simulación,
-migraciones, facturación recuperable, integración MP y configuración/comprobantes.
-Gestión, importación y métricas continúan según el roadmap. La aplicación de la
-Raspberry no se despliega ni se modifica automáticamente al publicar en GitHub.
+Facturación recuperable, cobros MP idempotentes, configuración, gestión/proveedores,
+importación del Excel con revisión y dashboard. La aplicación de la Raspberry no
+se despliega ni se modifica automáticamente al publicar en GitHub.
 
 ## Probar en Windows 11 sin ARCA ni Mercado Pago
 
@@ -23,6 +22,9 @@ selección de uno o varios pagos y descarga del PDF simulado. No requiere .env,
 certificados, tokens, NGROK ni un pago real. Los comprobantes dicen SIN VALIDEZ FISCAL.
 El importe del cargador es el de un pago ficticio. Para una factura independiente,
 usar **Factura por importe**, revisar el importe y confirmar. No crea otro ingreso.
+En **Gestión** registrar ventas reales del día, otros ingresos y egresos; en
+**Resumen** consultar métricas por mes/año. La carga del Excel muestra una vista
+previa antes de incorporar registros y conserva las filas ambiguas para revisión.
 
 ```powershell
 docker compose -f docker-compose.dev.yml stop
@@ -53,6 +55,9 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 - [Versionado, backup y operación](docs/DATOS_Y_OPERACION.md).
 - [Acceso, configuración y PDF](docs/ACCESO_Y_COMPROBANTES.md).
 - [Contratos y operación MP](docs/MERCADO_PAGO.md).
+- [Gestión y proveedores](docs/GESTION.md), [importación](docs/IMPORTACION_EXCEL.md)
+  y [métricas](docs/METRICAS.md).
+- [Validación ARM y operación](docs/OPERACION_RASPBERRY.md).
 
 ## Producción
 
@@ -62,7 +67,8 @@ la instalación efectiva, hacer backup en el SSD, ensayar adopción/migración e
 y seguir la guía de operación. El SQL adjunto por el usuario solo contiene estructura.
 No importarlo sobre la base actual.
 
-Faltan los hitos de UI/gestión/importación/métricas y la comprobación ARM. No se declara
-listo para reemplazar al sistema productivo sin terminar el roadmap y ensayar su
-configuración y migraciones en copia. La rotación de claves y CRON quedan a cargo
-del usuario en una etapa posterior.
+El entorno simulado y sus pruebas nunca emiten en ARCA ni operan dinero real.
+La puesta en producción requiere verificar la instalación efectiva y los formatos
+de notificación de la cuenta, configurar el emisor y ensayar sobre su respaldo.
+La rotación de claves y CRON quedan a cargo del usuario. Consultar el estado de
+ejecución para la evidencia realizada y los límites de la validación.

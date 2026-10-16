@@ -1,7 +1,7 @@
-# Pruebas locales y CI
+# Pruebas y evidencia
 
-## Suite reproducible en Windows 11
-Instalar/iniciar Docker Desktop con contenedores Linux. Desde la raíz del repo:
+## Windows 11 y CI
+Docker Desktop con contenedores Linux, desde la raíz del repositorio:
 
 ```powershell
 docker compose -f docker-compose.test.yml run --build --rm test
@@ -9,48 +9,78 @@ docker compose -f docker-compose.test.yml --profile backup-test run --rm backup-
 docker compose -f docker-compose.test.yml down --volumes --remove-orphans
 ```
 
-El último comando elimina exclusivamente el entorno de pruebas arca-dys-test.
-Nunca cambiarlo por el compose productivo. No pasar archivos de variables reales.
-PostgreSQL test usa tmpfs, sin puerto publicado ni /mnt. Desarrollo usa otro volumen.
-El perfil backup-test genera un backup, comprueba checksum, restaura en otra base
-temporal y verifica un importe ficticio y la revisión de esquema. No copia datos reales.
+El último comando elimina SOLO arca-dys-test, con datos ficticios. Nunca usar el
+compose productivo o el de desarrollo para limpiar la suite. Si la DB test se
+recreó, ejecutar primero la suite/migraciones antes del perfil backup-test.
+El perfil x86 fija linux/amd64; ARM tiene archivo/proyecto separado.
+Ejecutar suite y perfil de backup en secuencia: comparten la DB descartable y no
+deben modificarla al mismo tiempo.
 
-## Alcance de la suite inicial
-- Fallo cerrado de configuración local/productiva, errores tipográficos y límites.
-- Bloqueo de clientes reales; modo simulado rechaza IDs productivos.
-- Rutas de simulación ausentes cuando la aplicación se configura para producción.
-- Formularios de selección vacía, única, múltiple e inválida; recorrido con PostgreSQL.
-- Pagos ficticios -> factura simulada -> PDF parseable con aviso sin validez fiscal.
-- Escenarios approved/pending/rejected/refunded/api_error sin conexiones de proveedores.
-- Nueva base migrada, exportación heredada adoptada sin perder filas y drift rechazado.
-- Limpieza 0002: conserva pagos/facturas/vínculos/errores; rechaza campos o tabla
-  con información y deja esquema, datos y versión intactos. Downgrade y upgrade probados.
-- Contrato de respuesta completa del SDK, con detalle único o lista, observaciones y
-  vencimiento. Cliente falso; ningún contacto con ARCA. Respuesta guardada aunque
-  falle PDF; descargas posteriores sin otra emisión. Respuesta simulada identificada.
-- Registro y consulta del historial de errores sin campos de resolución retirados.
+## Cobertura crítica
+| Área | Verificación ejecutable |
+| --- | --- |
+| Aislamiento | Combinaciones de configuración rechazadas, clientes reales bloqueados, URLs test comprobadas y rutas dev ausentes en producción. |
+| Esquema | Nueva base, adopción del export original, rechazo de drift, limpieza sin pérdida y rollback ante información inesperada. |
+| Dinero | NUMERIC, representación Float original, conciliación por fila; rechazo de precisión inesperada/NaN/infinito/desborde, NULL conservado. |
+| Fiscal | Cero/uno/varios IDs, doble envío, solapamiento/concurrencia, reserva exclusiva, respuesta perdida, caída del proceso y fallo/ACK perdido de COMMIT posterior al CAE. |
+| Recuperación | Consulta coincidente, ausencia inequívoca, fallo de consulta sin reenvío, mismo número/payload, PDF fallido sin nueva factura y worker durable fuera de HTTP. |
+| MP | Reentregas/concurrencia, reinicio/reintentos, firma y cuenta, contratos canónicos por producto, estados viejos/contradictorios y devoluciones sin emisión automática. |
+| Acceso | Login real de TestClient, roles, sesión vencida/revocada, CSRF, nonce y auditoría/versiones de configuración. |
+| UI | Paginación SQL independiente, límites/filtros/fechas, TODO de todo el filtro, IDs fuera del filtro, confirmación vencida o con ajustes cambiados y errores HTML escapados. |
+| PDF | Factura C, snapshot, 50/50 exacto, CAE y QR decodificado desde PDF rasterizado; simulación identificada. |
+| Gestión | Venta diaria única concurrente, UUID, independencia de MP/facturas, correcciones/anulación/recuperación y proveedores archivados. |
+| Excel | Vista previa, ambigüedades, blanco/cero, fórmula sin ejecución, XML protegido, orígenes, repetición concurrente, nueva versión en conflicto y proveedor explícito. |
+| Métricas | Conciliación con detalle/importación, históricos separados, anulados, período vacío/cero, año bisiesto, diciembre/enero, timestamps y desgloses paginados. |
+| Operación | Backup custom, SHA256, restauración en DB propia y revisión de esquema; imagen de ejecución con servidor/worker reales en modo simulado. |
 
-H2 prueba idempotencia/concurrencia fiscal y recuperación del CAE con proveedor falso
-persistente, interrupciones y fallos inyectados. Esto no certifica conexión real ni
-homologación. Quedan formato de todos los productos MP, QR y diseño PDF en H3-H5.
-Los ejemplos no sustituyen
-una importación ni una migración de registros de producción.
+La suite solo permite ENV=test, INTEGRATIONS_MODE=mock y base arca_dys_test en
+postgres antes de TRUNCATE. Trunca exclusivamente tablas del ORM de ese destino.
+pytest-socket y requests bloquean red Python; libpq en C usa únicamente PostgreSQL
+en la red Docker interna. No se montan claves, certificados ni .env.prod.
+El test de rutas productivas importa la app y hace GET de rutas inexistentes sin
+iniciar lifespan; no construye clientes externos ni emite documentos.
 
-## Aislamiento
-La suite aborta antes de limpiar si no coincide ENV=test, INTEGRATIONS_MODE=mock y
-el destino arca_dys_test del servicio postgres. Solo usa fixtures ficticios.
-pytest-socket bloquea sockets de red Python; requests se bloquea explícitamente.
-psycopg2 en C no pasa por ese bloqueo, por eso se mantienen la validación de URL
-y la red interna de Docker. El test de producción importa rutas, sin iniciar
-lifespan ni construir clientes reales. No requiere ningún secreto en GitHub Actions.
+## ARM64
+```powershell
+docker compose -f docker-compose.arm64-test.yml run --build --rm test
+docker compose -f docker-compose.arm64-test.yml --profile backup-test run --rm backup-test
+docker compose -f docker-compose.arm64-test.yml down --volumes --remove-orphans
+```
 
-## Navegador
-Abrir http://localhost:8001/dev, cargar ejemplos, seleccionar uno o varios pagos,
-facturar y descargar PDF. Probar también errores y selección vacía. Verificar
-consola, estado visible y persistencia en DB. Registrar la evidencia concreta.
-TestClient y comprobar cadenas HTML no cuentan como validación visual.
+En Windows se ejecuta bajo emulación Docker/QEMU, incluyendo PostgreSQL ARM64.
+No equivale a certificar rendimiento, montajes o locale de la Raspberry física.
+Ver OPERACION_RASPBERRY.md y EXECUTION_STATUS.md para resultados medidos.
 
-## Homologación futura
-No habilitada en este hito. Si se agrega, usar un perfil distinto de la suite habitual:
-certificados de homologación, production=False y credenciales/URLs de prueba de MP
-según el producto real. Nunca usar una factura productiva de prueba ni dinero real.
+## Imagen de ejecución y archivo privado
+`scripts/smoke_runtime.py`, dentro de una imagen de ejecución, exige el entorno test
+aislado. Crea su propia DB temporal, migra y arranca Uvicorn sin reload en mock:
+login/CSRF, factura independiente, confirmación, worker, PDF y dashboard vía HTTP
+loopback. Comprueba una factura y cero pagos; cierra servidor y elimina solo su DB.
+Registra RSS máximo del proceso y tiempo de health del entorno de ensayo.
+No es un comando para ejecutar contra producción.
+
+`scripts/verify_excel.py` contrasta un original privado montado read-only en DB
+efímera, sin imprimir importes ni incorporarlos a fixtures. Se probó el adjunto real:
+9 meses conciliados, 493 registros y 30 filas ambiguas conservadas; repetición sin
+duplicados. Esa verificación NO forma parte de CI porque el archivo es privado.
+
+## Navegador y PDF
+La verificación visual usa el navegador de la aplicación, con datos ficticios:
+login, selección móvil, TODO desde otra página, emisión/descarga, configuración,
+gestión/proveedor, carga/revisión del Excel y filtros del dashboard. Se inspecciona
+el resultado visible, consola y persistencia. PDF simulado renderizado y revisado
+sin superposiciones. Capturas/resultados locales en artifacts/, fuera de Git.
+TestClient y comprobar HTML no se denominan validación visual.
+
+## Dependencias y límites
+requirements.in declara dependencias directas y requirements.txt fija la resolución
+comprobada. CI ejecuta pip check y pip-audit sobre dependencias públicas, sin datos
+de la app ni credenciales. Una auditoría sin hallazgos describe ese momento, no una
+garantía futura. La advertencia de deprecación del TestClient HTTPX no afecta el
+servidor ni se oculta en pytest; no es una prueba omitida.
+
+No se certifican servicios productivos ni homologación. Los contratos MP necesitan
+contraste con ejemplos anonimizados de la cuenta efectiva antes de publicar el
+webhook. Homologación futura debe ser un perfil distinto, con certificados/URLs de
+prueba. Nunca usar facturas productivas pequeñas, dinero real ni devoluciones reales
+para probar código. La puesta en producción se coordina después del backup y ensayo.

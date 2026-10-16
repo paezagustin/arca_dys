@@ -355,6 +355,14 @@ svg{
 }
 .mapping-row{padding:1rem 0;border-bottom:1px solid var(--line)}
 .source-cells dd{overflow-wrap:anywhere;white-space:pre-wrap;max-width:36rem}
+.dashboard-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:1rem}
+.dashboard-metrics .metric{font-size:clamp(1.25rem,2.5vw,1.9rem);overflow-wrap:anywhere}
+.chart-label{fill:var(--muted);font-size:16px}
+.chart-axis{stroke:var(--line);stroke-width:2}
+.bar-sales{fill:#21594f}
+.bar-expenses{fill:#b85070}
+.legend-sales::before,.legend-expenses::before{content:'';display:inline-block;width:.8rem;height:.8rem;margin-right:.4rem;background:#21594f}
+.legend-expenses::before{background:#b85070}
 .filters form{
   margin-top:1rem
 }
@@ -370,6 +378,8 @@ svg{
 .metrics .card{
   margin:.5rem 0
 }
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.metrics .metric{font-size:clamp(1.15rem,3vw,1.8rem);overflow-wrap:anywhere}
 @media(max-width:650px){
   .metrics{
     grid-template-columns:repeat(2,minmax(0,1fr))

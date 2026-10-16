@@ -69,7 +69,7 @@ que el respaldo productivo ya se haya realizado.
 En la Raspberry, usando la configuración que identifica su PostgreSQL existente:
 
 ```sh
-docker compose --env-file .env.prod -f docker-compose.prod.yml --profile backup run --rm backup
+docker compose --env-file .env.prod -f docker-compose.prod.yml --profile backup run --rm --no-deps backup
 ```
 
 Se usa pg_dump custom con snapshot consistente, permisos restrictivos, verificación
@@ -79,8 +79,8 @@ verifica además la restauración real y el contenido de un registro ficticio.
 No se agregó CRON, política de borrado ni copia a otro dispositivo.
 
 ## Antes de usar el nuevo Compose en producción
-El desarrollo continúa en los hitos H5-H8. No actualizar la Raspberry por el solo
-hecho de recibir un commit: faltan la verificación operativa y el ensayo en copia.
+No actualizar la Raspberry por el solo hecho de recibir un commit: primero hay
+que verificar su configuración efectiva y ensayar sobre una copia del respaldo real.
 No ejecutar este compose contra producción para probarlo.
 
 1. Identificar compose/proyecto de Portainer efectivos, nombres, mountpoints,
@@ -110,3 +110,7 @@ valida el archivo sin imprimir valores sensibles. ENV=production, modo productio
 y ALLOW_LIVE_OPERATIONS=true son necesarios para operar realmente. El nombre de
 la base productiva no es arca_dys_test ni arca_dys_dev.
 El usuario realizará la rotación de claves después; este trabajo no la ejecuta.
+
+El procedimiento completo y los comandos de mantenimiento con permiso explícito
+están en OPERACION_RASPBERRY.md. El baseline 0001-0009 y la conversión monetaria se
+ensayan con datos ficticios; producción requiere su propio respaldo restaurable.

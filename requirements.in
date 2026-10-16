@@ -1,0 +1,16 @@
+# Dependencias directas. requirements.txt fija también sus transitivas comprobadas.
+fastapi==0.143.2
+uvicorn==0.54.0
+SQLAlchemy==2.0.54
+pydantic==2.14.1
+requests==2.34.2
+Jinja2==3.1.6
+python-dotenv==1.2.4
+python-dateutil==2.9.0.post0
+psycopg2-binary==2.9.13
+afip.py==1.2.0
+python-multipart==0.0.32
+alembic==1.20.0
+reportlab==4.5.1
+openpyxl==3.1.5
+defusedxml==0.7.1

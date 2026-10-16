@@ -51,7 +51,8 @@ Monolito modular. Rutas HTTP delgadas; casos de uso sin HTML; adaptadores extern
 sustituibles. Mantener PostgreSQL compartido. Agregar procesos o infraestructura
 solo con una necesidad comprobada. No reemplazar el stack ni sumar SPA/ERP.
 Cambiar esquema exclusivamente con migraciones Alembic versionadas y revisadas.
-No editar una migración ya publicada ni el baseline congelado.
+No editar una migración ya publicada ni el baseline congelado. Las revisiones
+0001-0009 se conservan; cualquier cambio posterior agrega otra migración.
 No borrar columnas por ausencia de INSERT en un dump: comprobar referencias y datos.
 El usuario confirmó sin uso los campos de resolución de error_logs, logs_invoice
 y payments.id_arca. Se retiran con 0002_cleanup, que rechaza información inesperada.
@@ -73,6 +74,9 @@ Cambios de estado de MP no generan documentos fiscales automáticamente.
 Ejecutar `docker compose -f docker-compose.test.yml run --build --rm test`.
 Para respaldo/restauración, ejecutar también el perfil backup-test documentado.
 Ejecutar `git diff --check`, revisar archivos a publicar y excluir secretos/datos.
+Al cambiar dependencias, actualizar requirements.in y su resolución fijada en
+requirements.txt; ejecutar pip check/audit y las pruebas afectadas, incluyendo ARM
+cuando cambien paquetes con binarios. Consultar docs/OPERACION_RASPBERRY.md.
 Pruebas críticas: formularios cero/uno/varios, duplicados, concurrencia, resultado
 ARCA incierto, fallo DB posterior al CAE, PDF sin reemisión, fechas, filtros, importes,
 permisos, migraciones sin pérdida, importación repetida y conciliación del Excel.

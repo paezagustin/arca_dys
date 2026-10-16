@@ -62,13 +62,14 @@ class Page:
     size: int
 
 
-def paginate(db, statement, number=1, size=25):
+def paginate(db, statement, number=1, size=25, *, scalars=True):
     if number < 1 or size < 1 or size > 100:
         raise ValueError("Página o cantidad de filas inválida")
     total = db.scalar(select(func.count()).select_from(statement.order_by(None).subquery()))
     pages = max(1, (total + size - 1) // size)
     number = min(number, pages)
-    return Page(list(db.scalars(statement.offset((number - 1) * size).limit(size))), total, number, pages, size)
+    selected = statement.offset((number - 1) * size).limit(size)
+    return Page(list(db.scalars(selected) if scalars else db.execute(selected)), total, number, pages, size)
 
 
 def payment_totals(db, statement):

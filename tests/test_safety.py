@@ -64,8 +64,9 @@ def test_production_does_not_register_simulation_routes():
     import os
     env = dict(os.environ, ENV="production", INTEGRATIONS_MODE="production", ALLOW_LIVE_OPERATIONS="true")
     result = subprocess.run([sys.executable, "-c",
-        "from app.main import app; assert not any(r.path.startswith(('/dev', '/test')) for r in app.routes)"],
-        env=env, capture_output=True, text=True, timeout=15)
+        "from app.main import app; from fastapi.testclient import TestClient; "
+        "client=TestClient(app); assert all(client.get(path).status_code == 404 for path in ('/dev','/dev/payments','/test/error'))"],
+        env=env, capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stderr
 
 

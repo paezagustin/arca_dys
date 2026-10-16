@@ -17,4 +17,6 @@ def validate_amount(monto, minimum=None, maximum=None):
         raise AFIPBillingError("El importe debe ser válido con hasta dos decimales") from error
     if not minimum <= value <= maximum:
         raise AFIPBillingError(f"El importe debe estar entre {minimum} y {maximum}")
+    if Decimal(str(float(value))) != value:
+        raise AFIPBillingError("El importe excede la precisión admitida para enviar al proveedor; no se redondeará automáticamente")
     return value

@@ -53,6 +53,8 @@ async def lifespan(app):
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None,
               dependencies=[Depends(access.require_web_access)])
 app.state.integrations_mode = INTEGRATIONS_MODE
+from app.core.request_limits import RequestLimits
+app.add_middleware(RequestLimits)
 app.include_router(mp.router)
 app.include_router(page.router)
 app.include_router(invoice.router)

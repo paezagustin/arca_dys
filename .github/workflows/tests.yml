@@ -12,6 +12,13 @@ jobs:
         run: docker compose -f docker-compose.test.yml run --build --rm test
       - name: Verificar backup y restauración con datos ficticios
         run: docker compose -f docker-compose.test.yml --profile backup-test run --rm backup-test
+      - name: Probar imagen de ejecución sin proveedores reales
+        run: |
+          docker build --target production -t arca-dys-runtime .
+          docker run --rm arca-dys-runtime pip check
+          docker run --rm --network arca-dys-test_isolated -e ENV=test -e INTEGRATIONS_MODE=mock -e ALLOW_LIVE_OPERATIONS=false -e DATABASE_URL=postgresql://arca_test:local-test-only@postgres:5432/arca_dys_test arca-dys-runtime python -m scripts.smoke_runtime
+      - name: Auditar dependencias públicas de ejecución
+        run: docker run --rm -v "$PWD/requirements.txt:/scan/requirements.txt:ro" python:3.11-slim-bookworm sh -c 'pip install -q pip-audit==2.10.1 && pip-audit -r /scan/requirements.txt --progress-spinner off'
       - name: Limpiar únicamente el entorno de esta suite
         if: always()
         run: docker compose -f docker-compose.test.yml down --volumes --remove-orphans

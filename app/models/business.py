@@ -22,6 +22,8 @@ class BusinessEntry(Base):
         CheckConstraint("amount >= 0 AND (kind = 'sale' OR amount > 0)", name="ck_business_amount"),
         CheckConstraint("supplier_id IS NULL OR kind = 'expense'", name="ck_business_supplier"),
         Index("ix_business_date", "entry_date", "id"),
+        Index("ix_business_kind_date", "kind", "active", "entry_date"),
+        Index("ix_business_supplier_date", "supplier_id", "entry_date"),
         Index("uq_business_daily_sale", "entry_date", unique=True,
               postgresql_where=text("kind = 'sale' AND active")),
     )
