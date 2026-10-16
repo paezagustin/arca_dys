@@ -6,7 +6,8 @@ Actualizado: 2026-10-16, America/Buenos_Aires.
 H0-H8 publicados. H9 incorpora las correcciones solicitadas: gestión simple,
 acceso local sin login, diseño según PDF de Figma, ayudas mediante diálogo,
 exportación de Resumen y generación privada del INSERT de proveedores.
-H9 validado localmente; publicación y CI se registran al finalizar la entrega.
+H9 completado y publicado: implementación 20c8acf y ensayo final b849534.
+CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38942781766.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
 
 ## Evidencia H9
@@ -17,7 +18,8 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
   El ensayo runtime detectó una aserción desactualizada del título anterior; se
   corrigió y amplió para recorrer las tres secciones sin login. Imagen final amd64
   ensayada localmente: acceso anónimo, admin, CSRF, confirmación, worker, factura
-  simulada, PDF y Resumen aprobados; pip check aprobado. CI completo por confirmar.
+  simulada, PDF y Resumen aprobados; pip check aprobado. CI de b849534 completó con
+  éxito suite, respaldo/restauración, imagen final y auditoría de dependencias.
 - Migración 0010_simple_business probada desde cero/esquema original y desde 0009
   con egresos existentes: importes conservados, tipos inequívocos migrados, egresos
   sin tipo preservados y rechazo atómico si hay otros ingresos. Historiales de cambios
@@ -43,7 +45,8 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
 - Sin cambios de dependencias ni infraestructura. ARM no se volvió a ejecutar en
   esta entrega; H8 conserva su evidencia ARM. No se certifican operaciones productivas.
 
-Para retomar: comprobar el commit/CI de H9 y actualizar esta sección de publicación.
+No quedan tareas funcionales pendientes de H9. La adopción productiva es una
+operación separada con respaldo y ensayo en copia; no fue ejecutada en esta sesión.
 El SQL privado se entrega con su CSV; no está en GitHub. Usarlo sobre suppliers ya
 creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 
@@ -59,6 +62,7 @@ creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 | H6 | e6dde32fa171c2fab645ec88926d81053c0d7c67 | 150 pruebas; gestión/proveedores, auditoría y Float→NUMERIC conciliado. CI 38824494125 success. |
 | H7 | 8d0e384555a1b85771c92874516fac5dfa11a87b | 161 pruebas + ampliación dirigida de 13 casos; Excel trazable y conflicto/XML. CI 38844309749 success. |
 | H8 | 4febc14ecc7a397b018e7b36bbf9b72a64922ca6 | Métricas/operación/dependencias. CI 38846641742 success, incluidos suite, backup, imagen runtime y auditoría. |
+| H9 | 20c8acf5bea4241ce7af666f6f26a393e34d9e5a + b849534533910812d907b091c21f61556acf8718 | Gestión simple, diseño, acceso local, exportación y SQL privado de proveedores. CI 38942781766 success; 182 pruebas y navegador. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió

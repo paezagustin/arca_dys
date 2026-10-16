@@ -6,7 +6,7 @@
 - [x] Resumen por tipo de egreso y exportación Excel equivalente a la primera hoja.
 - [x] Script privado de proveedores normalizados y equivalencias.
 - [x] Diseño según PDF de Figma, ayudas al pulsar y logo sin recorte.
-- [ ] Migración, pruebas aisladas, navegador, documentación y publicación comprobada.
+- [x] Migración, pruebas aisladas, navegador, documentación y publicación comprobada.
 
 Trabajar en este orden. Un casillero requiere evidencia ejecutada en EXECUTION_STATUS;
 no marcarlo por existir código. Se permiten commits pequeños dentro de cada hito.
