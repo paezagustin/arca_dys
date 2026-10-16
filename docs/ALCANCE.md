@@ -21,7 +21,7 @@ intermedia de facturación parcial. La ampliación H10 incorpora Sueldos y Fiado
 | G03 | Importar ingresos/egresos y datos históricos del dashboard; conservar origen y resolver problemas mediante vista previa. |
 | G04 | Reportes separan ventas, cobros MP y emisión fiscal. Desglose efectivo/MP, Sueldos por empleado y Ganancia = Ventas − Total Egresos − Sueldos; filtros día/período y Excel. |
 | G05 | Sueldos simples: fecha, Francisco/Juan Cruz, monto y efectivo/mercado pago; reporte mensual por defecto filtrable. |
-| G06 | Fiados: nombre, monto, observación, fecha y pagó; listado no pagados por defecto y edición/marcado de pago, independiente de caja. |
+| G06 | Fiados: nombre, monto, observación, fecha y pagó; listado no pagados por defecto y edición/marcado de pago con fecha automática de Buenos Aires, independiente de caja. |
 | U01 | Logo existente, navegación y diseño responsive; mensajes de éxito/error comprensibles y enlaces de descarga. |
 | U02 | Paginación SQL de todos los listados, incluido reports-stadistics. Filtros y orden estable. |
 | O01 | Desarrollo Windows 11 con Docker Desktop: simulación sin servicios externos, datos de ejemplo y tests repetibles. |

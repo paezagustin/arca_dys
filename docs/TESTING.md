@@ -103,3 +103,10 @@ doble envío/edición obsoleta, Fiados antiguos no pagados/marcado idempotente/t
 escapado, métricas por empleado, Ganancia con sueldos sin doble cómputo y rangos
 cruzando años. Reabre el Excel de tres hojas y concilia importes. Las pruebas
 anteriores se conservan con el contrato nuevo del cierre de caja.
+
+## Ajustes H11
+test_credit_paid_date.py comprueba fecha automática en marcado y formulario,
+reintentos incluso al día siguiente, edición conservando fecha, vuelta a No y
+nuevo pago, fechas anteriores desconocidas y migración sin pérdida desde 0011.
+La alineación de acciones se verifica en navegador con botones reales y tamaño
+de sus celdas, tanto en Sueldos como en Fiados.

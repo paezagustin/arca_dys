@@ -68,7 +68,10 @@ No calcula nóminas ni importa la hoja de sueldos/adelantos del Excel.
 Nombre, monto positivo, observación opcional, fecha (hoy) y Pagó (No por defecto).
 Se listan primero los no pagados de cualquier fecha para no perder los anteriores.
 Se puede buscar por nombre, pago y fechas. Marcar pagado sirve para resolverlo de
-un clic; el lápiz permite editar o volver a No si hubo un error. No genera un
+un clic y guarda automáticamente la fecha del día en Buenos Aires. La columna
+Fecha de pago muestra ese valor. Cambiar Pagó a Sí en el formulario tiene el
+mismo efecto. Editar otros datos conserva la fecha; repetir el marcado no la
+actualiza. El lápiz permite volver a No si hubo un error y quitar la fecha. No genera un
 ingreso ni modifica ventas, caja, MP o Ganancia automáticamente.
 
 ## Migración 0011_sales_payroll_credits
@@ -81,3 +84,11 @@ salary_employee (Francisco, Juan Cruz) y salary_medium (efectivo, mercado pago),
 y customer_credits con paid booleano. UUID/versión/bloqueos impiden duplicados y
 ediciones perdidas; no hay historial ni motivos. Respaldo antes de migrar y ensayo
 en copia; para retroceder se restaura el backup con su código compatible.
+
+## Migración 0012_credit_paid_date
+Agrega paid_date DATE nullable. Los fiados anteriores conservan importes, estado
+y fecha de origen; no se asigna una fecha de pago ficticia. Un pagado histórico
+sin fecha sigue sin fecha al editar otros campos o repetir Marcar pagado. La
+restricción ck_credit_payment_date impide tener fecha en un fiado no pagado.
+Requiere backup y ensayo en copia igual que las otras migraciones; no hay
+downgrade que descarte fechas registradas.

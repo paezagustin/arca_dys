@@ -727,6 +727,7 @@ dialog .actions {
 
 /* Cabeceras y valores de reportes comparten alineación. */
 table th, table td, table .money { text-align: center; vertical-align: middle; }
+table td .actions { justify-content: center; margin: 0; }
 input[readonly] { background: var(--ground) !important; font-weight: 600; }
 .legend-salaries::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: #8a62b9; }
 .bar-salaries { fill: #8a62b9; rx: 3; }

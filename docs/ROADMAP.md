@@ -1,5 +1,11 @@
 # Roadmap y condiciones de salida
 
+## H11 · Acciones centradas y fecha de pago de Fiados
+- [x] Controles de acciones centrados sin margen superior en tablas.
+- [x] Fecha de pago automática, conservada al editar y vacía si no está pagado.
+- [x] Migración sin fechas históricas inventadas, pruebas y navegador.
+- [ ] Documentación y publicación con evidencia.
+
 ## H10 · Caja desglosada, Sueldos y Fiados
 - [x] Alineación centrada de las tablas.
 - [x] Efectivo/MP sugerido editable, suma validada, conservación de históricos.

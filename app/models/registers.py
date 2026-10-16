@@ -22,6 +22,7 @@ class SalaryPayment(Base):
 class CustomerCredit(Base):
     __tablename__ = "customer_credits"
     __table_args__ = (CheckConstraint("amount>0", name="ck_credit_amount"),
+        CheckConstraint("paid OR paid_date IS NULL", name="ck_credit_payment_date"),
         Index("ix_credit_paid_date", "paid", "entry_date", "id"))
     id = Column(Integer, primary_key=True)
     entry_key = Column(String(36), nullable=False, unique=True)
@@ -30,4 +31,5 @@ class CustomerCredit(Base):
     observation = Column(Text, nullable=False, default="")
     entry_date = Column(Date, nullable=False)
     paid = Column(Boolean, nullable=False, server_default=false())
+    paid_date = Column(Date)
     version = Column(Integer, nullable=False, default=1)

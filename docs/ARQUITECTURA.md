@@ -101,6 +101,7 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0009_reports | Índices de agregación por período. |
 | 0010_simple_business | Egresos white/black, retiro de campos/historiales, sesiones anónimas y propietario de confirmaciones. |
 | 0011_sales_payroll_credits | Desglose nullable de ventas, ENUM de empleados/medios, Sueldos y Fiados; sin alterar totales previos. |
+| 0012_credit_paid_date | paid_date nullable en Fiados; no completa fechas anteriores y exige NULL si no está pagado. |
 
 Se conserva payments.bill por compatibilidad histórica; la elegibilidad usa estado,
 registered_arca, reservas y vínculos. Otros campos históricos no se eliminan por

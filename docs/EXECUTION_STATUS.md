@@ -3,6 +3,9 @@
 Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
+H11 implementado y verificado localmente: acciones centradas y fecha automática
+de pago de Fiados. Pendiente publicar y confirmar CI; resultados locales abajo.
+
 H10 implementado y verificado localmente: caja por efectivo/MP editable, Sueldos
 con Francisco/Juan Cruz, Fiados, tablas centradas y ampliación de Resumen/Excel.
 Publicado en main: 7c9840e647e6f3b43a19ba227e22e90fa7662e4b.
@@ -15,6 +18,23 @@ exportación de Resumen y generación privada del INSERT de proveedores.
 H9 completado y publicado: implementación 20c8acf y ensayo final b849534.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38942781766.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
+
+## Evidencia H11
+- Suite completa: 207 passed, 1 warning conocido de Starlette/TestClient, 63.00s;
+  sin omitidos. Prueba fecha en marcado/formulario, idempotencia incluso al día
+  siguiente, edición conservando fecha, vuelta a No y nuevo pago; histórico pagado
+  sin fecha conservado y migración desde 0011 sin alterar importes/estado.
+- 0012_credit_paid_date agrega paid_date DATE nullable y restricción para impedir
+  fecha en fiados no pagados. No modifica las migraciones 0001-0011 publicadas.
+- Backup previo de desarrollo: artifacts/dev-before-h11.dump, privado e ignorado.
+  Desarrollo migrado sin borrar su volumen. Backup/restore de DB descartable:
+  checksum, importe 12345.67 y revisión 0012_credit_paid_date aprobados.
+- Navegador anónimo en simulación: crear un fiado ficticio, marcar pagado y ver
+  fecha 16/10/2026. Fiados y Sueldos tienen acciones con margen 0; diferencia entre
+  centro de botones y celda menor a 0.01px horizontal, 0px vertical. Consola sin
+  errores. Capturas privadas h11-acciones.png, h11-fecha-pago.png y h11-sueldos.png.
+- Sin dependencias/servicios nuevos, pruebas productivas ni despliegue Raspberry.
+  ARM64 no se repitió; sigue disponible la evidencia H8 para ese entorno.
 
 ## Evidencia H10
 - Suite completa: 203 passed, 1 warning conocido de Starlette/TestClient, 60.94s,

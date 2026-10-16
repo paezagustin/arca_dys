@@ -2,6 +2,7 @@ from uuid import UUID
 from sqlalchemy import select
 from app.models.registers import SalaryPayment, CustomerCredit, EMPLOYEES, SALARY_MEDIA
 from app.services.business import money, record_date, clean_text, check_version
+from app.services.listings import business_today
 
 
 def save_register(db, model, values, identifier=None):
@@ -32,11 +33,14 @@ def save_register(db, model, values, identifier=None):
             if all(getattr(previous, key) == value for key, value in data.items()):
                 return previous
             raise ValueError("Este formulario ya fue guardado. Abrí uno nuevo")
-        row = model(entry_key=key, version=1, **data)
+        row = model(entry_key=key, version=0)
         db.add(row)
-    else:
-        for key, value in data.items():
-            setattr(row, key, value)
-        row.version += 1
+    if model is CustomerCredit:
+        data["paid_date"] = None
+        if data["paid"]:
+            data["paid_date"] = row.paid_date if row.paid else business_today()
+    for key, value in data.items():
+        setattr(row, key, value)
+    row.version += 1
     db.commit()
     return row

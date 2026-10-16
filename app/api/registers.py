@@ -111,6 +111,7 @@ async def mark_paid(identifier: int, request: Request, db: Session = Depends(get
             check_version(row, values.get("version"))
         except ValueError as exc:
             raise HTTPException(409, str(exc)) from exc
+        row.paid_date = business_today()
         row.paid, row.version = True, row.version + 1
         db.commit()
     return RedirectResponse("/fiados?paid=all&stored=1", status_code=303)
