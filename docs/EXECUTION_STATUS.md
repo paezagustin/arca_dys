@@ -3,11 +3,12 @@
 Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
-H0-H7 publicados y validados. H8 implementado: métricas, índices 0009_reports,
-dependencias actualizadas/auditadas, límites de carga, renovación de assets y
-documentación de operación. Falta cerrar la última ejecución ARM64 y CI del hito.
-El objetivo sigue activo hasta completar esas comprobaciones y publicar su evidencia.
-No detenerse entre pasos ordinarios ni pedir otra autorización para commits/push.
+Roadmap H0-H8 completado en desarrollo y publicado. Incluye métricas, índices
+0009_reports, dependencias actualizadas/auditadas, límites de carga, renovación de
+assets y documentación técnica/de uso/operación. CI de la entrega funcional H8
+aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38846641742.
+La puesta en producción está separada y no fue ejecutada en la Raspberry.
+No hay desarrollo funcional pendiente del roadmap.
 
 ## Entregas publicadas
 | Hito | Commit de código | Evidencia |
@@ -20,11 +21,13 @@ No detenerse entre pasos ordinarios ni pedir otra autorización para commits/pus
 | H5 | 89dc110c087495520e86c700eb4561526c53454c | 132 pruebas; paginación/filtros/TODO, confirmación estable y cola fuera de HTTP. CI 38823737655 success. |
 | H6 | e6dde32fa171c2fab645ec88926d81053c0d7c67 | 150 pruebas; gestión/proveedores, auditoría y Float→NUMERIC conciliado. CI 38824494125 success. |
 | H7 | 8d0e384555a1b85771c92874516fac5dfa11a87b | 161 pruebas + ampliación dirigida de 13 casos; Excel trazable y conflicto/XML. CI 38844309749 success. |
+| H8 | 4febc14ecc7a397b018e7b36bbf9b72a64922ca6 | Métricas/operación/dependencias. CI 38846641742 success, incluidos suite, backup, imagen runtime y auditoría. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió
   después la protección de precisión fiscal para límites administrativos elevados;
-  los 40 casos de métricas/operación/seguridad afectados aprobaron tras ese ajuste.
+  los 40 casos de métricas/operación/seguridad afectados aprobaron tras ese ajuste,
+  y CI aprobó la suite completa de 174 casos del commit H8.
 - Auditoría pip-audit 2.10.1: sin vulnerabilidades conocidas en requirements.txt.
   Resolución instalada con pip check aprobado. Sin pymysql/SDK MP innecesarios;
   SQLAlchemy sigue en 2.0 y PostgreSQL sigue en 17.8.
@@ -41,8 +44,11 @@ No detenerse entre pasos ordinarios ni pedir otra autorización para commits/pus
 - Imagen de ejecución amd64: 343873208 bytes; mismo recorrido aprobado, RSS máximo
   hijo 110708 KiB y health promedio 3.0 ms. Sin reload en ambos ensayos. Son muestras
   locales, no mediciones del hardware Raspberry. No se iniciaron servicios productivos.
-- Suite ARM inicial: 172 casos aprobados; un proceso de inspección tardó más del
-  límite de 15s bajo emulación. Se amplió a 60s y la suite completa se está repitiendo.
+- Suite ARM64 completa: 173 passed, 1 warning, 624.66s; cero pruebas omitidas.
+  El límite de un proceso de inspección se amplió de 15s a 60s por emulación y se
+  volvió a ejecutar la suite entera, con resultado aprobado.
+  Después, los 11 casos del módulo de métricas/operación pasaron también en ARM64,
+  incluida la nueva protección fiscal de precisión (174 casos distintos cubiertos).
 - Navegador: venta/egreso/proveedor, importación ficticia y revisión con motivo,
   históricos separados y filtro mensual/tabla/gráfico. Documento móvil 375px de
   ancho sin desbordamiento exterior en viewport 390x844. Consola sin errores.

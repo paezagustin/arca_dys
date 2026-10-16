@@ -78,6 +78,8 @@ de proveedores sin fusiones silenciosas, lote repetido sin duplicación y totale
 mes coincidentes. No importar sueldos. No convertir blancos/errores a cero.
 
 ## H8 · Métricas y operación
+- [x] Dashboard conciliado, fuentes separadas, suite x86/ARM64, imágenes de ejecución,
+  consumo de ensayo, backup/restore y publicación coordinada documentados.
 G04/O03. Ventas, egresos, resultado registrado, proveedores y comparación entre meses.
 Separar cobros MP y facturas; sin métricas de saldos pendientes. No afirmar ganancia
 neta si faltan costos. Verificar consultas contra detalle/importación.
