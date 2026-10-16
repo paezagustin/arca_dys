@@ -70,6 +70,8 @@ correcciones trazables. Decimal/NUMERIC; migración del Float heredado con conci
 No introducir stock, deuda de proveedores, sueldos ni cuenta corriente.
 
 ## H7 · Importación del Excel
+- [x] Vista previa/revisión/orígenes, proveedores explícitos, históricos separados,
+  idempotencia y conciliación del archivo original en base efímera comprobados.
 G03. Ingresos/egresos + dashboard. Preservar originales, lote/hoja/fila, clasificación,
 históricos manuales y valores ambiguos. Vista previa, errores revisables, sugerencias
 de proveedores sin fusiones silenciosas, lote repetido sin duplicación y totales por

@@ -353,6 +353,8 @@ svg{
   font-weight:650;
   min-height:32px
 }
+.mapping-row{padding:1rem 0;border-bottom:1px solid var(--line)}
+.source-cells dd{overflow-wrap:anywhere;white-space:pre-wrap;max-width:36rem}
 .filters form{
   margin-top:1rem
 }

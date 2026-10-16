@@ -1,10 +1,26 @@
 # Estado de ejecución
 
-Actualizado: 2026-10-15, America/Buenos_Aires.
+Actualizado: 2026-10-16, America/Buenos_Aires.
 
-## Estado vigente: H2-H6 validados, continuar H7-H8
+## Estado vigente: H2-H7 validados, continuar H8
 El usuario pidió completar TODO el roadmap sin detenerse entre hitos y avisar al
-final. Objetivo activo: continuar H7 y H8 de forma autónoma.
+final. Objetivo activo: continuar H8 de forma autónoma.
+H6 publicado como e6dde32fa171c2fab645ec88926d81053c0d7c67; CI success:
+https://github.com/paezagustin/arca_dys/actions/runs/38824494125.
+
+H7 implementado: 0008_import, lotes/filas/celdas originales, vista previa, decisiones
+con motivo, importación parcial de filas válidas y conflictos preservados. Identidad
+por archivo y por coordenada de origen; repetición concurrente sin duplicados. Mapeo
+explícito de proveedores, históricos manuales separados y fórmulas no ejecutadas.
+Validación: suite completa 161 passed, 80 warnings, 46.98s. Después se amplió seguridad
+XML, conflicto con venta manual y filtro SQL de históricos: 13 pruebas del módulo
+aprobadas. Backup/restauración revisión 0008_import comprobados.
+Original privado: 9 meses, 493 registros, 30 revisiones; conciliación mensual exacta
+por ventas y clasificación de compras, reimportación idempotente y todas las celdas
+conservadas. Archivo montado solo lectura, hash intacto; DB efímera eliminada. No se
+publicaron datos reales. Navegador: libro ficticio, 6 filas importadas, 2 revisiones;
+corregir una celda y confirmar solo esa fila; ambos bloques históricos visibles
+sin mezclarlos. Captura artifacts/h7-historicos.jpg. Continuar H8 sin detenerse.
 H5 publicado como 89dc110c087495520e86c700eb4561526c53454c; CI success:
 https://github.com/paezagustin/arca_dys/actions/runs/38823737655.
 

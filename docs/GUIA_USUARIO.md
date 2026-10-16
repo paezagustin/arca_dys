@@ -110,3 +110,25 @@ Para corregir, abrir “Ver / corregir”, cambiar los datos y explicar el motiv
 El historial conserva los valores anteriores. Elegir “Anulado” para quitar un
 registro de los totales sin borrarlo; se puede recuperar desde el filtro Anulados.
 Archivar un proveedor impide seleccionarlo en pagos nuevos y conserva los anteriores.
+
+## Traer los datos del Excel
+Desde Gestión, abrir Importar Excel. Conservar el original y elegir el identificador
+del libro (por ejemplo Negocio2026), usando el mismo para versiones del mismo archivo.
+Subir el XLSX y revisar cantidades, filas y totales por mes. No se agrega gestión
+hasta elegir “Importar filas listas”. Sueldos y adelantos quedan excluidos.
+
+Las filas con fecha o importe ambiguo quedan para revisar. Abrir “Revisar fila”,
+comprobar las celdas originales y completar el dato con un motivo. Después confirmar
+las nuevas filas listas. Si no hay información suficiente, “Omitir con motivo” conserva
+el registro original sin inventar un importe. Un blanco no es cero.
+
+Antes de confirmar, “Revisar proveedores sugeridos” permite asociar etiquetas con
+proveedores existentes. Es opcional; sin elección se conserva la descripción.
+Nombres parecidos nunca se fusionan solos. Repetir el mismo archivo abre el lote
+anterior; otra versión no vuelve a sumar sus celdas ya importadas. Si una celda cambió,
+revisar el registro existente y resolver el conflicto, sin duplicarlo.
+
+“Ver históricos del dashboard” muestra los dos bloques originales separados.
+Sus datos no se agregan otra vez a ventas/gastos. Las fórmulas y resultados guardados
+siguen disponibles en las celdas originales. No reordenar filas en versiones posteriores
+del Excel: el origen se identifica por libro, hoja, fila y columna.
