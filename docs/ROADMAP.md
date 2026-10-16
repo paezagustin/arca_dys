@@ -4,7 +4,9 @@
 - [x] Controles de acciones centrados sin margen superior en tablas.
 - [x] Fecha de pago automática, conservada al editar y vacía si no está pagado.
 - [x] Migración sin fechas históricas inventadas, pruebas y navegador.
-- [ ] Documentación y publicación con evidencia.
+- [x] Documentación y publicación con evidencia.
+Completado: befdcc1, CI 38980673926 aprobado; 207 pruebas, backup/restore y revisión
+en navegador. La migración conserva sin fecha los pagos históricos desconocidos.
 
 ## H10 · Caja desglosada, Sueldos y Fiados
 - [x] Alineación centrada de las tablas.

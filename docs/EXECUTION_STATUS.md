@@ -4,13 +4,14 @@ Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
 H11 implementado y verificado localmente: acciones centradas y fecha automática
-de pago de Fiados. Pendiente publicar y confirmar CI; resultados locales abajo.
+de pago de Fiados. Publicado en main: befdcc104e3621e5d1324ce2280a9da919fb64f6.
+CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38980673926.
 
 H10 implementado y verificado localmente: caja por efectivo/MP editable, Sueldos
 con Francisco/Juan Cruz, Fiados, tablas centradas y ampliación de Resumen/Excel.
 Publicado en main: 7c9840e647e6f3b43a19ba227e22e90fa7662e4b.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38978324468.
-Las secciones H8/H9 siguientes conservan sus resultados históricos.
+Las secciones de hitos anteriores conservan sus resultados históricos.
 
 H0-H8 publicados. H9 incorpora las correcciones solicitadas: gestión simple,
 acceso local sin login, diseño según PDF de Figma, ayudas mediante diálogo,
@@ -35,6 +36,10 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
   errores. Capturas privadas h11-acciones.png, h11-fecha-pago.png y h11-sueldos.png.
 - Sin dependencias/servicios nuevos, pruebas productivas ni despliegue Raspberry.
   ARM64 no se repitió; sigue disponible la evidencia H8 para ese entorno.
+- CI del commit befdcc1: suite completa, backup/restore, imagen de ejecución en
+  simulación y auditoría de dependencias aprobados. Documentación y roadmap cerrados.
+  En móvil, Sueldos conserva margen 0 y acciones centradas; ancho y scrollWidth
+  de 375px en viewport 390x844, sin desborde exterior.
 
 ## Evidencia H10
 - Suite completa: 203 passed, 1 warning conocido de Starlette/TestClient, 60.94s,
@@ -128,6 +133,7 @@ creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 | H8 | 4febc14ecc7a397b018e7b36bbf9b72a64922ca6 | Métricas/operación/dependencias. CI 38846641742 success, incluidos suite, backup, imagen runtime y auditoría. |
 | H9 | 20c8acf5bea4241ce7af666f6f26a393e34d9e5a + b849534533910812d907b091c21f61556acf8718 | Gestión simple, diseño, acceso local, exportación y SQL privado de proveedores. CI 38942781766 success; 182 pruebas y navegador. |
 | H10 | 7c9840e647e6f3b43a19ba227e22e90fa7662e4b | Caja efectivo/MP, Sueldos, Fiados, Resumen/Excel y tablas centradas. CI 38978324468 success; 203 pruebas, backup/restore, imagen final y navegador. |
+| H11 | befdcc104e3621e5d1324ce2280a9da919fb64f6 | Acciones centradas y fecha de pago automática de Fiados. CI 38980673926 success; 207 pruebas, restauración, imagen final y navegador. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió
