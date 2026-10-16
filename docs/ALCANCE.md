@@ -1,6 +1,6 @@
 # Alcance acordado
 
-Fecha: 2026-10-15. Las anotaciones finales del usuario reemplazan la propuesta
+Actualizado: 2026-10-16, con simplificación explícita posterior al roadmap H0-H8. Las anotaciones finales del usuario reemplazan la propuesta
 intermedia que incluía facturación parcial y sueldos.
 
 | ID | Requisito y aceptación |
@@ -16,16 +16,16 @@ intermedia que incluía facturación parcial y sueldos.
 | M01 | MP idempotente por ID externo; repetir notificaciones no duplica pagos. Importes iguales no implican duplicado. |
 | M02 | Actualizar estados y conservar historial de eventos; devolución no emite nota de crédito automáticamente. |
 | M03 | Identificar formatos reales de Point, QR y transferencias con ejemplos anonimizados; validar firma cuando corresponda al producto. |
-| G01 | Ventas diarias manuales con total MP+efectivo; independientes de cobros y facturas. Correcciones trazables. |
-| G02 | Ingresos, egresos y categorías; proveedores simples seleccionables al registrar pagos. |
+| G01 | Ventas diarias manuales con total MP+efectivo; independientes de cobros y facturas. Edición simple por lápiz, sin motivos ni historial de cambios. |
+| G02 | Solo ventas diarias y egresos En Blanco/En Negro; proveedores buscables. Sin otros ingresos ni medios/categorías adicionales. |
 | G03 | Importar ingresos/egresos y datos históricos del dashboard; conservar origen y resolver problemas mediante vista previa. |
-| G04 | Reportes separan ventas, cobros MP y emisión fiscal. Explicar el cálculo de resultado registrado, sin llamarlo ganancia neta completa. |
+| G04 | Reportes separan ventas, cobros MP y emisión fiscal. Mostrar Ganancia = Ventas − Total Egresos como estimación; exportar el período a Excel. |
 | U01 | Logo existente, navegación y diseño responsive; mensajes de éxito/error comprensibles y enlaces de descarga. |
 | U02 | Paginación SQL de todos los listados, incluido reports-stadistics. Filtros y orden estable. |
 | O01 | Desarrollo Windows 11 con Docker Desktop: simulación sin servicios externos, datos de ejemplo y tests repetibles. |
 | O02 | Compose separados dev/test/prod; PostgreSQL 17.8 de referencia, sin upgrade mayor en este trabajo. |
 | O03 | Alembic y adopción comprobada del esquema existente; backup manual en SSD antes de migrar. |
-| O04 | Autenticación de operaciones y configuración; webhook externo accesible sin sesión web pero validado por su propio contrato. |
+| O04 | Facturación/Gestión/Resumen sin login con sesión local y CSRF. Otras secciones solo admin; webhook con contrato propio. |
 | D01 | Roadmap, estado reanudable, documentación técnica y guía de uso actualizados; commits/push directos con evidencia. |
 
 ## Exclusiones

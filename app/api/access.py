@@ -14,9 +14,14 @@ router = APIRouter(tags=["Acceso"])
 
 @dataclass(frozen=True)
 class Principal:
-    id: int
+    id: int | None
     username: str
     role: str
+
+
+def public_path(path):
+    return path in {"/", "/logout"} or path in {"/page/invoice", "/page/invoice/manual", "/page/billing-requests"} or any(
+        path == prefix or path.startswith(prefix + "/") for prefix in ("/ARCA", "/business", "/dashboard"))
 
 
 async def require_web_access(request: Request, db: Session = Depends(get_db)):
@@ -25,10 +30,21 @@ async def require_web_access(request: Request, db: Session = Depends(get_db)):
         return
     identity = lookup_session(db, request.cookies.get(COOKIE))
     if not identity:
-        raise HTTPException(303, headers={"Location": "/login"})
+        if not public_path(path):
+            raise HTTPException(303, headers={"Location": "/login"})
+        if request.method not in {"GET", "HEAD", "OPTIONS"}:
+            raise HTTPException(403, "Actualizá la página y volvé a guardar el formulario.")
+        token, _ = start_session(db)
+        identity = lookup_session(db, token)
+        request.state.new_session_token = token
     session, user = identity
-    request.state.user, request.state.csrf_token = Principal(user.id, user.username, user.role), session.csrf_token
+    request.state.user = Principal(user.id, user.username, user.role) if user else Principal(None, "Local", "guest")
+    request.state.csrf_token = session.csrf_token
     request.state.session_hash = session.token_hash
+    if not public_path(path) and request.state.user.role != "admin":
+        if user is None:
+            raise HTTPException(303, headers={"Location": "/login"})
+        raise HTTPException(403, "Esta sección requiere una cuenta administradora")
     if request.method not in {"GET", "HEAD", "OPTIONS"}:
         token = request.headers.get("x-csrf-token")
         if not token:
@@ -39,7 +55,7 @@ async def require_web_access(request: Request, db: Session = Depends(get_db)):
 
 
 def require_admin(request: Request):
-    if request.state.user.role != "admin":
+    if getattr(request.state, "user", None) is None or request.state.user.role != "admin":
         raise HTTPException(403, "Esta configuración requiere una cuenta administradora")
 
 
@@ -66,6 +82,11 @@ async def login(request: Request, db: Session = Depends(get_db)):
         return templates.TemplateResponse(request=request, name="login.html", context={"login_csrf": nonce,
             "error": "No pudimos ingresar. Revisá usuario y contraseña; si hubo muchos intentos, esperá 10 minutos."}, status_code=401)
     token, _ = start_session(db, user)
+    # Al ingresar se renueva la identidad y se revoca la sesión anónima anterior.
+    previous = lookup_session(db, request.cookies.get(COOKIE))
+    if previous:
+        db.delete(previous[0])
+        db.commit()
     response = RedirectResponse("/page/invoice", status_code=303)
     response.set_cookie(COOKIE, token, max_age=43200, httponly=True, secure=config.ENV == "production", samesite="lax")
     response.delete_cookie("arca_login_csrf")
@@ -77,6 +98,6 @@ def logout(request: Request, db: Session = Depends(get_db)):
     from app.models.settings import WebSession
     db.delete(db.get(WebSession, request.state.session_hash))
     db.commit()
-    response = RedirectResponse("/login", status_code=303)
+    response = RedirectResponse("/page/invoice", status_code=303)
     response.delete_cookie(COOKIE)
     return response

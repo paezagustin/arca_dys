@@ -3,12 +3,43 @@
 Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
-Roadmap H0-H8 completado en desarrollo y publicado. Incluye métricas, índices
-0009_reports, dependencias actualizadas/auditadas, límites de carga, renovación de
-assets y documentación técnica/de uso/operación. CI de la entrega funcional H8
-aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38846641742.
+H0-H8 publicados. H9 incorpora las correcciones solicitadas: gestión simple,
+acceso local sin login, diseño según PDF de Figma, ayudas mediante diálogo,
+exportación de Resumen y generación privada del INSERT de proveedores.
+H9 validado localmente; publicación y CI se registran al finalizar la entrega.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
-No hay desarrollo funcional pendiente del roadmap.
+
+## Evidencia H9
+- Suite completa de 182 casos: 182 passed, 1 warning, 49.69s, sin omitidos.
+  El warning conocido de Starlette/TestClient no afecta la ejecución y no se oculta.
+- Migración 0010_simple_business probada desde cero/esquema original y desde 0009
+  con egresos existentes: importes conservados, tipos inequívocos migrados, egresos
+  sin tipo preservados y rechazo atómico si hay otros ingresos. Historiales de cambios
+  de gestión/configuración eliminados; solicitudes y snapshots fiscales conservados.
+- Backup/restore descartable: checksum y valor 12345.67, revisión 0010_simple_business.
+  Antes de actualizar dev se guardó un dump local privado dev-before-h9.dump.
+- Original Excel montado read-only: 9 meses, 493 registros, 30 revisiones, conciliación
+  exacta y reimportación sin duplicados. Originales/históricos intactos, sueldos excluidos.
+  Su hash permaneció intacto; la base privada efímera se eliminó después del ensayo.
+- INSERT privado: 53 proveedores normalizados, 292 referencias conservadas en CSV.
+  Ejecutado dos veces en DB efímera: 53 proveedores, ningún movimiento. No se cargó
+  en producción ni se publicaron nombres, Excel, SQL o equivalencias privadas.
+- Navegador local sin login: crear/editar venta con fecha/total, guardar egresos de
+  ambos tipos, búsqueda y selección de proveedor, resumen, diálogo de ayuda y descarga.
+  Archivo descargado reabierto y conciliado; render de seis columnas revisado, sin
+  fórmulas ejecutables ni importes como texto. Encabezado azul y texto oscuro legible.
+- Admin muestra ocho secciones en mock; al salir vuelve el menú de tres secciones.
+  El historial de solicitudes sigue accesible sin login; otro navegador no puede
+  confirmar una vista previa ajena. CSRF y doble confirmación fiscal cubiertos por tests.
+- Móvil 390x844: ancho de documento 375px y scrollWidth 375px, sin desborde exterior.
+  Logo completo, barra lateral en escritorio y navegación compacta en móvil.
+  Capturas privadas: artifacts/h9-resumen.png, h9-movil.png y h9-export.png.
+- Sin cambios de dependencias ni infraestructura. ARM no se volvió a ejecutar en
+  esta entrega; H8 conserva su evidencia ARM. No se certifican operaciones productivas.
+
+Para retomar: comprobar el commit/CI de H9 y actualizar esta sección de publicación.
+El SQL privado se entrega con su CSV; no está en GitHub. Usarlo sobre suppliers ya
+creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 
 ## Entregas publicadas
 | Hito | Commit de código | Evidencia |

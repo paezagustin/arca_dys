@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from fastapi import APIRouter, Request, Depends, Query, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import select, or_, func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -10,6 +11,19 @@ from app.services.metrics import year_metrics, period_total, change, bounds, exp
 from app.web import templates
 
 router = APIRouter(prefix="/dashboard", tags=["Resumen"])
+
+
+@router.get("/export")
+def export(year: int | None = Query(None, ge=2, le=9998), month: int = Query(0, ge=0, le=12), db: Session = Depends(get_db)):
+    from app.services.excel_export import export_business
+    year = year or business_today().year
+    try:
+        content = export_business(db, *bounds(year, month))
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    period = f"{year}-{month:02}" if month else str(year)
+    return Response(content, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="ingresos-egresos-{period}.xlsx"'})
 
 
 @router.get("")
@@ -30,7 +44,7 @@ def dashboard(request: Request, year: int | None = Query(None, ge=2, le=9998), m
     bars, maximum = chart_bars(rows)
     return templates.TemplateResponse(request=request, name="dashboard.html", context={"year": year, "month": month, "months": MONTHS,
         "rows": rows, "summary": selected, "comparison_label": comparison_label,
-        "changes": {key: change(selected[key], previous[key]) for key in ("sale", "expense", "result")},
+        "changes": {key: change(selected[key], previous[key]) for key in ("sale", "expense_white", "expense_black", "expense", "result")},
         "start": start, "end": end, "bars": bars, "maximum": maximum,
         "suppliers": paginate(db, suppliers, suppliers_page, scalars=False), "categories": paginate(db, categories, categories_page, scalars=False)})
 

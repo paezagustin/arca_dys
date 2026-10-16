@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% block title %}Factura por importe{% endblock %}{% block content %}
 <a href="/page/invoice">← Volver a facturación</a><section class="card narrow"><h1>Factura por importe</h1>
-<p>Creá una factura independiente. No modifica cobros de Mercado Pago ni ventas diarias.</p>
+
 <form method="post" action="/ARCA/invoice/manual/preview"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-<div class="field"><label for="amount">Importe total a facturar</label><input id="amount" name="amount" type="number" inputmode="decimal" min="{{ values.minimum }}" max="{{ values.maximum }}" step="0.01" required autofocus aria-describedby="amount-help"></div>
-<p id="amount-help" class="muted">Entre ${{ values.minimum }} y ${{ values.maximum }}. Comprobante: Factura C.</p>
+<div class="field"><label for="amount">Importe total a facturar</label><input id="amount" name="amount" type="number" inputmode="decimal" min="{{ values.minimum }}" max="{{ values.maximum }}" step="0.01" required autofocus></div>
+<button type="button" class="help-trigger" data-help-next aria-label="Ayuda">?</button><template>Entre ${{ values.minimum }} y ${{ values.maximum }}. Comprobante: Factura C.</template>
 <div class="actions"><button>Revisar factura</button></div></form></section>{% endblock %}

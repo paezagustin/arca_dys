@@ -3,11 +3,10 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from uuid import UUID
 from sqlalchemy import select
-from app.models.business import BusinessEntry, Supplier, BusinessChange
+from app.models.business import BusinessEntry, Supplier
 
-KINDS = {"sale": "Venta del día", "income": "Otro ingreso", "expense": "Egreso"}
-MEDIA = {"mixed": "Mixto (efectivo y MP)", "cash": "Efectivo", "mp": "Mercado Pago",
-         "transfer": "Transferencia", "card": "Tarjeta", "unspecified": "Sin especificar"}
+KINDS = {"sale": "Venta del día", "expense": "Egreso"}
+EXPENSE_TYPES = {"white": "En Blanco", "black": "En Negro"}
 
 
 def clean_text(value, label, maximum, required=False):
@@ -36,14 +35,8 @@ def record_date(value):
 
 
 def snapshot(row):
-    fields = ("kind", "entry_date", "amount", "category", "medium", "supplier_id", "description", "classification", "origin", "active", "version") if isinstance(row, BusinessEntry) else ("name", "contact", "notes", "active", "version")
+    fields = ("kind", "entry_date", "amount", "expense_type", "supplier_id", "description", "version") if isinstance(row, BusinessEntry) else ("name", "contact", "notes", "active", "version")
     return {key: str(getattr(row, key)) if isinstance(getattr(row, key), (date, Decimal)) else getattr(row, key) for key in fields}
-
-
-def audit(db, row, actor, reason, previous):
-    db.flush()
-    db.add(BusinessChange(entity="entry" if isinstance(row, BusinessEntry) else "supplier", entity_id=row.id,
-        actor=actor, reason=reason, previous=previous, current=snapshot(row)))
 
 
 def check_version(row, value):
@@ -57,17 +50,18 @@ def check_version(row, value):
 
 def save_entry(db, values, actor, entry_id=None):
     row = db.scalar(select(BusinessEntry).where(BusinessEntry.id == entry_id).with_for_update()) if entry_id else None
-    if entry_id and row is None:
+    if entry_id and (row is None or not row.active):
         raise ValueError("Registro no encontrado")
-    previous = snapshot(row) if row else None
     if row:
         check_version(row, values.get("version"))
     kind = str(values.get("kind", ""))
     if kind not in KINDS:
-        raise ValueError("Elegí venta, ingreso o egreso")
-    medium = str(values.get("medium", ""))
-    if medium not in MEDIA:
-        raise ValueError("Elegí un medio válido")
+        raise ValueError("Elegí venta o egreso")
+    expense_type = values.get("expense_type") if kind == "expense" else None
+    if kind == "expense" and expense_type not in EXPENSE_TYPES:
+        raise ValueError("Elegí En Blanco o En Negro")
+    if row and row.kind != kind:
+        raise ValueError("No se puede convertir una venta en un egreso ni un egreso en venta")
     supplier_id = None
     if values.get("supplier_id"):
         try:
@@ -79,12 +73,8 @@ def save_entry(db, values, actor, entry_id=None):
             raise ValueError("El proveedor debe estar activo y solo se usa para egresos")
     data = {"kind": kind, "entry_date": record_date(values.get("entry_date")),
         "amount": money(values.get("amount"), allow_zero=kind == "sale"),
-        "category": "Ventas" if kind == "sale" else clean_text(values.get("category"), "la categoría", 100, True),
-        "medium": medium, "supplier_id": supplier_id,
-        "description": clean_text(values.get("description"), "la descripción", 2000),
-        "classification": clean_text(values.get("classification"), "la clasificación", 100),
-        "active": values.get("active", "1") == "1"}
-    reason = clean_text(values.get("reason"), "el motivo de corrección", 300, bool(row)) or "Alta manual"
+        "expense_type": expense_type, "supplier_id": supplier_id,
+        "description": clean_text(values.get("description"), "la descripción", 2000) if kind == "expense" else ""}
     if row is None:
         try:
             key = str(UUID(str(values.get("entry_key", ""))))
@@ -101,7 +91,7 @@ def save_entry(db, values, actor, entry_id=None):
         for key, value in data.items():
             setattr(row, key, value)
         row.version += 1
-    audit(db, row, actor, reason, previous)
+    db.flush()
     db.commit()
     return row
 
@@ -110,14 +100,13 @@ def save_supplier(db, values, actor, supplier_id=None):
     row = db.scalar(select(Supplier).where(Supplier.id == supplier_id).with_for_update()) if supplier_id else None
     if supplier_id and row is None:
         raise ValueError("Proveedor no encontrado")
-    previous = snapshot(row) if row else None
     if row:
         check_version(row, values.get("version"))
     name = clean_text(values.get("name"), "el nombre", 150, True)
     data = {"name": name, "name_key": clean_text(" ".join(name.casefold().split()), "el nombre normalizado", 150, True),
         "contact": clean_text(values.get("contact"), "el contacto", 200),
         "notes": clean_text(values.get("notes"), "las notas", 2000), "active": values.get("active", "1") == "1"}
-    reason = clean_text(values.get("reason"), "el motivo de corrección", 300, bool(row)) or "Alta de proveedor"
+
     if row is None:
         row = Supplier(version=1, **data)
         db.add(row)
@@ -125,6 +114,6 @@ def save_supplier(db, values, actor, supplier_id=None):
         for key, value in data.items():
             setattr(row, key, value)
         row.version += 1
-    audit(db, row, actor, reason, previous)
+    db.flush()
     db.commit()
     return row

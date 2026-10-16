@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from sqlalchemy import select, text
 from app.core import config
-from app.models.settings import BusinessSettings, SettingsChange
+from app.models.settings import BusinessSettings
 
 
 def defaults():
@@ -62,7 +62,6 @@ def save_settings(db, values, expected_version, username):
         row = BusinessSettings(id=1)
         db.add(row)
     row.values, row.version = cleaned, version + 1
-    db.add(SettingsChange(username=username, previous=previous, current=cleaned))
     db.commit()
 
 

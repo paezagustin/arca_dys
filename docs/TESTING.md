@@ -25,7 +25,7 @@ deben modificarla al mismo tiempo.
 | Fiscal | Cero/uno/varios IDs, doble envío, solapamiento/concurrencia, reserva exclusiva, respuesta perdida, caída del proceso y fallo/ACK perdido de COMMIT posterior al CAE. |
 | Recuperación | Consulta coincidente, ausencia inequívoca, fallo de consulta sin reenvío, mismo número/payload, PDF fallido sin nueva factura y worker durable fuera de HTTP. |
 | MP | Reentregas/concurrencia, reinicio/reintentos, firma y cuenta, contratos canónicos por producto, estados viejos/contradictorios y devoluciones sin emisión automática. |
-| Acceso | Login real de TestClient, roles, sesión vencida/revocada, CSRF, nonce y auditoría/versiones de configuración. |
+| Acceso | Login real de TestClient, roles, sesión vencida/revocada, CSRF, nonce, acceso anónimo, propiedad de vista previa y versiones de configuración. |
 | UI | Paginación SQL independiente, límites/filtros/fechas, TODO de todo el filtro, IDs fuera del filtro, confirmación vencida o con ajustes cambiados y errores HTML escapados. |
 | PDF | Factura C, snapshot, 50/50 exacto, CAE y QR decodificado desde PDF rasterizado; simulación identificada. |
 | Gestión | Venta diaria única concurrente, UUID, independencia de MP/facturas, correcciones/anulación/recuperación y proveedores archivados. |
@@ -84,3 +84,12 @@ contraste con ejemplos anonimizados de la cuenta efectiva antes de publicar el
 webhook. Homologación futura debe ser un perfil distinto, con certificados/URLs de
 prueba. Nunca usar facturas productivas pequeñas, dinero real ni devoluciones reales
 para probar código. La puesta en producción se coordina después del backup y ensayo.
+
+## Ajustes H9
+tests/test_simple_business.py comprueba uso anónimo y menú, CSRF, aislamiento entre
+navegadores, emisión simulada idempotente, edición sin motivo, clasificación,
+búsqueda literal de proveedores, borrado restringido, normalización/INSERT repetido,
+migración sin pérdida y rechazo de income heredado. La exportación se reabre y
+concilia al centavo: fechas, seis columnas, varias compras, cero/blanco, fórmulas
+tratadas como texto y precisión de Excel. Navegador separado para diseño, búsqueda,
+ayudas, descarga y móvil. Los datos privados no son fixtures ni se publican.

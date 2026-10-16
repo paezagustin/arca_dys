@@ -18,8 +18,9 @@ class Supplier(Base):
 class BusinessEntry(Base):
     __tablename__ = "business_entries"
     __table_args__ = (
-        CheckConstraint("kind IN ('sale','income','expense')", name="ck_business_kind"),
+        CheckConstraint("kind IN ('sale','expense')", name="ck_business_kind"),
         CheckConstraint("amount >= 0 AND (kind = 'sale' OR amount > 0)", name="ck_business_amount"),
+        CheckConstraint("expense_type IS NULL OR (kind='expense' AND expense_type IN ('white','black'))", name="ck_business_expense_type"),
         CheckConstraint("supplier_id IS NULL OR kind = 'expense'", name="ck_business_supplier"),
         Index("ix_business_date", "entry_date", "id"),
         Index("ix_business_kind_date", "kind", "active", "entry_date"),
@@ -32,28 +33,13 @@ class BusinessEntry(Base):
     kind = Column(String(10), nullable=False)
     entry_date = Column(Date, nullable=False)
     amount = Column(Numeric(18, 2), nullable=False)
-    category = Column(String(100), nullable=False)
-    medium = Column(String(30), nullable=False)
+    expense_type = Column(String(10))
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
     description = Column(Text, nullable=False, default="")
-    classification = Column(String(100), nullable=False, default="")
     origin = Column(String(20), nullable=False, default="manual")
     active = Column(Boolean, nullable=False, default=True)
     version = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
-
-
-class BusinessChange(Base):
-    __tablename__ = "business_changes"
-    id = Column(Integer, primary_key=True)
-    entity = Column(String(20), nullable=False)
-    entity_id = Column(Integer, nullable=False)
-    actor = Column(String(80), nullable=False)
-    reason = Column(String(300), nullable=False)
-    previous = Column(JSON)
-    current = Column(JSON, nullable=False)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
-    __table_args__ = (Index("ix_business_change_entity", "entity", "entity_id", "id"),)
 
 
 class MoneyMigrationAudit(Base):

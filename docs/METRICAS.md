@@ -1,33 +1,33 @@
-# Métricas del negocio
+# Resumen y exportación
 
-El resumen filtra por año y mes, con comparación contra el mes anterior (enero
-contra diciembre anterior) o contra el año anterior. Usa agregaciones SQL y NUMERIC,
-sin cargar el historial completo ni agregar servicios o librerías de gráficos.
-El gráfico SVG tiene descripción accesible y tabla con importes exactos.
+El período admite año completo o un mes. Los cálculos SQL usan NUMERIC:
 
-- Ventas: total manual de ventas vigentes por fecha. Incluye lo cobrado en efectivo
-  y MP según la carga de la usuaria. Una venta cero cuenta como día registrado;
-  un día sin carga no participa en promedio, mínimo ni máximo.
-- Otros ingresos: movimientos income vigentes; no incluyen ventas ya registradas.
-- Egresos: movimientos expense vigentes, con desglose paginado independiente por
-  proveedor y categoría. Los pagos sin proveedor siguen formando parte del total.
-- Resultado registrado: ventas + otros ingresos − egresos. Usa únicamente registros
-  existentes, sin estimar días faltantes ni calcular costo de mercadería/stock/sueldos.
-  No se presenta como ganancia neta contable. Un período sin gestión muestra ausencia
-  de registros, conservando los ceros que sí fueron cargados.
-- MP: pagos de estado actual approved, positivos, por fecha de aprobación en Buenos
-  Aires. Devoluciones posteriores cambian ese agregado; no es un histórico de saldo
-  ni un informe de liquidaciones, comisiones o ingresos netos de Mercado Pago.
-- Facturación: comprobantes con número, fecha, total y CAE guardados, por fecha de
-  emisión. Una factura independiente se cuenta aquí y nunca crea otra venta.
+- Ventas: suma del total vendido ingresado manualmente, incluyendo efectivo y MP.
+- Egresos en blanco y Egresos en negro: sumas por el tipo seleccionado.
+- Total Egresos: todos los egresos del período, incluidos los heredados aún sin tipo.
+- Ganancia: Ventas − Total Egresos, estimación con los registros cargados.
 
-Cobros y facturas se muestran separados y no se suman a ventas. No hay métricas de
-saldos pendientes ni parciales. Los bloques manuales del dashboard Excel se consultan
-por lote en Históricos; no se mezclan con estas fuentes. Sus fórmulas y blancos
-originales se conservan.
+Un día sin carga no cuenta en promedio/mínimo/máximo; una venta cero sí cuenta.
+Un período vacío muestra Sin registros. Comparaciones entre períodos se consultan
+con ?. El gráfico SVG y la tabla muestran ventas/egresos por mes. Los egresos se
+agrupan por proveedor y tipo; cada tabla conserva paginación independiente.
 
-Variación: diferencia entre importes comparables; porcentaje solo si la base es
-positiva. Si falta un período o la base es cero, el porcentaje queda no disponible.
-Los límites de mes incluyen todo el último día, incluidos timestamps de MP.
-El año bisiesto, el cruce diciembre/enero, las anulaciones, la importación y los
-desgloses paginados están cubiertos por tests de conciliación.
+MP (aprobados según estado actual y fecha de aprobación) y facturas con CAE guardado
+(por fecha de emisión) se muestran separados. Nunca se suman otra vez a Ventas.
+No hay saldos pendientes ni facturación parcial. Los históricos manuales del Excel
+se consultan por lote, sin mezclarlos con estos cálculos.
+
+## Exportar Excel
+El botón de Resumen descarga el período seleccionado completo, sin paginación.
+La hoja ingresos y egresos tiene las seis columnas originales: FECHA, VENTAS DEL DIA,
+COMPRAS EN BLANCO, MONTO, COMPRAS EN NEGRO, MONTO2. Conserva encabezado azul, tabla
+con bandas, fechas y moneda numéricas, filtro y cabecera inmovilizada. Se ajustan
+anchos para que los nombres y valores se lean completos.
+
+Se incluye cada fecha del período. Las fechas sin ventas conservan la celda vacía.
+Con varias compras por día se agregan filas y la venta aparece una sola vez.
+El concepto conserva proveedor y descripción. Nombres que comienzan con = se
+exportan como texto, sin ejecutar fórmulas. Los importes que exceden las 15 cifras
+significativas de Excel se rechazan con un mensaje, sin truncar centavos.
+Antes de exportar deben clasificarse los egresos heredados sin tipo: de ese modo
+los montos de MONTO/MONTO2 concilian con Total Egresos.

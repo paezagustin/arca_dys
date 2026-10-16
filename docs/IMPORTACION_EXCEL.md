@@ -13,11 +13,11 @@ Referencias: https://openpyxl.readthedocs.io/en/stable/ y sus notas de seguridad
 - Cada venta B y compra D/F tiene una propuesta independiente. Fechas/importes
   ambiguos van a revisión, sin reemplazarlos por cero. Una compra con importe válido
   sin descripción conserva el importe, la clasificación original y proveedor vacío.
-- La clasificación COMPRAS EN BLANCO / COMPRAS EN NEGRO permanece como texto original,
+- La clasificación COMPRAS EN BLANCO / COMPRAS EN NEGRO se conserva en las celdas
+  originales y determina el tipo de egreso white/black,
   sin inferir tratamiento fiscal. Ninguna importación genera pagos MP ni facturas.
 - Preparar no escribe gestión. Confirmar importa solo filas listas; conflictos de
-  fecha/origen regresan a revisión. Revisión/omisión requieren actor y motivo, con
-  historial de decisiones. Los valores originales nunca se sobrescriben.
+  fecha/origen regresan a revisión. Revisión/omisión no piden motivo ni guardan historial de cambios. Los valores originales nunca se sobrescriben.
 - Las etiquetas sugieren nombres parecidos de proveedores, sin asignaciones ni
   fusiones automáticas. Elegir explícitamente el proveedor, o conservar descripción.
   La asignación solo aplica a filas que se importen después; las ya importadas se

@@ -1,14 +1,14 @@
 {% extends "base.html" %}{% block title %}Resultado de facturación{% endblock %}{% block head_extra %}{% if operation.state in ['queued','sending','check_queued','retry_queued'] %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}{% block content %}
 <a href="/page/invoice">← Volver a facturación</a><section class="card narrow">
-{% if operation.state in ['queued','sending','check_queued','retry_queued'] %}<h1>Factura en proceso</h1><div class="notice" role="status">La solicitud está guardada. Esta pantalla se actualizará con el resultado.</div><p class="metric">{{ operation.total|money }}</p><p>Podés volver al listado y consultar el resultado más tarde. No hace falta repetir la operación.</p>
+{% if operation.state in ['queued','sending','check_queued','retry_queued'] %}<h1>Factura en proceso</h1><div class="notice" role="status">La solicitud está guardada. Esta pantalla se actualizará con el resultado.</div><p class="metric">{{ operation.total|money }}</p><button type="button" class="help-trigger" data-help-next aria-label="Ayuda">?</button><template>Podés volver al listado y consultar el resultado más tarde. No hace falta repetir la operación.</template>
 {% elif operation.state == 'authorized' %}<h1>Factura generada correctamente</h1>
 <div class="notice" role="status">La factura quedó guardada. Podés descargar el comprobante.</div>
 <p class="metric">{{ operation.total|money }}</p><p>{{ operation.fiscal_snapshot.get('name','') }} · Punto de venta {{ operation.point }}</p>
 <div class="actions"><a class="button" href="/ARCA/invoice/{{ operation.invoice_id }}/pdf">Descargar comprobante PDF</a></div>
-<p class="muted">Si falla la descarga, podés repetirla desde aquí. No hace falta emitir otra factura.</p>
+<button type="button" class="help-trigger" data-help-next aria-label="Ayuda">?</button><template>Si falla la descarga, podés repetirla desde aquí. No hace falta emitir otra factura.</template>
 {% else %}<h1>Facturación por revisar</h1><div class="notice warning" role="alert">{{ operation.error or 'La solicitud quedó guardada para verificar.' }}</div>
 <p>Importe: <strong>${{ '%.2f'|format(operation.total) }}</strong></p><p>Estado: {{ {'prepared':'Sin enviar','sending':'Por verificar','uncertain':'Por verificar','rejected':'Rechazada'}.get(operation.state,operation.state) }}</p>
 <div class="actions"><form method="post" action="/ARCA/requests/{{ operation.id }}/recover"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><button>Consultar comprobante</button></form>
 <form method="post" action="/ARCA/requests/{{ operation.id }}/retry"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><button class="quiet">Reintentar esta solicitud</button></form></div>
-<p class="muted">Antes de reintentar se consultará el mismo comprobante. No vuelvas a seleccionar estos pagos en otro intento.</p>{% endif %}
+<button type="button" class="help-trigger" data-help-next aria-label="Ayuda">?</button><template>Antes de reintentar se consultará el mismo comprobante. No vuelvas a seleccionar estos pagos en otro intento.</template>{% endif %}
 <p class="muted"><small>Solicitud: {{ operation.id }}</small></p></section>{% endblock %}

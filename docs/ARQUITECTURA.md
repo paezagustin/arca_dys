@@ -7,7 +7,7 @@ durable. Servicios de negocio sin HTML; rutas presentan resultados y validan acc
 
 ```mermaid
 flowchart LR
-    U[Usuaria] --> W[Web autenticada]
+    U[Usuaria] --> W[Web local / admin]
     MP[Notificaciones MP] --> I[Inbox persistente]
     I --> Q[Worker local]
     W --> F[Solicitudes fiscales]
@@ -30,13 +30,13 @@ flowchart LR
 | Facturación | services/billing.py, fiscal_gateway.py, arca/ | Solicitud, snapshot, reserva exclusiva y bloqueo por punto/tipo. |
 | Comprobantes | services/invoices.py | ReportLab local, QR dinámico, total exacto 50/50, sin reemisión. |
 | MP | services/mp.py, mp_inbox.py, payments.py | Inbox antes de ACK, GET canónico con timeout, identidad externa e historial. |
-| Gestión | services/business.py | Ventas manuales independientes, movimientos, proveedores y auditoría. |
+| Gestión | services/business.py | Ventas manuales independientes, egresos En Blanco/En Negro y proveedores. |
 | Excel | services/excel_reader.py, excel_import.py | Lectura acotada, originales, decisiones, identidad por origen y conciliación. |
 | Reportes | services/metrics.py | SQL/Decimal, datos vigentes, fuentes separadas y gráficos SVG. |
-| Configuración | services/settings.py, access.py | Roles, sesiones revocables, límites/emisor versionados y auditados. |
+| Configuración | services/settings.py, access.py | Roles, sesiones revocables, límites/emisor versionados. |
 
 ## Flujos fiscales
-La web prepara una confirmación con usuario, IDs estables, cantidad, importe,
+La web prepara una confirmación con sesión de navegador, IDs estables, cantidad, importe,
 versión de ajustes y vencimiento. TODO resuelve todo el filtro en el servidor;
 seleccionados revalida cada ID. Confirmar crea una solicitud durable y devuelve
 rápidamente su página de estado. El worker procesa después, fuera de HTTP.
@@ -75,8 +75,8 @@ Los contratos efectivos y sus límites están en MERCADO_PAGO.md.
 ## Gestión y originales
 BusinessEntry no depende de pagos/facturas. Ventas diarias registran manualmente el
 total real; no se impone igualdad con otras fuentes. UUID de formulario, venta
-vigente única por fecha, bloqueo/versión en correcciones y auditoría transaccional.
-Anular y archivar son recuperables. Proveedores sin stock ni cuenta corriente.
+vigente única por fecha y bloqueo/versión en ediciones sin historial.
+Las anulaciones heredadas siguen excluidas; se pueden archivar proveedores. Proveedores sin stock ni cuenta corriente.
 Importación confirma filas listas, conserva ambiguas y mantiene ambos históricos
 del dashboard fuera de gestión. Ver GESTION.md e IMPORTACION_EXCEL.md.
 
@@ -97,6 +97,7 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0007_business | Gestión, proveedores y Float → NUMERIC con original y conciliación por fila. |
 | 0008_import | Lotes/orígenes/celdas y decisiones del Excel. |
 | 0009_reports | Índices de agregación por período. |
+| 0010_simple_business | Egresos white/black, retiro de campos/historiales, sesiones anónimas y propietario de confirmaciones. |
 
 Se conserva payments.bill por compatibilidad histórica; la elegibilidad usa estado,
 registered_arca, reservas y vínculos. Otros campos históricos no se eliminan por
@@ -113,8 +114,8 @@ dev expone 127.0.0.1:8001; no sirve de proxy genérico. Suite x86 y ARM usan pro
 distintos y DB descartables. La simulación persiste comprobantes propios identificados
 SIM/SIN VALIDEZ FISCAL y permite probar pérdida de respuestas y reinicios.
 
-Sesiones opacas hasheadas, expiración, roles y CSRF; configuración, PDFs y gestión
-requieren acceso. Health/assets públicos; webhooks usan su propio contrato. CSP sin
+Sesiones opacas hasheadas, expiración, roles y CSRF; Facturación, Gestión y Resumen
+permiten uso anónimo; las demás secciones requieren admin. Health/assets públicos; webhooks usan su propio contrato. CSP sin
 CDN ni scripts inline, límites de cuerpo y carga XLSX, salidas HTML escapadas y
 errores sin SQL/credenciales. CSS/JS versionados evitan estilos antiguos al actualizar.
 No se agregan exportadores de telemetría ni servicios externos de observabilidad.

@@ -75,7 +75,7 @@ if ENV in {"development", "test"} and INTEGRATIONS_MODE == "mock":
 
 @app.get("/", include_in_schema=False)
 def home():
-    return RedirectResponse("/dev" if ENV != "production" and INTEGRATIONS_MODE == "mock" else "/page/invoice")
+    return RedirectResponse("/page/invoice")
 
 
 @app.get("/health", include_in_schema=False)
@@ -88,6 +88,10 @@ def health():
 @app.middleware("http")
 async def privacy_headers(request, call_next):
     response = await call_next(request)
+    if getattr(request.state, "new_session_token", None):
+        from app.services.access import COOKIE
+        response.set_cookie(COOKIE, request.state.new_session_token, max_age=43200,
+                            httponly=True, secure=ENV == "production", samesite="lax")
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "same-origin"

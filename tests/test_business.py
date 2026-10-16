@@ -8,7 +8,7 @@ from sqlalchemy import select, func, text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.core.database import engine
-from app.models.business import BusinessEntry, BusinessChange, Supplier
+from app.models.business import BusinessEntry, Supplier
 from app.models.payment import Payment
 from app.models.invoice import Invoice
 from app.services.business import save_entry, save_supplier, money
@@ -17,21 +17,21 @@ from tests.test_migrations import scratch_database, migrate
 
 def values(**changes):
     return dict({"entry_key": str(uuid4()), "kind": "sale", "entry_date": "2026-01-10", "amount": "1500.25",
-        "category": "Ventas", "medium": "mixed", "active": "1"}, **changes)
+        "expense_type": "white"}, **changes)
 
 
-def test_sales_do_not_create_payments_or_invoices_and_other_income_is_separate(client):
+def test_sales_are_independent_idempotent_and_other_income_is_rejected(client):
     data = values()
     assert client.post("/business/entries/new", data=data).status_code == 200
     assert client.post("/business/entries/new", data=data).status_code == 200
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(BusinessEntry)) == 1
-        assert db.scalar(select(func.count()).select_from(BusinessChange)) == 1
         assert db.scalar(select(func.count()).select_from(Payment)) == 0
         assert db.scalar(select(func.count()).select_from(Invoice)) == 0
-        save_entry(db, values(kind="income", amount="50.20", category="Reintegro"), "admin")
+        with pytest.raises(ValueError):
+            save_entry(db, values(kind="income", amount="50.20"), "admin")
     page = client.get("/business")
-    assert "$ 1.500,25" in page.text and "$ 50,20" in page.text
+    assert "$ 1.500,25" in page.text and "Otro ingreso" not in page.text
 
 
 def test_daily_sale_unique_under_concurrency():
@@ -47,23 +47,19 @@ def test_daily_sale_unique_under_concurrency():
         assert sorted(pool.map(save, range(2))) == ["conflict", "saved"]
 
 
-def test_edit_void_restore_audit_and_stale_version(client):
+def test_edit_without_reason_preserves_version_protection_and_has_no_history(client):
     with Session(engine) as db:
-        row = save_entry(db, values(), "admin")
-        identifier = row.id
-    data = values(version="1", amount="2000.10", reason="Corregir total", active="0")
+        identifier = save_entry(db, values(), "admin").id
+    data = values(version="1", amount="2000.10")
     assert client.post(f"/business/entries/{identifier}", data=data, follow_redirects=False).status_code == 303
     assert client.post(f"/business/entries/{identifier}", data=data).status_code == 422
-    data.update(version="2", active="1", reason="Recuperar registro")
-    assert client.post(f"/business/entries/{identifier}", data=data, follow_redirects=False).status_code == 303
     with Session(engine) as db:
         row = db.get(BusinessEntry, identifier)
-        assert row.amount == Decimal("2000.10") and row.active and row.version == 3
-        changes = list(db.scalars(select(BusinessChange).order_by(BusinessChange.id)))
-        assert len(changes) == 3 and changes[1].previous["amount"] == "1500.25"
-        assert changes[1].current["active"] is False
+        assert row.amount == Decimal("2000.10") and row.version == 2
     page = client.get(f"/business/entries/{identifier}")
-    assert "Corregir total" in page.text and "Recuperar registro" in page.text
+    assert "Historial de cambios" not in page.text and 'name="reason"' not in page.text
+    assert 'name="medium"' not in page.text and 'name="active"' not in page.text
+    assert 'name="kind" value="sale"' in page.text
 
 
 def test_supplier_selection_archival_and_no_silent_duplicate(client):
@@ -92,7 +88,7 @@ def test_zero_is_distinct_from_blank(client):
     with Session(engine) as db:
         identifier = db.scalar(select(BusinessEntry.id))
     assert 'value="0.00" required' in client.get(f"/business/entries/{identifier}").text
-    assert 'value="unspecified" selected' in client.get("/business/entries/new?kind=expense").text
+    assert 'name="expense_type"' in client.get("/business/entries/new?kind=expense").text
     assert client.post("/business/entries/new", data=values(kind="expense", amount="0", category="Compra")).status_code == 422
     assert client.post("/business/entries/new", data=values(entry_date="2026-02-30")).status_code == 422
 

@@ -20,9 +20,8 @@ from tests.test_excel_import import workbook_bytes
 def test_metrics_reconcile_registered_detail_and_keep_mp_and_invoices_separate(client):
     with Session(engine) as db:
         for data in [values(entry_date="2026-01-01", amount="100.10"), values(entry_date="2026-01-02", amount="0"),
-            values(kind="income", amount="5.05", category="Reintegro"),
+            values(kind="expense", amount="5.05", expense_type="black"),
             values(kind="expense", amount="25.05", category="Mercadería"),
-            values(kind="expense", amount="999", active="0", category="Anulado"),
             values(entry_date="2026-02-01", amount="200.20"),
             values(entry_date="2026-02-01", kind="expense", amount="50.20", category="Servicio"),
             values(entry_date="2025-12-01", amount="50")]:
@@ -36,17 +35,17 @@ def test_metrics_reconcile_registered_detail_and_keep_mp_and_invoices_separate(c
         january, february, march = rows[:3]
         assert january["sale"] == Decimal("100.10") and january["days"] == 2
         assert january["average"] == Decimal("50.05") and january["min_sale"] == 0
-        assert january["result"] == Decimal("80.10")
+        assert january["result"] == Decimal("70.00")
         assert january["mp"] == Decimal(9999) and january["invoices"] == Decimal(3000)
         assert february["result"] == Decimal(150) and march["result"] is None
         assert march["sale"] is None and march["days"] == 0
         total = period_total(rows)
-        assert total["result"] == Decimal("230.10") and total["average"] == Decimal("100.10")
+        assert total["result"] == Decimal("220.00") and total["average"] == Decimal("100.10")
     page = client.get("/dashboard?year=2026&month=1")
-    assert page.status_code == 200 and "$ 80,10" in page.text and "$ 9.999,00" in page.text
+    assert page.status_code == 200 and "$ 70,00" in page.text and "$ 9.999,00" in page.text
     assert "$ 50,10" in page.text and "Diciembre 2025" in page.text
     assert '<svg ' in page.text and 'aria-labelledby="chart-title chart-description"' in page.text
-    assert "ganancia neta contable" in page.text
+    assert "Ganancia" in page.text and "Otros ingresos" not in page.text
     assert "saldo pendiente" not in page.text.lower() and "pendientes de facturar" not in page.text.lower()
 
 
@@ -61,14 +60,14 @@ def test_import_and_dashboard_aggregate_same_values_without_historical_double_co
         assert year_metrics(db, 2022)[0]["result"] is None
 
 
-def test_grouped_supplier_and_category_lists_have_independent_sql_pagination(client):
+def test_grouped_supplier_and_expense_type_lists_have_independent_sql_pagination(client):
     with Session(engine) as db:
         for n in range(27):
             supplier = save_supplier(db, {"name": f"Ficticio {n:02}"}, "test")
             save_entry(db, values(kind="expense", amount="1.25", category=f"Categoría {n:02}", supplier_id=str(supplier.id)), "test")
     page = client.get("/dashboard?year=2026&month=1&suppliers_page=2&categories_page=1")
     assert page.status_code == 200
-    assert "Página 2 de 2" in page.text and "Página 1 de 2" in page.text
+    assert "Página 2 de 2" in page.text and "Página 1 de 1" in page.text
     assert "Ficticio 26" in page.text and "$ 33,75" in page.text
     assert "&lt;built-in" not in page.text
 

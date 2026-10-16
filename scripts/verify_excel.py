@@ -45,7 +45,7 @@ def verify(path):
                         func.to_char(BusinessEntry.entry_date, "YYYY-MM") == month,
                         BusinessEntry.kind == ("sale" if key == "sales" else "expense"))
                     if key != "sales":
-                        query = query.where(BusinessEntry.classification == ("COMPRAS EN BLANCO" if key == "D" else "COMPRAS EN NEGRO"))
+                        query = query.where(BusinessEntry.expense_type == ("white" if key == "D" else "black"))
                     if db.scalar(query) != Decimal(expected):
                         raise RuntimeError("La conciliación mensual requiere revisión; no se alteró el original")
             count = db.scalar(select(func.count()).select_from(BusinessEntry))

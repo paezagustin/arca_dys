@@ -10,7 +10,9 @@ from app.services.arca.billing import validate_amount
 from app.services.billing import BillingService, BillingConflict
 
 
-def preview_invoice(db, user_id, payment_ids=(), manual_amount=None):
+def preview_invoice(db, user_id, payment_ids=(), manual_amount=None, *, session_hash=None):
+    if user_id is None and not session_hash:
+        raise ValueError("Reabrí el formulario de facturación")
     ids = sorted(set(payment_ids))
     if bool(ids) == (manual_amount is not None):
         raise ValueError("Elegí pagos o ingresá un importe independiente")
@@ -23,16 +25,22 @@ def preview_invoice(db, user_id, payment_ids=(), manual_amount=None):
     else:
         amount = Decimal(str(manual_amount))
     validate_amount(amount, Decimal(settings["minimum"]), Decimal(settings["maximum"]))
-    preview = BillingPreview(id=str(uuid4()), user_id=user_id, kind="payments" if ids else "manual",
+    preview = BillingPreview(id=str(uuid4()), user_id=user_id, session_hash=session_hash, kind="payments" if ids else "manual",
         payment_ids=ids, total=amount, settings_version=version, expires_at=utcnow() + timedelta(minutes=15))
     db.add(preview)
     db.commit()
     return preview
 
 
-def confirm_preview(db, preview_id, user_id, service=None):
+def owns_preview(preview, user_id, session_hash=None):
+    if preview.session_hash:
+        return bool(session_hash) and preview.session_hash == session_hash
+    return user_id is not None and preview.user_id == user_id
+
+
+def confirm_preview(db, preview_id, user_id, service=None, *, session_hash=None):
     preview = db.get(BillingPreview, preview_id)
-    if preview is None or preview.user_id != user_id:
+    if preview is None or not owns_preview(preview, user_id, session_hash):
         raise ValueError("Confirmación no encontrada")
     if preview.request_id:
         return preview.request_id

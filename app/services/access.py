@@ -81,9 +81,9 @@ def authenticate(db, username, password, client_address):
     return user
 
 
-def start_session(db, user):
+def start_session(db, user=None):
     token = secrets.token_urlsafe(32)
-    row = WebSession(token_hash=sha256(token.encode()).hexdigest(), user_id=user.id,
+    row = WebSession(token_hash=sha256(token.encode()).hexdigest(), user_id=user.id if user else None,
                      csrf_token=secrets.token_urlsafe(32), expires_at=utcnow() + timedelta(hours=12))
     db.add(row)
     db.commit()
@@ -96,5 +96,5 @@ def lookup_session(db, token):
     row = db.get(WebSession, sha256(token.encode()).hexdigest())
     if row is None or row.expires_at <= utcnow():
         return None
-    user = db.get(User, row.user_id)
-    return (row, user) if user else None
+    user = db.get(User, row.user_id) if row.user_id else None
+    return (row, user) if user or row.user_id is None else None

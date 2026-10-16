@@ -2,7 +2,7 @@
 from datetime import date, datetime, time
 from decimal import Decimal
 from calendar import monthrange
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 from app.models.business import BusinessEntry, Supplier
 from app.models.payment import Payment
 from app.models.invoice import Invoice
@@ -20,22 +20,24 @@ def bounds(year, month=0):
 
 
 def finish(row):
-    row["result"] = ((row["sale"] or ZERO) + (row["income"] or ZERO) - (row["expense"] or ZERO)) if row["entries"] else None
+    row["result"] = ((row["sale"] or ZERO) - (row["expense"] or ZERO)) if row["entries"] else None
     row["average"] = (row["sale"] / row["days"]).quantize(Decimal("0.01")) if row["days"] else None
     return row
 
 
 def year_metrics(db, year):
     start, end = bounds(year)
-    rows = [{"month": n, "label": MONTHS[n-1], "sale": None, "income": None, "expense": None,
+    rows = [{"month": n, "label": MONTHS[n-1], "sale": None, "expense_white": None, "expense_black": None, "expense_unknown": None, "expense": None,
         "result": None, "days": 0, "entries": 0, "min_sale": None, "max_sale": None,
         "mp": None, "mp_count": 0, "invoices": None, "invoice_count": 0} for n in range(1, 13)]
     month = func.extract("month", BusinessEntry.entry_date)
-    for number, kind, count, amount, minimum, maximum in db.execute(select(month, BusinessEntry.kind,
+    for number, kind, expense_type, count, amount, minimum, maximum in db.execute(select(month, BusinessEntry.kind, BusinessEntry.expense_type,
         func.count(), func.sum(BusinessEntry.amount), func.min(BusinessEntry.amount), func.max(BusinessEntry.amount)).where(
-        BusinessEntry.active.is_(True), BusinessEntry.entry_date.between(start, end)).group_by(month, BusinessEntry.kind)):
+        BusinessEntry.active.is_(True), BusinessEntry.entry_date.between(start, end)).group_by(month, BusinessEntry.kind, BusinessEntry.expense_type)):
         row = rows[int(number)-1]
-        row[kind], row["entries"] = amount, row["entries"] + count
+        row[kind], row["entries"] = (row[kind] or ZERO) + amount, row["entries"] + count
+        if kind == "expense":
+            row[{"white": "expense_white", "black": "expense_black"}.get(expense_type, "expense_unknown")] = amount
         if kind == "sale":
             row["days"], row["min_sale"], row["max_sale"] = count, minimum, maximum
     mp_month = func.extract("month", Payment.date_approved)
@@ -54,7 +56,7 @@ def year_metrics(db, year):
 def period_total(rows):
     result = {"days": sum(row["days"] for row in rows), "entries": sum(row["entries"] for row in rows),
         "mp_count": sum(row["mp_count"] for row in rows), "invoice_count": sum(row["invoice_count"] for row in rows)}
-    for key in ("sale", "income", "expense", "mp", "invoices"):
+    for key in ("sale", "expense_white", "expense_black", "expense_unknown", "expense", "mp", "invoices"):
         values = [row[key] for row in rows if row[key] is not None]
         result[key] = sum(values, ZERO) if values else None
     for key, reducer in (("min_sale", min), ("max_sale", max)):
@@ -76,7 +78,8 @@ def expense_groups(start, end, *, suppliers=False):
         statement = select(label.label("label"), func.sum(BusinessEntry.amount).label("amount"), func.count().label("count")).outerjoin(
             Supplier, Supplier.id == BusinessEntry.supplier_id).group_by(Supplier.id, Supplier.name)
     else:
-        label = BusinessEntry.category
+        label = case((BusinessEntry.expense_type == "white", "En Blanco"),
+                     (BusinessEntry.expense_type == "black", "En Negro"), else_="Sin tipo")
         statement = select(label.label("label"), func.sum(BusinessEntry.amount).label("amount"), func.count().label("count")).group_by(label)
     return statement.where(BusinessEntry.active.is_(True), BusinessEntry.kind == "expense",
         BusinessEntry.entry_date.between(start, end)).order_by(func.sum(BusinessEntry.amount).desc(), label)

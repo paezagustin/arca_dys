@@ -6,6 +6,21 @@ en Raspberry Pi 5. Usar FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Comp
 Leer README, docs/ALCANCE.md, docs/ROADMAP.md y docs/EXECUTION_STATUS.md al retomar.
 Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
+## Simplificación solicitada el 16/10/2026 (prevalece sobre H0-H8)
+- Acceso local sin login a Facturación, Gestión y Resumen, incluidos sus formularios.
+  Sesión anónima individual y CSRF; únicamente admin ve y usa los demás módulos.
+- Venta diaria: fecha editable (hoy por defecto) e importe. Egreso: fecha, importe,
+  tipo En Blanco/En Negro, proveedor con búsqueda y descripción opcional.
+- Sin otros ingresos, medios, categorías adicionales, estados editables, motivos
+  de corrección ni historiales de cambios. Conservar historial de solicitudes fiscales,
+  snapshots de comprobantes y origen del Excel para evitar duplicación de importaciones.
+- Resumen: Ventas, Egresos en blanco, Egresos en negro, Total Egresos y Ganancia
+  (ventas menos egresos). Exportación con las seis columnas del Excel original.
+- Ayudas mediante diálogo al pulsar un icono, sin subtítulos explicativos permanentes.
+- Proveedores del Excel: generar INSERT idempotente privado y tabla de equivalencias;
+  agrupar variantes claras y mantener nombres ambiguos separados. No publicar datos reales.
+- Referencia visual: PDF de Figma; logo completo, barra lateral, azul/cian/rosa.
+
 - Mercado Pago: facturar el importe COMPLETO de cada pago, con facturado sí/no.
 - Conservar FACTURAR TODO y FACTURAR SELECCIONADOS; TODO abarca el filtro completo,
   no solo la página actual. Definir un conjunto estable de IDs al confirmar.
@@ -52,7 +67,7 @@ sustituibles. Mantener PostgreSQL compartido. Agregar procesos o infraestructura
 solo con una necesidad comprobada. No reemplazar el stack ni sumar SPA/ERP.
 Cambiar esquema exclusivamente con migraciones Alembic versionadas y revisadas.
 No editar una migración ya publicada ni el baseline congelado. Las revisiones
-0001-0009 se conservan; cualquier cambio posterior agrega otra migración.
+0001-0010 se conservan; cualquier cambio posterior agrega otra migración.
 No borrar columnas por ausencia de INSERT en un dump: comprobar referencias y datos.
 El usuario confirmó sin uso los campos de resolución de error_logs, logs_invoice
 y payments.id_arca. Se retiran con 0002_cleanup, que rechaza información inesperada.

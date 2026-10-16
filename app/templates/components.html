@@ -13,3 +13,4 @@
 {%- endmacro %}
 
 {% macro payment_status(status) -%}{{ {'approved':'Aprobado','pending':'Pendiente de aprobación','authorized':'Autorizado','in_process':'En proceso','in_mediation':'En revisión','rejected':'Rechazado','cancelled':'Cancelado','refunded':'Devuelto','charged_back':'Contracargo','partially_refunded':'Devolución parcial'}.get(status,status) }}{%- endmacro %}
+{% macro edit_icon(url, label='Editar') %}<a class="icon-button" href="{{ url }}" aria-label="{{ label }}" title="{{ label }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m16 3 5 5M4 20l4-1L21 6a2 2 0 0 0-5-3L3 16l-1 6z"/></svg></a>{% endmacro %}

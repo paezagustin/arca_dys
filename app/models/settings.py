@@ -14,7 +14,7 @@ class User(Base):
 class WebSession(Base):
     __tablename__ = "web_sessions"
     token_hash = Column(String(64), primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     csrf_token = Column(String(64), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
 
@@ -33,19 +33,11 @@ class BusinessSettings(Base):
     version = Column(Integer, nullable=False)
 
 
-class SettingsChange(Base):
-    __tablename__ = "settings_changes"
-    id = Column(Integer, primary_key=True)
-    username = Column(String(80), nullable=False)
-    previous = Column(JSON, nullable=False)
-    current = Column(JSON, nullable=False)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
-
-
 class BillingPreview(Base):
     __tablename__ = "billing_previews"
     id = Column(String(36), primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    session_hash = Column(String(64))
     kind = Column(String(10), nullable=False)
     payment_ids = Column(JSON, nullable=False)
     total = Column(Numeric(18, 2), nullable=False)

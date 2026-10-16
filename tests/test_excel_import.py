@@ -86,7 +86,7 @@ def test_preview_confirm_and_reupload_are_independent_and_idempotent(client):
     assert "Revisar fila" in client.get(f"/business/imports/{identifier}?state=review").text
 
 
-def test_review_keeps_raw_and_audits_decision_then_imports_only_after_confirmation(client):
+def test_review_keeps_raw_without_change_history_then_imports_after_confirmation(client):
     with Session(engine) as db:
         batch = prepare(db)
         identifier = batch.id
@@ -99,19 +99,19 @@ def test_review_keeps_raw_and_audits_decision_then_imports_only_after_confirmati
     with Session(engine) as db:
         row = db.get(ImportRow, row_id)
         assert row.raw == raw and row.state == "ready"
-        assert row.resolution["history"][0]["actor"] == "admin"
+        assert "history" not in row.resolution
         assert db.scalar(select(func.count()).select_from(BusinessEntry)) == 6
         confirm_import(db, identifier, "test")
         assert db.scalar(select(func.sum(BusinessEntry.amount)).where(BusinessEntry.kind == "expense")) == Decimal(145)
     assert client.post(f"/business/imports/{identifier}/rows/{row_id}", data={"reason": "No alterar importada", "action": "skip"}).status_code == 422
 
 
-def test_omit_requires_reason_and_does_not_turn_missing_amount_into_zero(client):
+def test_omit_without_reason_does_not_turn_missing_amount_into_zero(client):
     with Session(engine) as db:
         batch = prepare(db)
         identifier = batch.id
         row_id = db.scalar(select(ImportRow.id).where(ImportRow.batch_id == identifier, ImportRow.slot == "F", ImportRow.row_number == 4))
-    assert client.post(f"/business/imports/{identifier}/rows/{row_id}", data={"action": "skip"}).status_code == 422
+    assert client.post(f"/business/imports/{identifier}/rows/{row_id}", data={"action": "skip"}).status_code == 200
     assert client.post(f"/business/imports/{identifier}/rows/{row_id}", data={"action": "skip", "reason": "Sin comprobante"}).status_code == 200
     with Session(engine) as db:
         confirm_import(db, identifier, "test")

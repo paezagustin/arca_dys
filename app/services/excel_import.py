@@ -7,8 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models.imports import ImportBatch, ImportRow, ImportSupplierMap
 from app.models.business import BusinessEntry, Supplier
 from app.models.billing import utcnow
-from app.services.business import money, record_date, clean_text, audit
-from app.services.excel_reader import digest
+from app.services.business import money, record_date, clean_text
 
 
 def import_lock(db):
@@ -47,10 +46,9 @@ def normalized_proposal(proposed):
         raise ValueError("Tipo de fila no importable")
     return {"kind": kind, "entry_date": record_date(proposed.get("entry_date")),
         "amount": money(proposed.get("amount"), allow_zero=kind == "sale"),
-        "category": "Ventas" if kind == "sale" else clean_text(proposed.get("category"), "la categoría", 100, True),
-        "medium": "mixed" if kind == "sale" else "unspecified",
-        "description": clean_text(proposed.get("description"), "la descripción", 2000),
-        "classification": clean_text(proposed.get("classification"), "la clasificación", 100)}
+        "expense_type": ({"COMPRAS EN BLANCO": "white", "COMPRAS EN NEGRO": "black"}.get(proposed.get("classification")) or proposed.get("expense_type")) if kind == "expense" else None,
+        "description": clean_text(proposed.get("description"), "la descripción", 2000)}
+
 
 
 def confirm_import(db, identifier, actor):
@@ -66,7 +64,7 @@ def confirm_import(db, identifier, actor):
                 row.state, row.entry_id = "already", previous.entry_id
                 row.issue = "Este origen ya fue importado; no se volvió a sumar"
             else:
-                row.state, row.issue = "review", "El origen ya tiene otros valores importados. Revisá y corregí el registro existente; luego omití esta fila con un motivo."
+                row.state, row.issue = "review", "El origen ya tiene otros valores importados. Revisá y corregí el registro existente; luego omití esta fila."
                 row.resolution = dict(row.resolution or {}, existing_entry_id=previous.entry_id)
             continue
         try:
@@ -79,7 +77,7 @@ def confirm_import(db, identifier, actor):
                 entry = BusinessEntry(entry_key="excel:" + row.source_key, origin="excel", active=True, version=1,
                     supplier_id=supplier_id, **data)
                 db.add(entry)
-                audit(db, entry, actor, f"Importación {identifier} · {row.sheet}!{row.slot}{row.row_number}", None)
+                db.flush()
                 row.state, row.entry_id, row.issue = "imported", entry.id, None
                 db.flush()
         except (ValueError, IntegrityError) as error:
@@ -95,21 +93,18 @@ def resolve_row(db, identifier, row_id, values, actor):
     row = db.scalar(select(ImportRow).where(ImportRow.id == row_id, ImportRow.batch_id == identifier).with_for_update())
     if row is None or row.kind not in {"sale", "expense"} or row.state not in {"review", "ready", "skipped"}:
         raise ValueError("Esta fila no admite revisión; los registros importados se corrigen desde Gestión")
-    reason = clean_text(values.get("reason"), "el motivo de revisión", 300, True)
-    decisions = list((row.resolution or {}).get("history", []))
     action = values.get("action", "ready")
     if action == "skip":
         row.state = "skipped"
     elif action == "ready":
         proposal = dict(row.proposed, entry_date=values.get("entry_date"), amount=values.get("amount"),
-            description=values.get("description", ""), category=values.get("category", "Compras"))
+            description=values.get("description", ""), expense_type=values.get("expense_type", row.proposed.get("expense_type")))
         normalized = normalized_proposal(proposal)
         proposal.update({key: str(value) if key in {"entry_date", "amount"} else value for key, value in normalized.items()})
         row.proposed, row.state = proposal, "ready"
     else:
         raise ValueError("Elegí guardar revisión u omitir")
-    decisions.append({"actor": actor, "reason": reason, "action": action, "proposal": row.proposed, "at": utcnow().isoformat()})
-    row.resolution = dict(row.resolution or {}, history=decisions)
+    row.resolution = {key: value for key, value in (row.resolution or {}).items() if key != "history"}
     db.commit()
 
 

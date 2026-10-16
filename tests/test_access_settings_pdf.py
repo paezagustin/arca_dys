@@ -19,18 +19,18 @@ from app.core.database import engine
 from app.models.billing import utcnow
 from app.models.invoice import Invoice
 from app.models.payment import Payment
-from app.models.settings import User, WebSession, SettingsChange, BillingPreview
+from app.models.settings import User, WebSession, BillingPreview
 from app.services.access import COOKIE, create_user, start_session, ensure_local_admin, authenticate, hash_password, verify_password
 from app.services.settings import defaults, save_settings
 from app.services.billing import BillingService
 from app.services.invoices import render_invoice_pdf, qr_value, split_amount
 
 
-def test_private_pages_and_operations_require_login_without_emitting():
+def test_public_pages_allow_guests_and_operations_require_csrf_without_emitting():
     with TestClient(app) as raw:
         assert raw.get("/health").status_code == 200
-        assert raw.get("/page/invoice", follow_redirects=False).status_code == 303
-        assert raw.post("/ARCA/invoice/selected", data={"payment_ids": "1"}, follow_redirects=False).status_code == 303
+        assert raw.get("/page/invoice", follow_redirects=False).status_code == 200
+        assert raw.post("/ARCA/invoice/selected", data={"payment_ids": "1"}, follow_redirects=False).status_code == 403
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(Invoice)) == 0
 
@@ -43,7 +43,7 @@ def test_csrf_body_token_works_missing_token_is_rejected_and_logout_revokes_sess
     assert client.post("/logout", data={"csrf_token": csrf}).status_code == 200
     with TestClient(app) as replay:
         replay.cookies.set(COOKIE, cookie)
-        assert replay.get("/page/invoice", follow_redirects=False).status_code == 303
+        assert replay.get("/settings", follow_redirects=False).status_code == 303
 
 
 def test_expired_session_is_rejected(client):
@@ -51,7 +51,8 @@ def test_expired_session_is_rejected(client):
         for row in db.scalars(select(WebSession)):
             row.expires_at = utcnow() - timedelta(seconds=1)
         db.commit()
-    assert client.get("/page/invoice", follow_redirects=False).status_code == 303
+    assert client.get("/settings", follow_redirects=False).status_code == 303
+    assert client.get("/page/invoice", follow_redirects=False).status_code == 200
 
 
 def test_operator_cannot_change_configuration(client):
@@ -64,6 +65,8 @@ def test_operator_cannot_change_configuration(client):
         assert operator.get("/settings").status_code == 403
         assert operator.post("/settings", data={}).status_code == 403
         assert operator.get("/page/invoice/manual").status_code == 200
+        assert operator.post("/logout").status_code == 200
+        assert operator.get("/settings", follow_redirects=False).status_code == 303
 
 
 def test_passwords_are_hashed_and_local_account_is_not_created_in_production(monkeypatch):
@@ -85,14 +88,13 @@ def test_login_is_throttled_after_repeated_invalid_attempts(client):
         assert authenticate(db, "admin", "pruebas-locales", "SIM-ADDRESS") is None
 
 
-def test_settings_change_is_audited_and_existing_invoice_snapshot_is_immutable(client):
+def test_settings_change_preserves_existing_invoice_snapshot_without_change_history(client):
     first = BillingService().issue(manual_amount="15000.01", idempotency_key="SIM-SNAPSHOT")
     with Session(engine) as db:
         original = deepcopy(db.get(Invoice, first.invoice_id).fiscal_snapshot)
         values = defaults()
         values["name"], values["minimum"] = "Nuevo emisor de prueba", "2000"
         save_settings(db, values, 0, "admin")
-        assert db.scalar(select(func.count()).select_from(SettingsChange)) == 1
         assert db.get(Invoice, first.invoice_id).fiscal_snapshot == original
         with pytest.raises(ValueError, match="otra pantalla"):
             save_settings(db, values, 0, "admin")
