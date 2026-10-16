@@ -46,7 +46,8 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 - Proveedores: datos básicos y selección al registrar pagos. Sin cuentas corrientes,
   compras a crédito, vencimientos ni pagos parciales de deuda en este alcance.
 - Excel: ingresos/egresos y dashboard, incluidos datos manuales históricos.
-  Sueldos/adelantos excluidos. No inventar datos ni corregir ambiguos sin trazabilidad.
+  Importación de sueldos/adelantos excluida; registro manual de Sueldos habilitado
+  por H10. No inventar datos ni corregir ambiguos sin trazabilidad.
 - Factura C (tipo 11) correcta. Corregir plantilla, no cambiar de tipo fiscal.
   Conservar condición de venta fija y distribución cotillón/repostería 50/50.
   La condición fiscal exacta del emisor debe configurarse, no inferirse de que no es RI.

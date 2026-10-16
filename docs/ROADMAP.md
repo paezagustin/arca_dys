@@ -5,7 +5,9 @@
 - [x] Efectivo/MP sugerido editable, suma validada, conservación de históricos.
 - [x] Sueldos con ENUM PostgreSQL, reporte mensual, filtros y métricas por empleado.
 - [x] Fiados con formulario simple, listado y marcado de pago.
-- [ ] Resumen/exportación, migración, pruebas, navegador, documentación y push.
+- [x] Resumen/exportación, migración, pruebas, navegador, documentación y push.
+Completado: 7c9840e, CI 38978324468 aprobado con 203 casos, backup/restore e imagen
+final; evidencia detallada en EXECUTION_STATUS.md. No despliega la Raspberry.
 
 ## H9 · Ajustes solicitados el 16/10/2026
 - [x] Formularios simples de ventas y egresos, proveedores buscables y sin cambios auditados.

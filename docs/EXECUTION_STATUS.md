@@ -5,7 +5,8 @@ Actualizado: 2026-10-16, America/Buenos_Aires.
 ## Estado vigente
 H10 implementado y verificado localmente: caja por efectivo/MP editable, Sueldos
 con Francisco/Juan Cruz, Fiados, tablas centradas y ampliación de Resumen/Excel.
-Publicación y CI pendientes en este punto; la evidencia final se registra abajo.
+Publicado en main: 7c9840e647e6f3b43a19ba227e22e90fa7662e4b.
+CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38978324468.
 Las secciones H8/H9 siguientes conservan sus resultados históricos.
 
 H0-H8 publicados. H9 incorpora las correcciones solicitadas: gestión simple,
@@ -19,6 +20,10 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
 - Suite completa: 203 passed, 1 warning conocido de Starlette/TestClient, 60.94s,
   sin pruebas omitidas. Incluye migración desde 0010 con total conservado y
   efectivo/MP NULL, comparación ORM/Alembic y ENUM nativos; suite fiscal/MP intacta.
+  Tras ajustar el error ante un total manipulado, los 58 casos de caja/gestión/
+  exportación/métricas afectados volvieron a aprobar (17.73s). CI del código final
+  aprobó 203 casos en 54.23s, backup/restore, imagen runtime y auditoría sin
+  vulnerabilidades conocidas. No se omitieron pruebas.
 - Caja: sugerencia local limitada a aprobados sin facturar de la fecha, límites
   de día, edición manual, suma exclusivamente en servidor, negativos/precisión/
   desborde rechazados y cierre guardado independiente de la facturación posterior.
@@ -102,6 +107,7 @@ creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 | H7 | 8d0e384555a1b85771c92874516fac5dfa11a87b | 161 pruebas + ampliación dirigida de 13 casos; Excel trazable y conflicto/XML. CI 38844309749 success. |
 | H8 | 4febc14ecc7a397b018e7b36bbf9b72a64922ca6 | Métricas/operación/dependencias. CI 38846641742 success, incluidos suite, backup, imagen runtime y auditoría. |
 | H9 | 20c8acf5bea4241ce7af666f6f26a393e34d9e5a + b849534533910812d907b091c21f61556acf8718 | Gestión simple, diseño, acceso local, exportación y SQL privado de proveedores. CI 38942781766 success; 182 pruebas y navegador. |
+| H10 | 7c9840e647e6f3b43a19ba227e22e90fa7662e4b | Caja efectivo/MP, Sueldos, Fiados, Resumen/Excel y tablas centradas. CI 38978324468 success; 203 pruebas, backup/restore, imagen final y navegador. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió
@@ -141,7 +147,7 @@ h4-factura-independiente.jpg, h5-todo-filtro.jpg, h5-seleccion-movil.jpg,
 h6-gestion.jpg, h7-historicos.jpg, h8-grafico.jpg, h8-movil.jpg y
 comprobante-simulado.pdf. H3 se verificó por navegador/DB; no se afirma captura de H3.
 
-## Alcance preservado y publicación posterior
+## Alcance H0-H8 y publicación posterior (ampliado por H9/H10 arriba)
 Factura C, Efectivo y reparto 50/50; cobros completos sí/no, factura independiente,
 ventas manuales reales separadas, proveedores simples, Excel sin sueldos y métricas
 sin saldos pendientes. No se agregaron stock, cuenta corriente, salarios ni SPA.
