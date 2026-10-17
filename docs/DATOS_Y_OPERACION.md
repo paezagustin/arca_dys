@@ -84,6 +84,15 @@ esas comprobaciones; un archivo sin extensión .dump indica una operación no te
 verifica además la restauración real y el contenido de un registro ficticio.
 No se agregó CRON, política de borrado ni copia a otro dispositivo.
 
+## Limpieza manual acordada para la primera actualización
+El usuario confirmó conservar el control de facturación. No se limpia toda la DB.
+Después de respaldar, ensayar en copia y migrar a 0012, puede ejecutar manualmente
+scripts/reset-business-data.sql con psql --single-transaction y ON_ERROR_STOP=1.
+Retira únicamente Gestión/proveedores/importaciones/Sueldos/Fiados. Conserva cobros
+facturados, CAE/vínculos, solicitudes inciertas/reservas, inbox MP y configuración.
+No usa CASCADE ni cambia el esquema. No es un paso para cada actualización ni se
+ejecuta por CI/arranque. Los comandos completos están en OPERACION_RASPBERRY.md.
+
 ## Antes de usar el nuevo Compose en producción
 No actualizar la Raspberry por el solo hecho de recibir un commit: primero hay
 que verificar su configuración efectiva y ensayar sobre una copia del respaldo real.
@@ -96,10 +105,12 @@ No ejecutar este compose contra producción para probarlo.
 3. Confirmar que postgres es la instancia existente. No levantar dos servidores
    PostgreSQL sobre el mismo directorio. Se conservan nombres conocidos para evitar
    crear silenciosamente otra instancia sobre /mnt.
-4. Respaldar, restaurar en copia y ensayar adopt-legacy + futuras migraciones.
+4. Respaldar, restaurar en copia y ensayar adopt-legacy + futuras migraciones y,
+   solo en esta primera actualización acordada, la limpieza restringida de Gestión.
 5. En publicación coordinada, detener web anterior, aplicar la adopción/migraciones
    comprobadas y crear la cuenta administradora (ACCESO_Y_COMPROBANTES.md) antes de
-   habilitar el acceso público. No usar down --volumes ni recrear la base.
+   habilitar el acceso público. Limpiar únicamente Gestión con el SQL probado y
+   volver a importar los JSON. No usar down --volumes ni recrear la base.
 6. Revisar integridad/estado sin emitir una factura real como prueba automática.
 
 Se conserva PostgreSQL major 17. Prod usa imagen Debian, evitando cambiar a Alpine

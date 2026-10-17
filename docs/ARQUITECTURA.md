@@ -144,3 +144,12 @@ Los sueldos se agregan por fecha/empleado en metrics.py y reducen Ganancia una s
 vez; no se insertan también en business_entries. customer_credits es independiente:
 marcar pagado no produce movimientos. Excel añade hojas de desglose y sueldos sin
 alterar las seis columnas originales. No hay nuevas dependencias/procesos/servicios.
+
+## Despliegue manual y limpieza inicial
+La preparación H15 conserva íntegro el control fiscal/MP y configuración. El SQL
+puntual de mantenimiento trunca solo siete tablas de Gestión con RESTRICT; requiere
+head y transacción. No es una revisión Alembic ni se ejecuta al arrancar. El usuario
+lo aplica después de backup/ensayo/migración y antes de importar los JSON.
+NGROK puede mantenerse como agente externo; el override opcional fija su misma URL
+cuando el Compose lo administre. No cambian gateways ni contratos de facturación.
+Ver OPERACION_RASPBERRY.md y TECNOLOGIAS_Y_CONFIGURACION.md.

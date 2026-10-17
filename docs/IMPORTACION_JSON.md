@@ -82,7 +82,9 @@ instancia sobre el volumen existente ni vaciar la base productiva.
 
 1. Actualizar el código e imagen en la ventana de mantenimiento acordada, con
    web/worker/túnel detenidos y DB existente funcionando. Aplicar las migraciones
-   de la guía de operación; el importador exige head. No borrar datos fiscales.
+   de la guía de operación; el importador exige head. Si hay Gestión anterior,
+   ejecutar UNA VEZ su limpieza restringida según OPERACION_RASPBERRY.md, después
+   del backup/ensayo/migración. No borrar datos fiscales ni limpiar tras importar.
 2. Copiar los tres JSON de `normalizados/` desde Windows al SSD por Samba/SCP,
    por ejemplo a `/mnt/datos/docker/arca_dys/importacion_json`. Mantenerlos privados;
    no dependen de Git. Verificar los SHA256 contra `preparacion.json`.
@@ -129,7 +131,8 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm --no-dep
 - Si hay movimientos de Gestión dentro del intervalo de los archivos, se rechaza
   la carga completa para evitar duplicaciones. Incluye movimientos inactivos. Los
   cobros/facturas no causan ese conflicto y nunca se borran. Revisar sobre una copia;
-  no limpiar producción para forzar la importación.
+  no borrar el control fiscal para forzar la importación. La limpieza inicial
+  restringida de Gestión se ejecuta solo en el procedimiento acordado, no en reintentos.
 - Proveedores existentes por clave se reutilizan sin cambiar nombre/contacto/notas
   ni su estado archivado. Dos coincidencias ambiguas bloquean toda la operación.
 - El JSON de salida informa estado, nombre de DB, conteos, proveedores creados/reusados

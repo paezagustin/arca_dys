@@ -10,6 +10,7 @@
 *.pfx
 *.sql
 !tests/fixtures/legacy_schema.sql
+!scripts/reset-business-data.sql
 *.dump
 *.backup
 *.xlsx

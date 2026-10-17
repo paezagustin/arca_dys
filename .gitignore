@@ -47,6 +47,7 @@ docker-compose-dev-window.yml
 *.sql
 !tests/fixtures/legacy_schema.sql
 !scripts/audit-legacy.sql
+!scripts/reset-business-data.sql
 *.dump
 *.backup
 *.xlsx

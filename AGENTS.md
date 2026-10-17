@@ -6,6 +6,23 @@ en Raspberry Pi 5. Usar FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Comp
 Leer README, docs/ALCANCE.md, docs/ROADMAP.md y docs/EXECUTION_STATUS.md al retomar.
 Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
+## Preparación de despliegue H15 (prevalece sobre la limpieza total propuesta)
+- El usuario confirmó: conservar control de facturación y limpiar el resto de Gestión.
+  Solicita comandos para ejecutar ÉL posteriormente en la Raspberry, no ejecución
+  productiva por el agente. No acceder ni desplegar allí en esta sesión.
+- Reutilizar /mnt/datos/docker/arca_dys y el cluster PostgreSQL existente. Guardar
+  respaldo/configuración/imagen, ensayar en copia, migrar a head y recién limpiar.
+- scripts/reset-business-data.sql es una operación MANUAL puntual de datos, no una
+  migración ni parte del arranque. Solo siete tablas de Gestión/importación/Sueldos/
+  Fiados, con RESTRICT, sin CASCADE y transacción. Nunca toda la base/volumen.
+- Conservar pagos y marca facturado, facturas/CAE/respuestas/vínculos, solicitudes y
+  reservas fiscales (incluidas inciertas), inbox/historial MP, usuarios y emisor.
+- No cambiar cuenta/token/dominio NGROK, app/cuenta MP, CUIT/punto/certificados.
+  El override opcional NGROK fija la URL existente; no sustituye un agente externo
+  ni migra sus políticas automáticamente. No crear un segundo túnel del mismo dominio.
+- Documentar tecnologías, configuración y comandos exactos con límites comprobados.
+  Probar el SQL SOLO en PostgreSQL descartable; no ejecutar la limpieza local otra vez.
+
 ## Carga inicial JSON y menú H14 (prevalece sobre el antiguo módulo Excel)
 - Menú móvil: icono sencillo de tres líneas junto al nombre de la sección activa.
   Sin flecha. El icono queda oculto en escritorio junto con el summary móvil.
@@ -20,9 +37,9 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
   Los datos reales no son fixtures. La Raspberry recibe esos archivos por separado.
 - Mantener tablas legadas de importación y migraciones publicadas por integridad;
   no borrar registros previos de producción al retirar las funciones Excel.
-- El usuario autorizó vaciar SOLO la DB local dev para esta carga, con respaldo.
-  No ofrecer ni ejecutar una limpieza productiva. Importar en producción requiere
-  respaldo/ensayo y comando manual documentado; esta sesión no despliega allí.
+- H14 autorizó vaciar SOLO la DB local dev para esa carga, con respaldo. H15 agrega
+  limpieza manual futura de Gestión conservando control fiscal. No repetir el
+  vaciado total ni ejecutar operaciones productivas desde esta sesión.
 
 ## Ajustes H12 de formularios y navegación
 - Altas de montos manuales vacías con placeholder 0,00; conservar valores guardados
@@ -126,7 +143,9 @@ devuelto por el SDK, sin añadir la solicitud ni credenciales. No inventar respu
 históricas ni consultar ARCA en producción para rellenarlas durante el desarrollo.
 Antes de adoptar/migrar producción: backup lógico y prueba en copia. El respaldo
 inicial se almacena en el mismo SSD; CRON y copia externa quedan para el usuario.
-No ejecutar DROP/TRUNCATE manual ni importar fixtures sobre la base productiva.
+No ejecutar DROP/TRUNCATE ni importar fixtures sobre la base productiva desde el
+agente. El único reset manual futuro autorizado es el SQL restringido H15 que el
+usuario ejecutará luego según la guía y con respaldo; no borrado fiscal/cluster.
 Los retiros de esquema autorizados solo se aplican mediante su migración probada,
 durante una actualización coordinada con backup; esta sesión no despliega en Raspberry.
 Conservar originales privados fuera de Git; hashes y recibo de carga JSON trazables.

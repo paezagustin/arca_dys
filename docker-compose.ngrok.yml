@@ -1,0 +1,5 @@
+# Opcional: solo si este Compose administrara el agente NGROK de la instalacion.
+# No combinar con otro agente activo que ya use la misma URL.
+services:
+  ngrok:
+    command: [http, "--url=${NGROK_URL:?Configurar la URL HTTPS actual de NGROK}", "http://fastapi:8000"]

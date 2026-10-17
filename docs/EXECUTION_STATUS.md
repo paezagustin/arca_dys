@@ -3,6 +3,14 @@
 Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
+H15 preparado para ejecución MANUAL posterior por el usuario: guía de despliegue
+conservando control de facturación/MP y configuración, limpieza restringida de
+Gestión e inventario técnico completo. No ejecutar despliegue o limpieza real desde
+este chat. Suite local de 231 casos y backup/restore aprobados; publicación y CI
+del hito pendientes de registrar. Ver OPERACION_RASPBERRY.md y
+TECNOLOGIAS_Y_CONFIGURACION.md.
+
+### Estado anterior publicado
 H14 implementado: carga puntual por consola de los tres JSON y retiro del módulo
 Importar Excel. Icono sencillo solo en el desplegable móvil, nombre activo y sin
 flecha. La DB local fue respaldada, vaciada y cargada con los datos corregidos.
@@ -14,7 +22,7 @@ La carga y la limpieza NO se ejecutaron en la Raspberry. Los archivos privados
 no se publican con el código; copiar normalizados/ por separado al SSD según
 IMPORTACION_JSON.md. La exportación Excel sigue disponible en Resumen.
 
-### Estado anterior publicado
+### Historial anterior
 H13: flecha retirada del desplegable móvil y nombre derivado del enlace activo.
 Publicado en main: 406ab740acb95babb2cdcdc5df8af570963476bd.
 Navegador local y suite de 211 pruebas aprobados. CI completo aprobado:
@@ -42,6 +50,36 @@ exportación de Resumen y generación privada del INSERT de proveedores.
 H9 completado y publicado: implementación 20c8acf y ensayo final b849534.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38942781766.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
+
+## Evidencia H15
+- El usuario descartó el vaciado total de producción y confirmó conservar el
+  control de facturación, con comandos para ejecutar él después en la Raspberry.
+  No se accedió a ese equipo ni se tocó su DB, NGROK, aplicación MP o ARCA.
+- OPERACION_RASPBERRY reescrita con inventario de nombres/red/montajes antes de
+  operar, reutilización del proyecto y PostgreSQL existentes, backup completo y
+  archivo de configuración/imagen previos, restauración en contenedor temporal
+  sin red, ensayo de adopción/migración, migración real y limpieza limitada posterior.
+  La guía no borra el directorio del SSD ni reinicializa el cluster.
+- scripts/reset-business-data.sql: lista cerrada de siete tablas, revisión 0012
+  exigida, psql --single-transaction y ON_ERROR_STOP, RESTART IDENTITY solo de
+  Gestión, RESTRICT sin CASCADE. No elimina ni modifica datos fiscales/MP/emisor.
+  Comprobadas conservación completa, repetición sobre ensayo, rechazo por revisión
+  errónea y FK inesperada con rollback. No se ejecutó sobre dev ni producción.
+- TECNOLOGIAS_Y_CONFIGURACION describe versiones fijadas, funciones/archivos,
+  flujos, prioridad de variables y configuración en DB, redes/puertos/volúmenes,
+  servicios opcionales y Samba. Referencias oficiales de NGROK, MP, Afip SDK,
+  Docker/PostgreSQL contrastadas; sin nuevas dependencias ni migraciones.
+- Override opcional docker-compose.ngrok.yml: URL actual obligatoria y upstream
+  http://fastapi:8000. Config validado con perfil public y valores ficticios;
+  ausencia de URL rechazada. Sin arrancar agentes ni modificar el túnel existente.
+- Suite completa: 231 passed, 1 warning conocido TestClient, 63.97s; sin omitidas.
+  Backup custom/checksum/restauración descartable aprobados después de la suite,
+  importe ficticio 12345.67 y revisión 0012_credit_paid_date.
+- Enlaces locales válidos y 24 bloques shell extraídos de la guía comprobados con
+  sh -n en contenedor sin red: solo sintaxis, nunca ejecución de los comandos.
+  No se afirma ensayo integral en Raspberry ni conexión fiscal/productiva real.
+- No cambios de interfaz, gateways o esquema. No repetición ARM64 en este hito;
+  los comandos de respaldo/ensayo reales quedan para la ventana manual del usuario.
 
 ## Evidencia H14
 - Destino comprobado antes de limpiar: arca_dys_dev, servicio postgres, usuario

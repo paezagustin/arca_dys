@@ -120,3 +120,18 @@ exportación conservada y respuestas 404 de las rutas de importación retiradas.
 La suite de migraciones contrasta el esquema ORM con head: no se modifican tablas
 legadas al retirar las funciones. El icono móvil se comprueba en navegador, con
 el nombre activo preservado al navegar y oculto en escritorio.
+
+## Preparación manual de despliegue H15
+test_deploy_cleanup.py ejecuta el SQL de mantenimiento en la DB descartable:
+elimina únicamente las siete tablas de Gestión y compara todas las demás antes y
+después, incluidas secuencias de pagos/facturas, CAE/respuestas, marca facturado,
+solicitud incierta/reserva, inbox/historial MP, usuario y emisor. Repetir el SQL en
+ese ensayo no altera el control fiscal. Una revisión incorrecta o una FK externa
+inesperada bloquean la limpieza completa sin pérdida; no se usa CASCADE.
+Esto NO convierte la limpieza en un comando para repetir tras importar datos.
+
+Se comprueban estáticamente los bloques shell de OPERACION_RASPBERRY.md con sh -n,
+sin ejecutarlos, y los enlaces locales. docker compose config con valores ficticios
+comprueba el override NGROK, URL requerida y montaje de certificado read-only; no
+se inicia un agente NGROK ni se contactan proveedores. La restauración/migración del
+respaldo real y el despliegue físico quedan como comandos manuales del usuario.

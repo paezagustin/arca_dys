@@ -73,13 +73,20 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 - [Gestión y proveedores](docs/GESTION.md), [importación por consola](docs/IMPORTACION_JSON.md)
   y [métricas](docs/METRICAS.md).
 - [Validación ARM y operación](docs/OPERACION_RASPBERRY.md).
+- [Tecnologías y configuración](docs/TECNOLOGIAS_Y_CONFIGURACION.md): función,
+  implementación, variables, redes, volúmenes y servicios opcionales.
 
 ## Producción
 
 `docker-compose.prod.yml` está separado del entorno local. Requiere .env.prod,
 certificados y configuración explícita. Antes de cualquier actualización, identificar
 la instalación efectiva, hacer backup en el SSD, ensayar adopción/migración en copia
-y seguir la guía de operación. El SQL adjunto por el usuario solo contiene estructura.
+y seguir la [guía de despliegue manual](docs/OPERACION_RASPBERRY.md). El usuario
+confirmó conservar cobros/facturas/control fiscal y limpiar únicamente Gestión,
+Sueldos y Fiados con el comando puntual documentado, después de migrar. No borrar
+la DB ni el directorio PostgreSQL. Mantener el dominio NGROK y las credenciales
+MP/ARCA; el override opcional docker-compose.ngrok.yml fija la URL actual.
+El SQL adjunto por el usuario solo contiene estructura.
 No importarlo sobre la base actual.
 
 El entorno simulado y sus pruebas nunca emiten en ARCA ni operan dinero real.

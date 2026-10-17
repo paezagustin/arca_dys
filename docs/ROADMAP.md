@@ -1,5 +1,17 @@
 # Roadmap y condiciones de salida
 
+## H15 · Guía de despliegue manual y tecnologías
+- [x] Decisión confirmada: conservar control fiscal y limpiar solo Gestión.
+- [x] Comandos para inventario, respaldo, ensayo en copia, migración, limpieza e importación.
+- [x] Rutas /mnt/datos/docker/arca_dys y preservación de infraestructura existente.
+- [x] SQL de limpieza restringida probado con rollback y conservación fiscal/MP/configuración.
+- [x] NGROK: agente externo preservado u override opcional con la misma URL explícita.
+- [x] Catálogo de tecnologías, implementación, variables, redes y volúmenes.
+- [x] 231 pruebas locales y backup/restore; sintaxis de comandos y Compose comprobados.
+- [ ] Publicación y cierre de CI.
+El despliegue en la Raspberry y la limpieza real los ejecutará el usuario después,
+manualmente. No son trabajo pendiente de ejecución por este agente.
+
 ## H14 · Carga inicial JSON y menú móvil
 - [x] Icono de tres líneas solo en móvil; nombre de sección y ausencia de flecha conservados.
 - [x] Respaldo y limpieza completa de datos SOLO en la DB dev local.
