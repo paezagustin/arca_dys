@@ -7,7 +7,9 @@
 - [x] Adopción y migración a head por API/CLI; integridad fiscal con datos sintéticos.
 - [x] Guías de adopción y ensayo manual actualizadas; migraciones publicadas intactas.
 - [x] Suite completa: 251 pruebas, sin omitidas; backup/checksum/restauración aprobados.
-- [ ] Publicación en main comprobada.
+- [x] Publicación en main y CI completos comprobados.
+Completado: cf43e13caf079c46f72ab4a29ece46b036300c07; CI 39062048816 aprobado con
+251 pruebas, backup/restauración, imagen final simulada y auditoría.
 No se proporcionó el respaldo productivo en esta sesión. Los conteos del ensayo
 son sintéticos; no se ejecuta producción ni se accede a Raspberry.
 

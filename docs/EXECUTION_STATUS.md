@@ -9,8 +9,9 @@ invoices(invoice_number) frente al índice explícito del baseline. Normalizaci�
 solo en memoria; la restricción original, su índice y las migraciones 0001-0012
 permanecen intactos. Otras diferencias siguen bloqueando la adopción.
 Suite local completa: 251 passed, 1 warning, sin omitidas, 82.55s.
-Backup/checksum/restauración local aprobados. Publicación en main pendiente al
-registrar este estado.
+Backup/checksum/restauración local aprobados. Corrección publicada en main:
+cf43e13caf079c46f72ab4a29ece46b036300c07. CI completo aprobado:
+https://github.com/paezagustin/arca_dys/actions/runs/39062048816.
 El nombre correcto comprobado es paezagustin/arca_dys; arca_dysy devuelve 404.
 No se proporcionó ni restauró un backup productivo: integridad comprobada solo
 con datos sintéticos equivalentes en conteo. No se accedió a Raspberry/producción,
@@ -89,6 +90,10 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
 - Perfil backup-test aprobado después de la suite: dump custom, checksum SHA256
   y restauración en otra DB descartable; importe ficticio 12345.67 y revisión
   0012_credit_paid_date comprobados. git diff --check sin errores.
+- CI del commit cf43e13 aprobado: 251 passed, 1 warning, 62.73s; backup/checksum/
+  restauración, imagen final simulada con servidor/worker, pip check y auditoría
+  sin vulnerabilidades conocidas al ejecutar. No implica conexión productiva.
+  Entorno local arca-dys-test eliminado al terminar; desarrollo no se modificó.
 - Guías de adopción, ensayo Raspberry y testing actualizadas. Baseline, fixture
   original, migraciones históricas, dependencias e integraciones sin cambios.
   Sin cambios de interfaz; no aplica revisión visual. ARM64 no se volvió a ejecutar.
@@ -333,6 +338,7 @@ creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 | H12 | 6a03a2c40095add356a886872531e983f353d918 | Montos sin ceros iniciales, menú móvil desplegable, marca centrada y Administración al pie. CI 38986920971 success; 211 pruebas, backup/restauración y navegador real. |
 | H14 | cd59fb0301de2adbf9ae7c740a99d31fd52e2f31 | Carga JSON privada por consola, 107 proveedores/3113 movimientos conciliados en dev, retiro del módulo Excel e icono móvil. CI 38992592914 success; 228 pruebas, backup/restauración, imagen final y navegador. |
 | H15 | 5c2beb4a60f1f9823ad5fe477022d1b892fd21b0 | Guía de despliegue y tecnologías, SQL manual de limpieza limitada conservando control fiscal y override NGROK opcional. CI 38994221748 success; 231 pruebas, backup/restauración, imagen final y auditoría. No ejecutado en Raspberry. |
+| H16 | cf43e13caf079c46f72ab4a29ece46b036300c07 | Equivalencia UNIQUE específica de adopción legacy, sin editar restricciones ni migraciones históricas. CI 39062048816 success; 251 pruebas, backup/restauración, imagen final y auditoría. Integridad fiscal solo con datos sintéticos; sin backup productivo disponible. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió
