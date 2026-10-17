@@ -4,8 +4,10 @@ Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
 H12 verificado localmente: montos vacíos con placeholder, menú móvil desplegable,
-marca Dulce y Salado centrada y acceso de administración al pie. Pendiente CI y
-cierre de publicación. Evidencia local: 211 pruebas aprobadas, sin omitidas.
+marca Dulce y Salado centrada y acceso de administración al pie. Publicado en main:
+6a03a2c40095add356a886872531e983f353d918. Evidencia local: 211 pruebas aprobadas,
+sin omitidas. CI completo aprobado:
+https://github.com/paezagustin/arca_dys/actions/runs/38986920971.
 
 H11 implementado y verificado localmente: acciones centradas y fecha automática
 de pago de Fiados. Publicado en main: befdcc104e3621e5d1324ce2280a9da919fb64f6.
@@ -44,6 +46,8 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
   temporal separado. No se usó el navegador embebido de entregas anteriores.
 - Sin dependencias, servicios o migraciones nuevas. ARM64 no se repitió; no se
   desplegó en Raspberry ni se operó contra ARCA o MP productivos.
+- CI 38986920971 del código publicado aprobó suite, backup/restauración, imagen
+  de ejecución en simulación y auditoría de dependencias. Roadmap y guías cerrados.
 
 ## Evidencia H11
 - Suite completa: 207 passed, 1 warning conocido de Starlette/TestClient, 63.00s;
@@ -159,6 +163,7 @@ creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 | H9 | 20c8acf5bea4241ce7af666f6f26a393e34d9e5a + b849534533910812d907b091c21f61556acf8718 | Gestión simple, diseño, acceso local, exportación y SQL privado de proveedores. CI 38942781766 success; 182 pruebas y navegador. |
 | H10 | 7c9840e647e6f3b43a19ba227e22e90fa7662e4b | Caja efectivo/MP, Sueldos, Fiados, Resumen/Excel y tablas centradas. CI 38978324468 success; 203 pruebas, backup/restore, imagen final y navegador. |
 | H11 | befdcc104e3621e5d1324ce2280a9da919fb64f6 | Acciones centradas y fecha de pago automática de Fiados. CI 38980673926 success; 207 pruebas, restauración, imagen final y navegador. |
+| H12 | 6a03a2c40095add356a886872531e983f353d918 | Montos sin ceros iniciales, menú móvil desplegable, marca centrada y Administración al pie. CI 38986920971 success; 211 pruebas, backup/restauración y navegador real. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió

@@ -4,7 +4,9 @@
 - [x] Montos manuales sin valores iniciales, placeholder y edición conservada.
 - [x] Menú móvil desplegable, logo/nombre centrados y Administración al pie.
 - [x] Pruebas aisladas, navegador y documentación.
-- [ ] Publicación y evidencia final de CI.
+- [x] Publicación y evidencia final de CI.
+Completado: 6a03a2c, CI 38986920971 aprobado; 211 pruebas y navegador en móvil y
+escritorio. Sin nuevas dependencias ni cambios de esquema.
 
 ## H11 · Acciones centradas y fecha de pago de Fiados
 - [x] Controles de acciones centrados sin margen superior en tablas.
