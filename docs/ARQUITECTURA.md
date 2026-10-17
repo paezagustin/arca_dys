@@ -15,7 +15,7 @@ flowchart LR
     Q --> A[Adaptadores ARCA y MP]
     Q --> C[Cobros MP]
     W --> G[Gestión y proveedores]
-    X[Excel] --> V[Vista previa y revisión]
+    X[Tres JSON privados] --> V[Script de consola puntual]
     V --> G
     G --> R[Métricas]
     F --> P[PDF local]
@@ -32,7 +32,7 @@ flowchart LR
 | MP | services/mp.py, mp_inbox.py, payments.py | Inbox antes de ACK, GET canónico con timeout, identidad externa e historial. |
 | Gestión | services/business.py | Ventas manuales independientes, egresos En Blanco/En Negro y proveedores. |
 | Sueldos/Fiados | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión y CSRF; Fiados independiente. |
-| Excel | services/excel_reader.py, excel_import.py | Lectura acotada, originales, decisiones, identidad por origen y conciliación. |
+| Carga inicial | scripts/import_business_json.py | JSON privados, transacción, recibo idempotente, claves explícitas y conciliación mensual. |
 | Reportes | services/metrics.py | SQL/Decimal, datos vigentes, fuentes separadas y gráficos SVG. |
 | Configuración | services/settings.py, access.py | Roles, sesiones revocables, límites/emisor versionados. |
 
@@ -79,8 +79,13 @@ consulta solo la DB para sugerir MP aprobado sin facturar de la fecha; la usuari
 puede modificarlo. business.py valida efectivo/MP y calcula la suma en servidor; no se impone igualdad con otras fuentes. UUID de formulario, venta
 vigente única por fecha y bloqueo/versión en ediciones sin historial.
 Las anulaciones heredadas siguen excluidas; se pueden archivar proveedores. Proveedores sin stock ni cuenta corriente.
-Importación confirma filas listas, conserva ambiguas y mantiene ambos históricos
-del dashboard fuera de gestión. Ver GESTION.md e IMPORTACION_EXCEL.md.
+La carga inicial JSON valida los tres archivos y confirma todos los registros en
+una transacción con bloqueo, comprobación de período vacío y conciliación mensual.
+Los históricos de ventas conservan el desglose NULL. Un recibo con hash canónico
+en import_batches impide repetir la carga. Las tablas import_rows/import_supplier_maps
+legadas permanecen por integridad, sin funciones web Excel. Se eliminan rutas,
+plantillas, lectores y scripts del importador anterior. No cambian migraciones
+publicadas ni el esquema. Ver GESTION.md e IMPORTACION_JSON.md.
 
 ## Esquema
 Las revisiones publicadas permanecen inmutables. El arranque comprueba head, sin
@@ -109,7 +114,8 @@ falta de escritura reciente. invoices.raw_afip_response queda poblado para nueva
 autorizaciones; no se inventan respuestas previas. Los importes usan NUMERIC(18,2).
 
 ## Formularios y navegación H12
-base.html usa details/summary nativo para el menú. app.js adapta su estado al
+base.html usa details/summary nativo para el menú, con icono de tres líneas y
+span del nombre activo; actualizar el texto no elimina el SVG. app.js adapta su estado al
 breakpoint de 900px: móvil cerrado y escritorio abierto; mantiene teclado y
 funcionamiento nativo sin dependencias. Administración/Salir están antes del footer.
 Los montos nuevos no traen cero precargado; MP positivo conserva la sugerencia local.
@@ -128,7 +134,7 @@ SIM/SIN VALIDEZ FISCAL y permite probar pérdida de respuestas y reinicios.
 
 Sesiones opacas hasheadas, expiración, roles y CSRF; Facturación, Gestión, Resumen, Sueldos y Fiados
 permiten uso anónimo; las demás secciones requieren admin. Health/assets públicos; webhooks usan su propio contrato. CSP sin
-CDN ni scripts inline, límites de cuerpo y carga XLSX, salidas HTML escapadas y
+CDN ni scripts inline, límites de cuerpo, salidas HTML escapadas y
 errores sin SQL/credenciales. CSS/JS versionados evitan estilos antiguos al actualizar.
 No se agregan exportadores de telemetría ni servicios externos de observabilidad.
 Dependencias directas en requirements.in y resolución fijada en requirements.txt;

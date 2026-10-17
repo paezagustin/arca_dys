@@ -1,12 +1,11 @@
 """Reglas de la simplificación: acceso local, caja diaria y exportación conciliable."""
 from datetime import date
 from decimal import Decimal
-from hashlib import sha256
 from io import BytesIO
 import re
 import pytest
 from fastapi.testclient import TestClient
-from openpyxl import Workbook, load_workbook
+from openpyxl import load_workbook
 from sqlalchemy import select, func, text, inspect
 from sqlalchemy.orm import Session
 from app.main import app
@@ -17,7 +16,6 @@ from app.models.settings import BillingPreview
 from app.services.billing import BillingService
 from app.services.business import save_entry, save_supplier
 from app.services.listings import business_today
-from scripts.supplier_seed import suppliers_from_excel, build_sql
 from tests.test_business import values
 from tests.test_migrations import scratch_database, migrate
 
@@ -134,27 +132,6 @@ def test_export_rejects_unknown_legacy_expense_and_excel_precision_loss(client):
         db.commit()
     response = client.get("/dashboard/export?year=2026&month=1")
     assert response.status_code == 422 and "precisión" in response.text
-
-
-def test_supplier_seed_preserves_source_normalizes_and_is_idempotent(tmp_path):
-    book = Workbook()
-    sheet = book.active
-    sheet.title = "ingresos y egresos"
-    sheet.append(["FECHA", "VENTAS DEL DIA", "COMPRAS EN BLANCO", "MONTO", "COMPRAS EN NEGRO", "MONTO2"])
-    sheet.append([None, None, "  PROVEEDOR UNO ", None, "O'Brien", None])
-    sheet.append([None, None, "proveedor uno", None, None, None])
-    path = tmp_path / "synthetic.xlsx"
-    book.save(path)
-    original = sha256(path.read_bytes()).digest()
-    names, sources = suppliers_from_excel(path)
-    assert len(names) == 2 and len(sources) == 3 and sha256(path.read_bytes()).digest() == original
-    sql = build_sql(names)
-    assert "O''Brien" in sql
-    for _ in range(2):
-        with engine.connect() as db:
-            db.exec_driver_sql(sql)
-    with Session(engine) as db:
-        assert db.scalar(select(func.count()).select_from(Supplier)) == 2
 
 
 def test_simple_migration_preserves_amounts_and_maps_only_known_types(scratch_database):

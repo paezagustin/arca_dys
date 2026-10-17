@@ -4,7 +4,7 @@ Sistema personal para facturación sencilla y control del negocio en Raspberry P
 FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Compose.
 
 Facturación recuperable, cobros MP idempotentes, configuración, gestión/proveedores,
-importación del Excel con revisión y dashboard. La aplicación de la Raspberry no
+carga inicial por consola desde JSON y dashboard. La aplicación de la Raspberry no
 se despliega ni se modifica automáticamente al publicar en GitHub.
 
 ## Probar en Windows 11 sin ARCA ni Mercado Pago
@@ -28,8 +28,18 @@ y egresos En Blanco/En Negro. **Sueldos** registra pagos de Francisco/Juan Cruz;
 **Fiados** permite anotar clientes y marcar pagos. En **Resumen** consultar por
 día/período/mes/año, ventas por medio, sueldos por empleado y Ganancia después de
 egresos y sueldos. Exportar Excel conserva las seis columnas originales y añade
-hojas Ventas y Sueldos. La carga del Excel muestra una vista
-previa antes de incorporar registros y conserva las filas ambiguas para revisión.
+hojas Ventas y Sueldos. No hay módulo web de importación.
+
+La carga inicial de los tres JSON corregidos se ejecuta una sola vez por base:
+
+```powershell
+docker compose -f docker-compose.dev.yml run --rm --no-deps fastapi python -m scripts.import_business_json --directory /app/data/private/importacion_negocio/normalizados
+docker compose -f docker-compose.dev.yml run --rm --no-deps fastapi python -m scripts.import_business_json --directory /app/data/private/importacion_negocio/normalizados --apply
+```
+
+El primer comando valida sin escribir; el segundo inserta todo en una transacción.
+Repetir los mismos archivos no duplica datos. Los JSON privados no se publican en
+GitHub ni se incluyen en las imágenes. Ver [preparación y comandos para Raspberry](docs/IMPORTACION_JSON.md).
 
 ```powershell
 docker compose -f docker-compose.dev.yml stop
@@ -60,7 +70,7 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 - [Versionado, backup y operación](docs/DATOS_Y_OPERACION.md).
 - [Acceso, configuración y PDF](docs/ACCESO_Y_COMPROBANTES.md).
 - [Contratos y operación MP](docs/MERCADO_PAGO.md).
-- [Gestión y proveedores](docs/GESTION.md), [importación](docs/IMPORTACION_EXCEL.md)
+- [Gestión y proveedores](docs/GESTION.md), [importación por consola](docs/IMPORTACION_JSON.md)
   y [métricas](docs/METRICAS.md).
 - [Validación ARM y operación](docs/OPERACION_RASPBERRY.md).
 

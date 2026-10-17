@@ -20,8 +20,9 @@ agrupan por proveedor y tipo; cada tabla conserva paginación independiente.
 
 MP (aprobados según estado actual y fecha de aprobación) y facturas con CAE guardado
 (por fecha de emisión) se muestran separados. Nunca se suman otra vez a Ventas.
-No hay saldos pendientes ni facturación parcial. Los históricos manuales del Excel
-se consultan por lote, sin mezclarlos con estos cálculos.
+No hay saldos pendientes ni facturación parcial. Las ventas/egresos de la carga
+JSON participan en estos mismos cálculos. Las ventas sin desglose permanecen
+separadas de efectivo/MP. No se importan bloques manuales del dashboard del Excel.
 
 ## Exportar Excel
 El botón de Resumen descarga el período seleccionado completo, sin paginación.

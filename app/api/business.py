@@ -161,7 +161,6 @@ async def update_supplier(supplier_id: int, request: Request, db: Session = Depe
 @router.post("/suppliers/{supplier_id}/delete")
 async def delete_supplier(supplier_id: int, request: Request, db: Session = Depends(get_db)):
     from app.services.business import check_version
-    from app.models.imports import ImportSupplierMap
     values = dict(await request.form())
     row = db.scalar(select(Supplier).where(Supplier.id == supplier_id).with_for_update())
     if row is None:
@@ -169,9 +168,8 @@ async def delete_supplier(supplier_id: int, request: Request, db: Session = Depe
     try:
         check_version(row, values.get("version"))
         linked = db.scalar(select(BusinessEntry.id).where(BusinessEntry.supplier_id == supplier_id).limit(1))
-        mapped = db.scalar(select(ImportSupplierMap.batch_id).where(ImportSupplierMap.supplier_id == supplier_id).limit(1))
-        if linked or mapped:
-            raise ValueError("Este proveedor tiene egresos o una importación vinculada. Podés editarlo o archivarlo.")
+        if linked:
+            raise ValueError("Este proveedor tiene egresos registrados. Podés editarlo o archivarlo.")
         db.delete(row)
         db.commit()
     except (ValueError, IntegrityError) as error:

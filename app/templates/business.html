@@ -1,5 +1,5 @@
 {% extends "base.html" %}{% from "components.html" import pager, edit_icon with context %}
-{% block title %}Gestión{% endblock %}{% block content %}<div class="page-head"><h1>Gestión</h1><div class="actions"><a href="/business/suppliers">Proveedores</a><a href="/business/imports">Importar Excel</a></div></div>
+{% block title %}Gestión{% endblock %}{% block content %}<div class="page-head"><h1>Gestión</h1><div class="actions"><a href="/business/suppliers">Proveedores</a></div></div>
 {% if request.query_params.get('stored') %}<div class="notice" role="status">Registro guardado.</div>{% endif %}
 <div class="actions"><a class="button" href="/business/entries/new?kind=sale">Registrar ventas del día</a><a class="button quiet" href="/business/entries/new?kind=expense">Registrar egreso</a></div>
 <div class="metrics">{% for key,label in [('sale','Ventas'),('expense','Total Egresos')] %}<section class="card"><h2>{{ label }}</h2><strong class="metric">{{ totals.get(key,0)|money }}</strong></section>{% endfor %}</div>

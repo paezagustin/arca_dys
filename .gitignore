@@ -52,6 +52,7 @@ docker-compose-dev-window.yml
 *.xlsx
 backups/
 artifacts/
+data/private/
 .pytest_cache/
 .coverage
 htmlcov/

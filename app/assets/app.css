@@ -90,6 +90,7 @@ small,.muted {
 .site-menu>summary {
   display:none;
 }
+.menu-icon { flex-shrink:0; }
 .site-header nav a {
   padding:12px;
   border-radius:8px;
@@ -624,7 +625,8 @@ dialog .actions {
   .site-menu>summary {
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-start;
+    gap:10px;
     min-height:44px;
     padding:8px 12px;
     background:var(--ground);

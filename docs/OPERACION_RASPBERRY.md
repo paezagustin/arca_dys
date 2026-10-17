@@ -64,6 +64,9 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm --no-dep
 ```
 
 4. Comparar las cantidades/totales/vínculos con el respaldo y consultar la revisión.
+   Para la carga histórica puntual de los tres archivos corregidos, seguir
+   [IMPORTACION_JSON.md](IMPORTACION_JSON.md) antes de iniciar la web. Copiar los JSON
+   privados al SSD por separado de Git; validar primero sin --apply. No vaciar la DB.
    Iniciar la web con configuración productiva explícita; crear primero la cuenta,
    comprobar acceso y configurar datos reales del emisor/punto/límites antes de
    habilitar el túnel. No existe la cuenta local de prueba en producción.

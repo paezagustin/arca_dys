@@ -29,8 +29,8 @@ deben modificarla al mismo tiempo.
 | UI | Paginación SQL independiente, límites/filtros/fechas, TODO de todo el filtro, IDs fuera del filtro, confirmación vencida o con ajustes cambiados y errores HTML escapados. |
 | PDF | Factura C, snapshot, 50/50 exacto, CAE y QR decodificado desde PDF rasterizado; simulación identificada. |
 | Gestión | Venta diaria única concurrente, UUID, independencia de MP/facturas, correcciones/anulación/recuperación y proveedores archivados. |
-| Excel | Vista previa, ambigüedades, blanco/cero, fórmula sin ejecución, XML protegido, orígenes, repetición concurrente, nueva versión en conflicto y proveedor explícito. |
-| Métricas | Conciliación con detalle/importación, históricos separados, anulados, período vacío/cero, año bisiesto, diciembre/enero, timestamps y desgloses paginados. |
+| JSON | Validación estricta de tres archivos, proveedores/claves explícitas, cero/fechas/precisión, dry-run sin escritura, transacción, conciliación, reintento concurrente y rechazo de otro conjunto o período ocupado. |
+| Métricas/Excel | Conciliación con detalle/JSON, sin desglose inventado, anulados, período vacío/cero, año bisiesto, timestamps; exportación reabierta, seis columnas y hojas Ventas/Sueldos. |
 | Operación | Backup custom, SHA256, restauración en DB propia y revisión de esquema; imagen de ejecución con servidor/worker reales en modo simulado. |
 
 La suite solo permite ENV=test, INTEGRATIONS_MODE=mock y base arca_dys_test en
@@ -59,15 +59,14 @@ loopback. Comprueba una factura y cero pagos; cierra servidor y elimina solo su 
 Registra RSS máximo del proceso y tiempo de health del entorno de ensayo.
 No es un comando para ejecutar contra producción.
 
-`scripts/verify_excel.py` contrasta un original privado montado read-only en DB
-efímera, sin imprimir importes ni incorporarlos a fixtures. Se probó el adjunto real:
-9 meses conciliados, 493 registros y 30 filas ambiguas conservadas; repetición sin
-duplicados. Esa verificación NO forma parte de CI porque el archivo es privado.
+Los JSON reales permanecen en data/private/, excluidos de fixtures, Git e imágenes.
+La carga local se concilia por mes/tipo contra sus originales; la suite utiliza
+únicamente JSON sintéticos. El anterior verify_excel.py se retiró junto con el módulo.
 
 ## Navegador y PDF
-La verificación visual usa el navegador de la aplicación, con datos ficticios:
+La verificación visual utiliza un navegador real con perfil temporal:
 login, selección móvil, TODO desde otra página, emisión/descarga, configuración,
-gestión/proveedor, carga/revisión del Excel y filtros del dashboard. Se inspecciona
+gestión/proveedor, exportación y filtros del dashboard. Se inspecciona
 el resultado visible, consola y persistencia. PDF simulado renderizado y revisado
 sin superposiciones. Capturas/resultados locales en artifacts/, fuera de Git.
 TestClient y comprobar HTML no se denominan validación visual.
@@ -88,7 +87,7 @@ para probar código. La puesta en producción se coordina después del backup y 
 ## Ajustes H9
 tests/test_simple_business.py comprueba uso anónimo y menú, CSRF, aislamiento entre
 navegadores, emisión simulada idempotente, edición sin motivo, clasificación,
-búsqueda literal de proveedores, borrado restringido, normalización/INSERT repetido,
+búsqueda literal de proveedores y borrado restringido,
 migración sin pérdida y rechazo de income heredado. La exportación se reabre y
 concilia al centavo: fechas, seis columnas, varias compras, cero/blanco, fórmulas
 tratadas como texto y precisión de Excel. Navegador separado para diseño, búsqueda,
@@ -110,3 +109,14 @@ reintentos incluso al día siguiente, edición conservando fecha, vuelta a No y
 nuevo pago, fechas anteriores desconocidas y migración sin pérdida desde 0011.
 La alineación de acciones se verifica en navegador con botones reales y tamaño
 de sus celdas, tanto en Sueldos como en Fiados.
+
+## Carga JSON y retiro de importación web H14
+test_json_import.py usa archivos sintéticos para comprobar validación previa,
+dry-run sin escritura, mapeo de clave con acento, proveedores existentes/archivados,
+ambigüedad, total histórico con NULL, igualdad legítima de egresos, repetición sin
+pisar ediciones y ejecución concurrente. Fuerza una conciliación fallida para
+demostrar rollback de proveedores, movimientos y recibo juntos. Comprueba métricas,
+exportación conservada y respuestas 404 de las rutas de importación retiradas.
+La suite de migraciones contrasta el esquema ORM con head: no se modifican tablas
+legadas al retirar las funciones. El icono móvil se comprueba en navegador, con
+el nombre activo preservado al navegar y oculto en escritorio.

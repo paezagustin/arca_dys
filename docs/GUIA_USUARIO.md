@@ -15,7 +15,7 @@ El banner de simulación y los PDF indican SIN VALIDEZ FISCAL.
 
 ## Navegación y montos
 El encabezado muestra el logo centrado y Dulce y Salado debajo. En el celular,
-pulsar el nombre de la sección actual para desplegar las opciones; no tiene flecha.
+pulsar el icono de tres líneas junto al nombre de la sección para desplegar las opciones; no tiene flecha.
 Al entrar a otra pantalla se cierra y muestra el nombre de la sección elegida.
 En escritorio las secciones quedan visibles en la barra lateral. Administración
 está al final de cada página, encima de ARCA DYS; al ingresar, Salir queda allí.
@@ -57,20 +57,10 @@ Desde Proveedores se puede registrar/editar nombre, contacto y notas. Eliminar s
 si no hay registros vinculados; en caso contrario se puede archivar para que deje
 de aparecer al cargar nuevos egresos. Las ayudas se abren pulsando ?.
 
-El script de proveedores entregado se pega y ejecuta en la consulta SQL de Adminer,
-en la base del negocio ya migrada. No reemplaza nombres existentes y repetirlo no
-duplica proveedores. El CSV adjunto muestra cada referencia del Excel y el nombre
-normalizado. Los nombres dudosos se dejan separados para corregirlos en Proveedores.
-
-## Importar los registros del Excel
-Gestión → Importar Excel. Conservar el original y usar el mismo identificador de
-libro para sus versiones. Subir, revisar la vista previa y elegir Importar filas
-listas. Se leen ingresos y egresos y dashboard; sueldos/adelantos quedan excluidos.
-Las celdas ambiguas quedan para revisar. Completar los datos o elegir Omitir, sin
-inventar importes. Guardar revisión no importa: después confirmar las filas listas.
-Las celdas originales permanecen disponibles. Repetir un archivo no duplica datos.
-Los proveedores se pueden asociar a las etiquetas antes de confirmar.
-No reordenar filas del libro entre versiones: el origen usa hoja, fila y columna.
+Los proveedores y movimientos anteriores se incorporan una sola vez por consola,
+según [la guía técnica de carga JSON](IMPORTACION_JSON.md). No hay pantalla de
+importación ni hace falta ejecutar SQL en Adminer. Después se modifican proveedores
+y registros desde sus formularios habituales.
 
 ## Resumen
 Elegir año/mes, Todo el año o completar ambas fechas para consultar un día/período. Se muestran Ventas, Egresos en blanco, Egresos en negro,

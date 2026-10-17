@@ -18,11 +18,11 @@ intermedia de facturación parcial. La ampliación H10 incorpora Sueldos y Fiado
 | M03 | Identificar formatos reales de Point, QR y transferencias con ejemplos anonimizados; validar firma cuando corresponda al producto. |
 | G01 | Ventas diarias con efectivo y MP editable sugerido localmente desde aprobados sin facturar de la fecha; suma en servidor; independientes de cobros y facturas. Edición simple por lápiz, sin motivos ni historial de cambios. |
 | G02 | Solo ventas diarias y egresos En Blanco/En Negro; proveedores buscables. Sin otros ingresos ni medios/categorías adicionales. |
-| G03 | Importar ingresos/egresos y datos históricos del dashboard; conservar origen y resolver problemas mediante vista previa. |
+| G03 | Carga inicial puntual por consola de los tres JSON corregidos: proveedores, ventas y egresos, validación, transacción, conciliación e idempotencia. Sin módulo web Importar Excel ni importación de bloques manuales del dashboard. |
 | G04 | Reportes separan ventas, cobros MP y emisión fiscal. Desglose efectivo/MP, Sueldos por empleado y Ganancia = Ventas − Total Egresos − Sueldos; filtros día/período y Excel. |
 | G05 | Sueldos simples: fecha, Francisco/Juan Cruz, monto y efectivo/mercado pago; reporte mensual por defecto filtrable. |
 | G06 | Fiados: nombre, monto, observación, fecha y pagó; listado no pagados por defecto y edición/marcado de pago con fecha automática de Buenos Aires, independiente de caja. |
-| U01 | Logo centrado y nombre Dulce y Salado debajo, menú móvil desplegable y Administración al pie; montos nuevos vacíos con placeholder y datos guardados conservados; mensajes de éxito/error comprensibles y enlaces de descarga. |
+| U01 | Logo centrado y nombre Dulce y Salado debajo, menú móvil desplegable con icono sencillo y nombre de sección, sin flecha; Administración al pie; montos nuevos vacíos con placeholder y datos guardados conservados; mensajes de éxito/error comprensibles y enlaces de descarga. |
 | U02 | Paginación SQL de todos los listados, incluido reports-stadistics. Filtros y orden estable. |
 | O01 | Desarrollo Windows 11 con Docker Desktop: simulación sin servicios externos, datos de ejemplo y tests repetibles. |
 | O02 | Compose separados dev/test/prod; PostgreSQL 17.8 de referencia, sin upgrade mayor en este trabajo. |
@@ -41,12 +41,12 @@ Una venta diaria conserva importes manuales. MP solo sugiere un importe inicial
 editable; no cambia cierres guardados al facturar. Totales históricos sin desglose
 se preservan y no se atribuyen a efectivo/MP. Se pueden comparar períodos de
 esas fuentes, sin exigir igualdad ni bloquear operaciones por una diferencia.
-Conservar clasificaciones del Excel; no reinterpretar "en blanco/en negro" sin
-documentar el significado original. Un día vacío significa sin registrar, no cero.
-El archivo Excel queda fuera del repositorio y no se usa como fixture de datos reales.
+Conservar En Blanco/En Negro de los JSON; no inferir tratamiento fiscal.
+Un día vacío significa sin registrar, no cero. Los originales y copias normalizadas
+se guardan en data/private/, fuera de Git, imágenes y fixtures. El script no limpia
+la DB: la limpieza local solicitada fue una operación previa con respaldo.
 
 ## Pendientes de información que no bloquean el entorno local
 - Condición fiscal exacta del emisor (no asumir monotributista ni exento).
 - Configuración efectiva de Portainer/Compose, montajes, arquitectura y locale de la Raspberry.
 - Ejemplos anonimizados de cada notificación real recibida; particularidades de transferencias.
-- Decisiones de mapeo para filas ambiguas del Excel y bloques históricos manuales.

@@ -6,6 +6,24 @@ en Raspberry Pi 5. Usar FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Comp
 Leer README, docs/ALCANCE.md, docs/ROADMAP.md y docs/EXECUTION_STATUS.md al retomar.
 Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
+## Carga inicial JSON y menú H14 (prevalece sobre el antiguo módulo Excel)
+- Menú móvil: icono sencillo de tres líneas junto al nombre de la sección activa.
+  Sin flecha. El icono queda oculto en escritorio junto con el summary móvil.
+- Eliminar el módulo de importación Excel, sus rutas, pantallas, lectores y scripts.
+  Conservar la exportación Excel de Resumen. No volver a crear importadores web.
+- Carga puntual por consola: scripts/import_business_json.py, tres JSON privados,
+  validación sin escrituras por defecto, --apply transaccional, conciliación por
+  mes/tipo y repetición idempotente. No conectar ARCA/MP ni iniciar web/worker.
+- Proveedores por clave explícita normalizada; no fusionar por similitud. Ventas
+  históricas con total y desglose NULL; no inventar efectivo/MP, sueldos ni fiados.
+- Guardar originales y normalizados en data/private/, ignorados en Git y Docker.
+  Los datos reales no son fixtures. La Raspberry recibe esos archivos por separado.
+- Mantener tablas legadas de importación y migraciones publicadas por integridad;
+  no borrar registros previos de producción al retirar las funciones Excel.
+- El usuario autorizó vaciar SOLO la DB local dev para esta carga, con respaldo.
+  No ofrecer ni ejecutar una limpieza productiva. Importar en producción requiere
+  respaldo/ensayo y comando manual documentado; esta sesión no despliega allí.
+
 ## Ajustes H12 de formularios y navegación
 - Altas de montos manuales vacías con placeholder 0,00; conservar valores guardados
   al editar, importes de revisión y configuración. MP sigue sugiriendo el total
@@ -43,12 +61,12 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
   tipo En Blanco/En Negro, proveedor con búsqueda y descripción opcional.
 - Sin otros ingresos, medios, categorías adicionales, estados editables, motivos
   de corrección ni historiales de cambios. Conservar historial de solicitudes fiscales,
-  snapshots de comprobantes y origen del Excel para evitar duplicación de importaciones.
+  snapshots de comprobantes y metadatos de importaciones anteriores por integridad.
 - Resumen: Ventas, Egresos en blanco, Egresos en negro, Total Egresos y Ganancia
   (ventas menos egresos). Exportación con las seis columnas del Excel original.
 - Ayudas mediante diálogo al pulsar un icono, sin subtítulos explicativos permanentes.
-- Proveedores del Excel: generar INSERT idempotente privado y tabla de equivalencias;
-  agrupar variantes claras y mantener nombres ambiguos separados. No publicar datos reales.
+- Proveedores: la carga inicial usa los JSON corregidos entregados por el usuario.
+  Mantener nombres ambiguos separados. No publicar datos reales.
 - Referencia visual: PDF de Figma; logo completo, barra lateral, azul/cian/rosa.
 
 - Mercado Pago: facturar el importe COMPLETO de cada pago, con facturado sí/no.
@@ -60,9 +78,9 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
   Facturas y cobros no crean ni modifican esa venta. No imponer igualdad entre ellos.
 - Proveedores: datos básicos y selección al registrar pagos. Sin cuentas corrientes,
   compras a crédito, vencimientos ni pagos parciales de deuda en este alcance.
-- Excel: ingresos/egresos y dashboard, incluidos datos manuales históricos.
-  Importación de sueldos/adelantos excluida; registro manual de Sueldos habilitado
-  por H10. No inventar datos ni corregir ambiguos sin trazabilidad.
+- JSON: proveedores, ventas totales y egresos. No importar bloques manuales del
+  dashboard ni sueldos/adelantos del Excel; registro manual de Sueldos habilitado
+  por H10. Exportación Excel conservada. No inventar datos históricos.
 - Factura C (tipo 11) correcta. Corregir plantilla, no cambiar de tipo fiscal.
   Conservar condición de venta fija y distribución cotillón/repostería 50/50.
   La condición fiscal exacta del emisor debe configurarse, no inferirse de que no es RI.
@@ -111,7 +129,8 @@ inicial se almacena en el mismo SSD; CRON y copia externa quedan para el usuario
 No ejecutar DROP/TRUNCATE manual ni importar fixtures sobre la base productiva.
 Los retiros de esquema autorizados solo se aplican mediante su migración probada,
 durante una actualización coordinada con backup; esta sesión no despliega en Raspberry.
-Conservar originales del Excel fuera de Git; lote/hoja/fila y problemas trazables.
+Conservar originales privados fuera de Git; hashes y recibo de carga JSON trazables.
+Los metadatos Excel anteriores quedan sin rutas de lectura/escritura ni pantallas.
 Dinero nuevo: Decimal/NUMERIC. Migrar Float heredado en una tarea con conciliación.
 Idempotencia basada en identidad externa, nunca en igualdad de importes.
 Cambios de estado de MP no generan documentos fiscales automáticamente.
@@ -125,7 +144,7 @@ requirements.txt; ejecutar pip check/audit y las pruebas afectadas, incluyendo A
 cuando cambien paquetes con binarios. Consultar docs/OPERACION_RASPBERRY.md.
 Pruebas críticas: formularios cero/uno/varios, duplicados, concurrencia, resultado
 ARCA incierto, fallo DB posterior al CAE, PDF sin reemisión, fechas, filtros, importes,
-permisos, migraciones sin pérdida, importación repetida y conciliación del Excel.
+permisos, migraciones sin pérdida, carga JSON atómica/repetida y exportación Excel.
 Verificar UI en navegador cuando cambie un flujo; no llamar validación visual a
 TestClient ni a una inspección HTML. No declarar una tarea validada con tests omitidos.
 Actualizar docs/EXECUTION_STATUS.md, roadmap y guías afectadas por cada hito.

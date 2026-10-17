@@ -3,6 +3,16 @@
 Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
+H14 implementado: carga puntual por consola de los tres JSON y retiro del módulo
+Importar Excel. Icono sencillo solo en el desplegable móvil, nombre activo y sin
+flecha. La DB local fue respaldada, vaciada y cargada con los datos corregidos.
+Publicación y CI del hito pendientes de cierre; evidencia local debajo.
+
+La carga y la limpieza NO se ejecutaron en la Raspberry. Los archivos privados
+no se publican con el código; copiar normalizados/ por separado al SSD según
+IMPORTACION_JSON.md. La exportación Excel sigue disponible en Resumen.
+
+### Estado anterior publicado
 H13: flecha retirada del desplegable móvil y nombre derivado del enlace activo.
 Publicado en main: 406ab740acb95babb2cdcdc5df8af570963476bd.
 Navegador local y suite de 211 pruebas aprobados. CI completo aprobado:
@@ -30,6 +40,50 @@ exportación de Resumen y generación privada del INSERT de proveedores.
 H9 completado y publicado: implementación 20c8acf y ensayo final b849534.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38942781766.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
+
+## Evidencia H14
+- Destino comprobado antes de limpiar: arca_dys_dev, servicio postgres, usuario
+  arca_dev, volumen arca-dys-dev_pg_dev; sin /mnt ni DB productiva. Web detenida.
+  Dump custom previo de 73807 bytes, catálogo pg_restore --list válido:
+  artifacts/dev-before-json-reset.dump, SHA256
+  7B150FD5232F8EE4F640095D97DB9784E3FCA5763B95DA3AB2E820946A090AEB.
+  Se vaciaron 22 tablas conservando Alembic/esquema. No se entrega un reset productivo.
+- Tres adjuntos preservados byte por byte (hash contra Downloads), originales y
+  normalizados bajo data/private/importacion_negocio/. Una clave de proveedor con
+  diferencia de acento y 18 referencias corregidas; no se fusionaron proveedores.
+  Preparación privada con hashes y totales mensuales; git check-ignore aprobado.
+- Carga local confirmada: 107 proveedores, 1349 ventas y 1764 egresos (743 En Blanco,
+  1021 En Negro), 57 meses. Conciliación SQL por mes/tipo y comprobación posterior
+  de los 3113 movimientos uno por uno contra los JSON. Repetición already_applied;
+  resto de tablas vacío antes de arrancar web. Al iniciar se recrea solo la cuenta
+  admin de simulación y las sesiones de navegación; no hay pagos/facturas ficticios.
+- Ventas históricas con total, cash_amount/mp_amount NULL. No se inventaron medios,
+  sueldos, fiados ni facturas. Proveedores vinculados por claves y IDs reales.
+- Script aislado de app.main/worker/gateways, dry-run sin escrituras, transacción y
+  bloqueo PostgreSQL, rechazo de otro conjunto/período ocupado y recibo idempotente.
+  Conserva proveedores existentes, rechaza ambiguos y revierte todo ante fallo.
+- Eliminadas API, plantillas, lectores y scripts de importación Excel. Rutas viejas
+  y /dashboard/history devuelven 404. Tablas legadas se conservan por integridad;
+  recibo JSON reutiliza import_batches, sin migraciones nuevas ni cambios de dependencias.
+- Edge headless/Playwright con perfil temporal: cinco secciones públicas en
+  390x844, icono de tres líneas visible con nombre activo, cerrado tras navegar,
+  teclado Enter, sin flecha ni desborde. En 1280x850 el icono/summary están ocultos.
+  Sin errores JavaScript. Captura privada revisada: artifacts/h14-menu.png.
+- Navegador: 107 proveedores paginados, ausencia de enlaces del módulo retirado,
+  Resumen septiembre 2026 conciliado con JSON (ventas/tipos/ganancia y Sin desglose).
+  Descarga real de Excel, reapertura y sumas exactas de las tres columnas monetarias;
+  tres hojas conservadas, efectivo/MP vacíos y Sueldos sin datos inventados.
+- Suite final: 228 passed, 1 warning conocido de TestClient, 64.52s; sin omitidas.
+  Incluye invocación real de CLI (validar/aplicar/repetir/error) y conservación de
+  referencias legadas al eliminar proveedores. Backup/restauración descartable
+  aprobados después de la suite con revisión 0012_credit_paid_date e importe
+  ficticio 12345.67. Publicación y CI pendientes de registrar.
+- Imagen Docker comprobada sin data/private ni artifacts y sin lector/API Excel
+  retirados. El script JSON sí está incluido. Enlaces locales de las guías válidos;
+  git diff --check aprobado. No se publican registros privados ni resultados monetarios.
+- Guía IMPORTACION_JSON con Windows/Raspberry, comandos sin/con --apply, archivos
+  privados fuera de imágenes/Git, transferencia al SSD, respaldo y recuperación.
+  Sin ARCA/MP real, despliegue físico ni repetición ARM64 en este ajuste.
 
 ## Evidencia H13
 - Suite completa: 211 passed, 1 warning conocido de TestClient, 61.72s; sin omitidas.

@@ -1,6 +1,6 @@
 document.querySelectorAll('.site-menu').forEach(menu => {
   const current = menu.querySelector('[aria-current="page"]');
-  if (current) menu.querySelector('summary').textContent = current.textContent.trim();
+  if (current) menu.querySelector('[data-menu-label]').textContent = current.textContent.trim();
   const mobile = window.matchMedia('(max-width: 900px)');
   function adapt() { menu.open = !mobile.matches; }
   mobile.addEventListener('change', adapt);

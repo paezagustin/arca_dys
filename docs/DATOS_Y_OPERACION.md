@@ -29,6 +29,12 @@ Un rollback de aplicación/esquema debe ser coordinado, no con la web funcionand
 Compose dev aplica `alembic upgrade head` antes de iniciar. El arranque web solo
 verifica conexión y revisión; no modifica tablas con create_all.
 
+La limpieza completa solicitada para la carga inicial JSON se realizó únicamente
+en arca_dys_dev, con backup previo, conservando esquema/Alembic. No es un paso de
+actualización productiva ni una opción del importador. La guía [IMPORTACION_JSON.md](IMPORTACION_JSON.md)
+documenta validación, transacción e idempotencia. Los datos privados no van a Git
+ni a las imágenes Docker; se transfieren por separado a la Raspberry.
+
 ## Adopción de una base existente
 Ensayar primero sobre una copia restaurada, con datos anonimizados cuando corresponda.
 El comando `python -m app.manage adopt-legacy` compara tablas, tipos, nullability,

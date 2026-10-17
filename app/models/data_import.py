@@ -1,9 +1,14 @@
+"""Recibos de carga por consola y metadatos legados conservados sin rutas Excel.
+
+Las tablas de filas/asignaciones anteriores quedan sólo por compatibilidad e
+integridad: no hay lectores, escritores ni pantallas para importar Excel.
+"""
 from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey, Index, UniqueConstraint
 from app.core.database import Base
 from app.models.billing import utcnow
 
 
-class ImportBatch(Base):
+class DataImport(Base):
     __tablename__ = "import_batches"
     id = Column(String(36), primary_key=True)
     dataset = Column(String(80), nullable=False)
@@ -17,7 +22,7 @@ class ImportBatch(Base):
     __table_args__ = (UniqueConstraint("dataset", "file_hash", name="uq_import_file"),)
 
 
-class ImportRow(Base):
+class LegacyImportRow(Base):
     __tablename__ = "import_rows"
     id = Column(Integer, primary_key=True)
     batch_id = Column(String(36), ForeignKey("import_batches.id"), nullable=False)
@@ -37,7 +42,7 @@ class ImportRow(Base):
         Index("ix_import_rows_batch", "batch_id", "state", "id"), Index("ix_import_rows_source", "source_key"))
 
 
-class ImportSupplierMap(Base):
+class LegacyImportSupplierMap(Base):
     __tablename__ = "import_supplier_maps"
     batch_id = Column(String(36), ForeignKey("import_batches.id"), primary_key=True)
     label = Column(String(200), primary_key=True)

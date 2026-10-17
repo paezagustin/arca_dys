@@ -1,6 +1,5 @@
 from datetime import date, datetime
 from decimal import Decimal
-from uuid import uuid4
 import pytest
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
@@ -11,10 +10,7 @@ from app.models.invoice import Invoice
 from app.models.mp_event import MPEvent
 from app.services.business import save_entry, save_supplier
 from app.services.metrics import year_metrics, period_total, change, bounds
-from app.services.excel_import import prepare_import, confirm_import
-from app.services.excel_reader import read_excel
 from tests.test_business import values
-from tests.test_excel_import import workbook_bytes
 
 
 def test_metrics_reconcile_registered_detail_and_keep_mp_and_invoices_separate(client):
@@ -49,17 +45,6 @@ def test_metrics_reconcile_registered_detail_and_keep_mp_and_invoices_separate(c
     assert "saldo pendiente" not in page.text.lower() and "pendientes de facturar" not in page.text.lower()
 
 
-def test_import_and_dashboard_aggregate_same_values_without_historical_double_counting():
-    content = workbook_bytes()
-    with Session(engine) as db:
-        batch = prepare_import(db, content, "Libro-qa", "ejemplo.xlsx", "test", read_excel(content, "Libro-qa"))
-        confirm_import(db, batch.id, "test")
-        january = year_metrics(db, 2026)[0]
-        assert january["sale"] == Decimal(110) and january["expense"] == Decimal(120)
-        assert january["result"] == Decimal(-10) and january["days"] == 3
-        assert year_metrics(db, 2022)[0]["result"] is None
-
-
 def test_grouped_supplier_and_expense_type_lists_have_independent_sql_pagination(client):
     with Session(engine) as db:
         for n in range(27):
@@ -92,7 +77,7 @@ def test_bad_periods_show_clear_error(client, query):
 
 
 def test_request_size_limit_checks_declared_and_streamed_bytes(client):
-    assert client.post("/business/imports", content=b"x", headers={"content-length": str(7*1024*1024)}).status_code == 413
+    assert client.post("/business/entries/new", content=b"x", headers={"content-length": str(7*1024*1024)}).status_code == 413
     assert client.post("/mp/webhook", content=(b"x"*65536 for _ in range(5))).status_code == 413
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(MPEvent)) == 0

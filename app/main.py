@@ -16,7 +16,7 @@ from app.core.config import ENV, INTEGRATIONS_MODE
 from app.core.database import engine
 from app.core.logging import setup_logging
 from app.api import invoice, mp, page, page_reports_statistics
-from app.api import access, business, imports, dashboard, registers, settings as settings_routes
+from app.api import access, business, dashboard, registers, settings as settings_routes
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -62,7 +62,6 @@ app.include_router(page_reports_statistics.router)
 app.include_router(access.router)
 app.include_router(settings_routes.router)
 app.include_router(business.router)
-app.include_router(imports.router)
 app.include_router(dashboard.router)
 app.include_router(registers.router)
 assets = Path(__file__).resolve().parent / "assets"

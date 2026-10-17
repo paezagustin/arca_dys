@@ -1,5 +1,19 @@
 # Roadmap y condiciones de salida
 
+## H14 · Carga inicial JSON y menú móvil
+- [x] Icono de tres líneas solo en móvil; nombre de sección y ausencia de flecha conservados.
+- [x] Respaldo y limpieza completa de datos SOLO en la DB dev local.
+- [x] Tres JSON privados analizados/normalizados; originales intactos.
+- [x] Script de consola con dry-run, transacción, conciliación e idempotencia.
+- [x] Carga local: 107 proveedores, 1349 ventas y 1764 egresos, 57 meses conciliados.
+- [x] Retirado el módulo web Importar Excel y sus scripts; exportación conservada.
+- [x] Navegador móvil/escritorio, métricas y Excel descargado comprobados.
+- [x] Guías actualizadas para Windows y carga manual posterior en Raspberry.
+- [ ] Cierre de suite final, backup/restore y publicación/CI.
+
+H14 reemplaza el importador de H7 y la precarga SQL de H9. Las secciones inferiores
+conservan la evidencia y las decisiones de cada hito anterior, no el alcance vigente.
+
 ## H13 · Nombre de sección en el menú móvil
 - [x] Sin flecha; el texto del desplegable sigue la sección activa.
 - [x] Navegación móvil y teclado comprobados en navegador real.

@@ -53,12 +53,13 @@ No hay downgrade destructivo; para retroceder se restaura el backup y su código
 conciliar importes originales. No se eliminan snapshots fiscales, respuestas ARCA,
 identidades MP ni celdas originales del Excel.
 
-## Precarga desde Excel
-scripts/supplier_seed.py genera un INSERT y CSV de equivalencias, sin conectar a la DB.
-Acepta --aliases para variantes confirmadas; las abreviaturas o conceptos dudosos
-se conservan separados para que la usuaria los edite/elimine. El INSERT usa
-ON CONFLICT (name_key) DO NOTHING, no pisa proveedores existentes. Originales,
-equivalencias privadas y SQL generado permanecen fuera de Git.
+## Carga inicial por consola
+scripts/import_business_json.py carga los tres JSON corregidos en una transacción.
+No hay módulo Importar Excel. Reutiliza proveedores por clave explícita, conserva
+sus campos existentes y rechaza coincidencias ambiguas; no fusiona por similitud.
+Las ventas históricas conservan total y desglose desconocido. El recibo interno
+evita duplicados al repetir el mismo conjunto; los originales privados se conservan.
+Comandos y procedimiento: [IMPORTACION_JSON.md](IMPORTACION_JSON.md).
 
 ## Sueldos
 Acceso local sin login. Fecha (hoy por defecto), empleado Francisco/Juan Cruz,
@@ -82,8 +83,8 @@ ingreso ni modifica ventas, caja, MP o Ganancia automáticamente.
 Agrega cash_amount/mp_amount NUMERIC nullable y exige pares completos cuya suma
 coincida con amount. Conserva los totales anteriores con ambos campos NULL; se
 muestran como Sin desglose en Resumen y celdas vacías en Excel. Al editarlos se
-completan importes reales; no se inventan proporciones. Importar Excel sigue
-conservando el total sin desglose. Crea salary_payments con ENUM nativos
+completan importes reales; no se inventan proporciones. La carga JSON también
+conserva el total sin desglose. Crea salary_payments con ENUM nativos
 salary_employee (Francisco, Juan Cruz) y salary_medium (efectivo, mercado pago),
 y customer_credits con paid booleano. UUID/versión/bloqueos impiden duplicados y
 ediciones perdidas; no hay historial ni motivos. Respaldo antes de migrar y ensayo
