@@ -4,7 +4,9 @@ Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
 H13: flecha retirada del desplegable móvil y nombre derivado del enlace activo.
-Navegador local y suite de 211 pruebas aprobados; pendiente publicación y CI.
+Publicado en main: 406ab740acb95babb2cdcdc5df8af570963476bd.
+Navegador local y suite de 211 pruebas aprobados. CI completo aprobado:
+https://github.com/paezagustin/arca_dys/actions/runs/38988173690.
 
 H12 verificado localmente: montos vacíos con placeholder, menú móvil desplegable,
 marca Dulce y Salado centrada y acceso de administración al pie. Publicado en main:
@@ -42,6 +44,8 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
   Captura privada revisada: artifacts/h13-menu.png. Sin nuevas pruebas unitarias
   que repliquen este ajuste visual; se ejecuta la suite existente exigida por AGENTS.
 - Sin cambios de esquema o dependencias, pruebas productivas ni despliegue Raspberry.
+- CI del código publicado aprobó suite, backup/restauración, imagen de ejecución
+  en simulación y auditoría de dependencias. Documentación y roadmap cerrados.
 
 ## Evidencia H12
 - Suite completa: 211 passed, 1 warning conocido de TestClient, 61.21s. Incluye

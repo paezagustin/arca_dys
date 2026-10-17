@@ -3,7 +3,8 @@
 ## H13 · Nombre de sección en el menú móvil
 - [x] Sin flecha; el texto del desplegable sigue la sección activa.
 - [x] Navegación móvil y teclado comprobados en navegador real.
-- [ ] Suite completa, documentación y publicación verificadas.
+- [x] Suite completa, documentación y publicación verificadas.
+Completado: 406ab74, CI 38988173690 aprobado; 211 pruebas y navegador móvil/escritorio.
 
 ## H12 · Montos vacíos, menú móvil y marca
 - [x] Montos manuales sin valores iniciales, placeholder y edición conservada.
