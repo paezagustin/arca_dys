@@ -38,7 +38,16 @@ ni a las imágenes Docker; se transfieren por separado a la Raspberry.
 ## Adopción de una base existente
 Ensayar primero sobre una copia restaurada, con datos anonimizados cuando corresponda.
 El comando `python -m app.manage adopt-legacy` compara tablas, tipos, nullability,
-índices y relaciones contra el baseline congelado. Si coincide, crea únicamente
+índices y relaciones contra el baseline congelado. Se acepta exclusivamente la
+variante PostgreSQL conocida: restricción UNIQUE invoices_invoice_number_key en
+invoices(invoice_number), con índice asociado único del mismo nombre, válido,
+inmediato, sin columnas adicionales y con NULLs distintos. No se aceptan otras
+tablas, nombres o columnas, restricciones diferibles ni NULLS NOT DISTINCT.
+La equivalencia se prepara solo en los metadatos de comparación en memoria:
+no cambia el índice/restricción existente ni el baseline publicado. Las demás
+diferencias de Alembic siguen bloqueando la adopción, incluso si coexisten con
+esa restricción válida. El export original con índice explícito también se acepta.
+Si coincide, crea únicamente
 alembic_version y marca 0001_legacy; no ejecuta el CREATE inicial sobre tablas existentes.
 Si hay diferencias o ya existe versionado, se detiene. No usar stamp manual para
 silenciar una diferencia. Después de adoptar, aplicar `alembic upgrade head` en la

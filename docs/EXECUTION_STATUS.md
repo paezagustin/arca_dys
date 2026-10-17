@@ -1,8 +1,22 @@
 # Estado de ejecución
 
-Actualizado: 2026-10-16, America/Buenos_Aires.
+Actualizado: 2026-10-17, America/Buenos_Aires.
 
 ## Estado vigente
+H16 implementado y comprobado localmente: adopt-legacy acepta exclusivamente la
+equivalencia PostgreSQL UNIQUE invoices_invoice_number_key sobre
+invoices(invoice_number) frente al índice explícito del baseline. Normalización
+solo en memoria; la restricción original, su índice y las migraciones 0001-0012
+permanecen intactos. Otras diferencias siguen bloqueando la adopción.
+Suite local completa: 251 passed, 1 warning, sin omitidas, 82.55s.
+Backup/checksum/restauración local aprobados. Publicación en main pendiente al
+registrar este estado.
+El nombre correcto comprobado es paezagustin/arca_dys; arca_dysy devuelve 404.
+No se proporcionó ni restauró un backup productivo: integridad comprobada solo
+con datos sintéticos equivalentes en conteo. No se accedió a Raspberry/producción,
+ni se modificaron credenciales o archivos privados.
+
+### Estado H15 publicado
 H15 preparado para ejecución MANUAL posterior por el usuario: guía de despliegue
 conservando control de facturación/MP y configuración, limpieza restringida de
 Gestión e inventario técnico completo. No ejecutar despliegue o limpieza real desde
@@ -52,6 +66,35 @@ exportación de Resumen y generación privada del INSERT de proveedores.
 H9 completado y publicado: implementación 20c8acf y ensayo final b849534.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38942781766.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
+
+## Evidencia H16
+- Reproducción previa a la corrección: RuntimeError con remove_constraint,
+  add_index sobre la variante PostgreSQL con UNIQUE, en la DB descartable.
+- Consulta de catálogos verifica tabla, nombre, única columna, restricción UNIQUE
+  no diferible, NULLs distintos e índice asociado único/válido/listo/inmediato del
+  mismo nombre, sin INCLUDE, expresiones ni predicado. Solo entonces se sustituye
+  el índice por una UniqueConstraint en los metadatos temporales de comparación.
+  La comparación completa de Alembic sigue aplicándose al resto del esquema.
+- Veinte casos nuevos: adopción y migración completa hasta 0012_credit_paid_date
+  tanto por API como por CLI; 18 variantes incorrectas/drift adicional rechazadas.
+  Una adopción repetida se rechaza; no hay DDL de corrección ni stamp manual.
+- Ensayo exclusivamente sintético con 3876 cobros, 3625 facturados, 181 facturas y
+  3624 vínculos. Comparación fila por fila de todas las columnas originales
+  conservadas (incluidas CAE/respuestas/fechas/importes/marcas), secuencias sin
+  cambios y OIDs originales de restricción/índice preservados. Duplicados siguen
+  rechazados y no se inventa el vínculo faltante del cobro facturado sin relación.
+- Suite obligatoria Docker local completa: 251 passed, 1 warning conocido de
+  Starlette/TestClient, 82.55s; sin omitidas. Los 31 casos de migración también
+  aprobaron en la ejecución dirigida previa al último control de esquema head.
+- Perfil backup-test aprobado después de la suite: dump custom, checksum SHA256
+  y restauración en otra DB descartable; importe ficticio 12345.67 y revisión
+  0012_credit_paid_date comprobados. git diff --check sin errores.
+- Guías de adopción, ensayo Raspberry y testing actualizadas. Baseline, fixture
+  original, migraciones históricas, dependencias e integraciones sin cambios.
+  Sin cambios de interfaz; no aplica revisión visual. ARM64 no se volvió a ejecutar.
+- El respaldo real no está disponible como entrada de esta tarea; los conteos
+  sintéticos no certifican sus datos. El ensayo con su copia restaurada permanece
+  como operación manual del usuario, sin acceder desde este chat a producción.
 
 ## Evidencia H15
 - El usuario descartó el vaciado total de producción y confirmó conservar el

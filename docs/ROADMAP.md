@@ -1,5 +1,16 @@
 # Roadmap y condiciones de salida
 
+## H16 · Equivalencia PostgreSQL en adopción legacy
+- [x] Reproducir remove_constraint/add_index de la variante con UNIQUE.
+- [x] Aceptar solo invoices_invoice_number_key en invoices(invoice_number), sin DDL.
+- [x] Rechazar otras variantes y drift adicional sin marcar la base.
+- [x] Adopción y migración a head por API/CLI; integridad fiscal con datos sintéticos.
+- [x] Guías de adopción y ensayo manual actualizadas; migraciones publicadas intactas.
+- [x] Suite completa: 251 pruebas, sin omitidas; backup/checksum/restauración aprobados.
+- [ ] Publicación en main comprobada.
+No se proporcionó el respaldo productivo en esta sesión. Los conteos del ensayo
+son sintéticos; no se ejecuta producción ni se accede a Raspberry.
+
 ## H15 · Guía de despliegue manual y tecnologías
 - [x] Decisión confirmada: conservar control fiscal y limpiar solo Gestión.
 - [x] Comandos para inventario, respaldo, ensayo en copia, migración, limpieza e importación.

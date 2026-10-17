@@ -4,12 +4,49 @@ from alembic import command
 from alembic.config import Config
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
-from sqlalchemy import inspect
+from sqlalchemy import UniqueConstraint, inspect, text
 from app.core.database import engine
 from migrations.baseline import legacy_metadata
 
 BASELINE = "0001_legacy"
 TABLES = {"payments", "invoices", "payment_invoice", "error_logs", "logs_invoice"}
+
+
+def _adoption_metadata(connection):
+    """Normaliza solo la equivalencia conocida, en memoria y para comparar.
+
+    No ejecuta DDL ni cambia el baseline congelado. Las demás diferencias siguen
+    pasando por la comparación completa de Alembic.
+    """
+    metadata = legacy_metadata()
+    if connection.dialect.name != "postgresql":
+        return metadata
+    key = "invoices_invoice_number_key"
+    equivalent = connection.execute(text("""
+        SELECT EXISTS (
+            SELECT 1
+            FROM pg_catalog.pg_constraint AS c
+            JOIN pg_catalog.pg_attribute AS a
+              ON a.attrelid = c.conrelid AND a.attname = 'invoice_number'
+            JOIN pg_catalog.pg_index AS i ON i.indexrelid = c.conindid
+            JOIN pg_catalog.pg_class AS idx ON idx.oid = c.conindid
+            WHERE c.conrelid = to_regclass('invoices')
+              AND c.conname = :key AND c.contype = 'u'
+              AND c.conkey = ARRAY[a.attnum]
+              AND NOT c.condeferrable AND NOT c.condeferred AND c.convalidated
+              AND idx.relname = :key
+              AND i.indisunique AND i.indisvalid AND i.indisready AND i.indimmediate
+              AND NOT i.indnullsnotdistinct
+              AND i.indnkeyatts = 1 AND i.indnatts = 1
+              AND i.indexprs IS NULL AND i.indpred IS NULL
+        )
+    """), {"key": key}).scalar_one()
+    if equivalent:
+        invoices = metadata.tables["invoices"]
+        index = next(index for index in invoices.indexes if index.name == key)
+        invoices.indexes.remove(index)
+        invoices.append_constraint(UniqueConstraint("invoice_number", name=key))
+    return metadata
 
 
 def adopt_legacy(target_engine=engine):
@@ -20,7 +57,7 @@ def adopt_legacy(target_engine=engine):
             raise RuntimeError("La base ya tiene versionado. Usar alembic current/upgrade, no volver a adoptar.")
         if actual != TABLES:
             raise RuntimeError("Las tablas no coinciden con el baseline; revisar antes de adoptar")
-        differences = compare_metadata(MigrationContext.configure(connection), legacy_metadata())
+        differences = compare_metadata(MigrationContext.configure(connection), _adoption_metadata(connection))
         if differences:
             descriptions = [str(item[0]) for item in differences]
             raise RuntimeError("El esquema difiere del baseline: " + ", ".join(descriptions))

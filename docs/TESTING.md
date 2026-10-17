@@ -135,3 +135,25 @@ sin ejecutarlos, y los enlaces locales. docker compose config con valores fictic
 comprueba el override NGROK, URL requerida y montaje de certificado read-only; no
 se inicia un agente NGROK ni se contactan proveedores. La restauración/migración del
 respaldo real y el despliegue físico quedan como comandos manuales del usuario.
+
+## Equivalencia de adopción legacy H16
+test_migrations.py reproduce en PostgreSQL descartable la restricción UNIQUE
+invoices_invoice_number_key en invoices(invoice_number). Primero comprueba que
+Alembic detecta remove_constraint/add_index contra el baseline congelado; luego
+ensaya adopción y upgrade hasta head tanto por API interna como mediante los
+comandos python -m app.manage adopt-legacy y alembic upgrade head.
+
+Datos exclusivamente sintéticos reproducen 3876 cobros, 3625 facturados, 181
+facturas y 3624 vínculos. Se comparan todas las columnas originales conservadas
+fila por fila, incluidas marcas, importes, CAE, respuestas JSON, fechas y vínculos,
+y el estado de las secuencias antes/después de adoptar y migrar. El OID de la
+restricción y su índice asociado permanecen iguales; los duplicados se rechazan.
+La migración monetaria publicada conserva sus auditorías y controles existentes.
+
+Dieciocho variantes negativas comprueban nombres/tablas/columnas incorrectos,
+unicidad ausente, restricciones diferibles, NULLS NOT DISTINCT, columnas incluidas
+y drift adicional de tablas, columnas, tipos, nullability, índices, restricciones
+o FK. Se rechazan sin alembic_version ni alteraciones de registros/secuencias.
+No se incluyó ni restauró un backup productivo: los conteos equivalentes no son
+evidencia de integridad de los registros reales. Ese ensayo sigue siendo manual
+en la copia aislada indicada en OPERACION_RASPBERRY.md.

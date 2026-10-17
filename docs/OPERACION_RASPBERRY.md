@@ -200,6 +200,14 @@ en esta copia; no saltarla con stamp ni borrar información fiscal. La capacidad
 temporal es 1 GB: si no alcanza, ampliar SOLO el tmpfs de ensayo y repetir desde
 el respaldo. No probar el servidor web/worker con esta copia de solicitudes reales.
 
+La adopción admite la variante PostgreSQL conocida del respaldo: UNIQUE
+invoices_invoice_number_key sobre invoices(invoice_number), equivalente al índice
+único explícito del baseline. Comprueba nombre, tabla, única columna y semántica
+de unicidad inmediata con NULLs distintos; conserva la restricción y su índice
+asociado. No hace falta convertirlos ni editar migraciones históricas.
+Otra diferencia, incluso junto con esa equivalencia, sigue deteniendo la adopción.
+No usar stamp manual ni eliminar restricciones para evitar el rechazo.
+
 ## 4. Migrar la DB real y limpiar únicamente Gestión
 
 Solo tras el ensayo correcto, todavía con web detenida:
