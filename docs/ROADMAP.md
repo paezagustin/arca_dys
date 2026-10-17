@@ -9,7 +9,10 @@
 - [x] Retirado el módulo web Importar Excel y sus scripts; exportación conservada.
 - [x] Navegador móvil/escritorio, métricas y Excel descargado comprobados.
 - [x] Guías actualizadas para Windows y carga manual posterior en Raspberry.
-- [ ] Cierre de suite final, backup/restore y publicación/CI.
+- [x] Cierre de suite final, backup/restore y publicación/CI.
+Completado: cd59fb0, CI 38992592914 aprobado; 228 pruebas, restauración, imagen
+final simulada, auditoría de dependencias y navegador. Sistema dev funcionando
+en localhost:8001 con los históricos cargados; sin despliegue en Raspberry.
 
 H14 reemplaza el importador de H7 y la precarga SQL de H9. Las secciones inferiores
 conservan la evidencia y las decisiones de cada hito anterior, no el alcance vigente.

@@ -6,7 +6,9 @@ Actualizado: 2026-10-16, America/Buenos_Aires.
 H14 implementado: carga puntual por consola de los tres JSON y retiro del módulo
 Importar Excel. Icono sencillo solo en el desplegable móvil, nombre activo y sin
 flecha. La DB local fue respaldada, vaciada y cargada con los datos corregidos.
-Publicación y CI del hito pendientes de cierre; evidencia local debajo.
+Publicado en main: cd59fb0301de2adbf9ae7c740a99d31fd52e2f31.
+Suite local y CI completos aprobados (228 pruebas):
+https://github.com/paezagustin/arca_dys/actions/runs/38992592914.
 
 La carga y la limpieza NO se ejecutaron en la Raspberry. Los archivos privados
 no se publican con el código; copiar normalizados/ por separado al SSD según
@@ -77,7 +79,10 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
   Incluye invocación real de CLI (validar/aplicar/repetir/error) y conservación de
   referencias legadas al eliminar proveedores. Backup/restauración descartable
   aprobados después de la suite con revisión 0012_credit_paid_date e importe
-  ficticio 12345.67. Publicación y CI pendientes de registrar.
+  ficticio 12345.67. CI del commit funcional también aprobó los 228 casos (62.00s),
+  backup/restauración, pip check e imagen final con servidor/worker en simulación.
+  pip-audit: sin vulnerabilidades conocidas al ejecutar este hito. Ensayo CI:
+  RSS máximo hijo 109108 KiB y health promedio 2.6ms; no mide la Raspberry física.
 - Imagen Docker comprobada sin data/private ni artifacts y sin lector/API Excel
   retirados. El script JSON sí está incluido. Enlaces locales de las guías válidos;
   git diff --check aprobado. No se publican registros privados ni resultados monetarios.
@@ -239,6 +244,7 @@ creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 | H10 | 7c9840e647e6f3b43a19ba227e22e90fa7662e4b | Caja efectivo/MP, Sueldos, Fiados, Resumen/Excel y tablas centradas. CI 38978324468 success; 203 pruebas, backup/restore, imagen final y navegador. |
 | H11 | befdcc104e3621e5d1324ce2280a9da919fb64f6 | Acciones centradas y fecha de pago automática de Fiados. CI 38980673926 success; 207 pruebas, restauración, imagen final y navegador. |
 | H12 | 6a03a2c40095add356a886872531e983f353d918 | Montos sin ceros iniciales, menú móvil desplegable, marca centrada y Administración al pie. CI 38986920971 success; 211 pruebas, backup/restauración y navegador real. |
+| H14 | cd59fb0301de2adbf9ae7c740a99d31fd52e2f31 | Carga JSON privada por consola, 107 proveedores/3113 movimientos conciliados en dev, retiro del módulo Excel e icono móvil. CI 38992592914 success; 228 pruebas, backup/restauración, imagen final y navegador. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió
