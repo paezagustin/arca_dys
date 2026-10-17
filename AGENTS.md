@@ -6,6 +6,16 @@ en Raspberry Pi 5. Usar FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Comp
 Leer README, docs/ALCANCE.md, docs/ROADMAP.md y docs/EXECUTION_STATUS.md al retomar.
 Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
+## Ajustes H12 de formularios y navegación
+- Altas de montos manuales vacías con placeholder 0,00; conservar valores guardados
+  al editar, importes de revisión y configuración. MP sigue sugiriendo el total
+  local cuando es positivo; si no hay cobros, queda vacío. No imponer cero inicial.
+- En ventas, un componente vacío vale cero si se completó el otro. Ambos vacíos
+  se rechazan; cero explícito sigue siendo una venta válida. Total calculado en servidor.
+- Marca visible Dulce y Salado, logo centrado y nombre debajo. Menú móvil nativo
+  desplegable, cerrado al entrar; escritorio abierto, incluso al cambiar de tamaño.
+- Administración y controles de sesión al final, justo antes de ARCA DYS.
+
 ## Ampliación H10 solicitada el 16/10/2026 (prevalece sobre exclusiones anteriores)
 - Ventas: fecha, efectivo y MP editable sugerido desde cobros locales aprobados sin
   facturar de esa fecha. Total calculado en servidor. Guardar desglose, no recalcular

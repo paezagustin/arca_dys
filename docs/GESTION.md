@@ -10,6 +10,10 @@ puede modificar. No realiza llamadas externas. El servidor suma ambos importes;
 el total visible es de solo lectura. Al cambiar la fecha vuelve a sugerir MP.
 Una edición ya abierta conserva los importes guardados, sin recalcularlos por
 posteriores facturas o cambios de estado del pago.
+En altas, efectivo queda vacío con placeholder 0,00; MP también queda vacío si
+la sugerencia es cero. Un componente vacío equivale a cero cuando se completó
+el otro. Los dos vacíos se rechazan; escribir 0 explícito registra una caja de cero.
+La edición conserva los importes guardados, incluidos ceros y totales históricos.
 Una venta por fecha; cero es válido, un día sin registrar sigue sin información.
 El icono de lápiz abre Editar con fecha y ambos importes. No exige motivo.
 

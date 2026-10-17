@@ -50,7 +50,8 @@ def entry_form(request, db, row=None, values=None, error=None):
         # Un total enviado por el navegador no participa ni del guardado ni del error.
         data.pop("amount", None)
     if not row and values is None and kind == "sale":
-        data.update(cash_amount="0.00", mp_amount=str(unbilled_mp_total(db, record_date(data["entry_date"]))))
+        suggested_mp = unbilled_mp_total(db, record_date(data["entry_date"]))
+        data.update(cash_amount="", mp_amount=str(suggested_mp) if suggested_mp else "")
     selected = db.get(Supplier, int(data["supplier_id"])) if str(data.get("supplier_id", "")).isdigit() else None
     return templates.TemplateResponse(request=request, name="business_entry.html", context={"row": row,
         "values": data, "selected_supplier": selected, "expense_types": EXPENSE_TYPES,

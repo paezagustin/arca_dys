@@ -13,6 +13,18 @@ solo en este entorno simulado. La cuenta de prueba no se crea en producción.
 Pruebas permite cargar cobros ficticios sin NGROK, claves ni operaciones reales.
 El banner de simulación y los PDF indican SIN VALIDEZ FISCAL.
 
+## Navegación y montos
+El encabezado muestra el logo centrado y Dulce y Salado debajo. En el celular,
+pulsar Menú para desplegar las secciones; al entrar a otra pantalla se cierra.
+En escritorio las secciones quedan visibles en la barra lateral. Administración
+está al final de cada página, encima de ARCA DYS; al ingresar, Salir queda allí.
+
+Los montos nuevos empiezan vacíos y muestran 0,00 como ayuda. Los importes guardados
+siguen visibles al editar. En ventas puede completarse efectivo, Mercado Pago o
+ambos; el que se deja vacío se toma como cero. No puede guardarse una caja con
+ambos vacíos: para registrar cero hay que escribir 0 en uno de los campos. MP
+continúa sugiriendo el importe de cobros de la fecha cuando hay un total positivo.
+
 ## Facturar
 En Facturación elegir cobros y FACTURAR SELECCIONADOS, o FACTURAR TODO para los pagos
 disponibles del filtro completo, incluso en otras páginas. Revisar importe/cantidad

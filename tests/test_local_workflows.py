@@ -100,7 +100,7 @@ def test_error_history_works_without_resolution_fields(client):
     assert "resolved" not in history["errors"][0]
 
 
-@pytest.mark.parametrize("amount", ["NaN", "Infinity", "-1", "0", "1.001"])
+@pytest.mark.parametrize("amount", ["NaN", "Infinity", "-1", "0", "1.001", ""])
 def test_simulator_rejects_invalid_amounts(client, amount):
     assert client.post("/dev/payments", data={"amount": amount}).status_code == 422
     assert counts() == (0, 0, 0)

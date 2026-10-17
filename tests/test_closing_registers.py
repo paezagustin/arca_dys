@@ -45,7 +45,7 @@ def test_mp_suggestion_uses_only_local_approved_unbilled_payments_and_day_bounda
         db.commit()
     assert client.get(f"/business/sales/mp-total?date={today}").json() == {"total": "30.30"}
     page = client.get("/business/entries/new?kind=sale")
-    assert 'value="30.30" required' in page.text and 'name="cash_amount"' in page.text
+    assert 'value="30.30" placeholder="0,00"' in page.text and 'name="cash_amount"' in page.text
     assert client.get("/business/sales/mp-total?date=2026-02-30").status_code == 422
 
 
@@ -60,18 +60,28 @@ def test_close_can_override_mp_total_server_sums_and_edit_does_not_recalculate(c
             mont=Decimal("1000"), date_approved=datetime(2026,1,10)))
         db.commit()
     page = client.get(f"/business/entries/{identifier}")
-    assert 'value="200.02" required' in page.text
+    assert 'value="200.02" placeholder="0,00"' in page.text
     assert client.post(f"/business/entries/{identifier}", data=dict(data, version="1", cash_amount="100.02")).status_code == 200
     with Session(engine) as db:
         assert db.get(BusinessEntry, identifier).amount == Decimal("300.04")
 
 
-@pytest.mark.parametrize("cash,mp", [("", "0"), ("1", ""), ("-1", "0"), ("NaN", "0"), ("0", "Infinity"),
+@pytest.mark.parametrize("cash,mp", [("", ""), ("-1", "0"), ("NaN", "0"), ("0", "Infinity"),
     ("1.001", "0"), ("9999999999999999.99", "0.01")])
 def test_invalid_breakdown_is_rejected_without_saving(client, cash, mp):
     assert client.post("/business/entries/new", data=values(cash_amount=cash, mp_amount=mp, amount="total ignorado")).status_code == 422
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(BusinessEntry)) == 0
+
+
+@pytest.mark.parametrize("cash,mp", [("12.34", ""), ("", "12.34"), ("0", ""), ("", "0")])
+def test_partial_close_treats_blank_side_as_zero_and_keeps_explicit_zero(client, cash, mp):
+    response = client.post("/business/entries/new", data=values(cash_amount=cash, mp_amount=mp))
+    assert response.status_code == 200
+    with Session(engine) as db:
+        row = db.scalar(select(BusinessEntry))
+        assert (row.cash_amount, row.mp_amount, row.amount) == (
+            Decimal(cash or "0"), Decimal(mp or "0"), Decimal(cash or "0")+Decimal(mp or "0"))
 
 
 def test_new_public_sections_have_only_requested_fields_and_csrf():

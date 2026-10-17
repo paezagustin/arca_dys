@@ -108,6 +108,14 @@ registered_arca, reservas y vínculos. Otros campos históricos no se eliminan p
 falta de escritura reciente. invoices.raw_afip_response queda poblado para nuevas
 autorizaciones; no se inventan respuestas previas. Los importes usan NUMERIC(18,2).
 
+## Formularios y navegación H12
+base.html usa details/summary nativo para el menú. app.js adapta su estado al
+breakpoint de 900px: móvil cerrado y escritorio abierto; mantiene teclado y
+funcionamiento nativo sin dependencias. Administración/Salir están antes del footer.
+Los montos nuevos no traen cero precargado; MP positivo conserva la sugerencia local.
+business.py exige al menos un componente del cierre y convierte el otro vacío a
+cero. La suma y la validación siguen en servidor. No cambia el esquema de datos.
+
 ## Entornos y acceso
 Dev/test solo aceptan mock. Producción exige ENV=production, modo production y
 ALLOW_LIVE_OPERATIONS=true. .env no se descubre automáticamente; APP_ENV_FILE debe

@@ -60,7 +60,8 @@ small,.muted {
 .brand {
   display:flex;
   flex-direction:column;
-  align-items:flex-start;
+  align-items:center;
+  text-align:center;
   gap:12px;
   text-decoration:none;
   font-size:18px;
@@ -86,6 +87,16 @@ small,.muted {
   flex-direction:column;
   gap:6px;
 }
+.site-menu>summary {
+  display:none;
+}
+.menu-chevron {
+  font-size:24px;
+  line-height:1;
+}
+.site-menu[open] .menu-chevron {
+  transform:rotate(180deg);
+}
 .site-header nav a {
   padding:12px;
   border-radius:8px;
@@ -103,9 +114,11 @@ small,.muted {
   box-shadow:inset 3px 0 var(--brand);
 }
 .session-area {
-  margin-top:auto;
+  margin-top:24px;
+  padding:0 32px;
   display:flex;
-  flex-direction:column;
+  align-items:center;
+  flex-wrap:wrap;
   gap:12px;
   font-size:12px;
 }
@@ -139,7 +152,7 @@ main {
 footer {
   color:var(--muted);
   font-size:11px;
-  padding:32px;
+  padding:12px 32px 24px;
 }
 .card {
   background:var(--paper);
@@ -587,40 +600,51 @@ dialog .actions {
     position:relative;
     width:100%;
     padding:16px 20px;
-    flex-direction:row;
-    flex-wrap:wrap;
-    align-items:center;
+    flex-direction:column;
+    align-items:stretch;
     gap:12px;
     border-right:0;
     border-bottom:1px solid var(--line);
   }
   .brand {
-    flex-direction:row;
+    flex-direction:column;
     align-items:center;
     font-size:16px;
-    gap:12px;
+    gap:8px;
   }
   .brand img {
-    width:64px;
-    height:64px;
+    width:88px;
+    height:88px;
   }
   .brand small {
     margin-top:2px;
   }
   .site-header nav {
-    order:3;
     width:100%;
-    flex-direction:row;
-    flex-wrap:wrap;
+    flex-direction:column;
     gap:4px;
   }
   .site-header nav a {
     padding:8px 12px;
-    min-height:40px;
+    min-height:44px;
   }
+  .site-menu>summary {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    min-height:44px;
+    padding:8px 12px;
+    background:var(--ground);
+    border:1px solid var(--line);
+    border-radius:8px;
+    cursor:pointer;
+    list-style:none;
+    font-weight:600;
+  }
+  .site-menu>summary::-webkit-details-marker { display:none; }
+  .site-menu[open]>summary { margin-bottom:8px; }
   .session-area {
-    margin-left:auto;
-    margin-top:0;
+    padding:0 20px;
   }
   .workspace {
     margin-left:0;
@@ -633,7 +657,7 @@ dialog .actions {
     padding:0 20px;
   }
   footer {
-    padding:24px 20px;
+    padding:12px 20px 24px;
   }
   .skip-link:focus {
     left:10px;

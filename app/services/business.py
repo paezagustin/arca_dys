@@ -71,8 +71,14 @@ def save_entry(db, values, actor, entry_id=None):
         supplier = db.get(Supplier, supplier_id)
         if kind != "expense" or supplier is None or (not supplier.active and (row is None or row.supplier_id != supplier_id)):
             raise ValueError("El proveedor debe estar activo y solo se usa para egresos")
-    cash = money(values.get("cash_amount"), allow_zero=True) if kind == "sale" else None
-    mp = money(values.get("mp_amount"), allow_zero=True) if kind == "sale" else None
+    cash, mp = None, None
+    if kind == "sale":
+        cash_input = str(values.get("cash_amount", "")).strip()
+        mp_input = str(values.get("mp_amount", "")).strip()
+        if not cash_input and not mp_input:
+            raise ValueError("Ingresá un monto en efectivo o Mercado Pago")
+        cash = money(cash_input or "0", allow_zero=True)
+        mp = money(mp_input or "0", allow_zero=True)
     data = {"kind": kind, "entry_date": record_date(values.get("entry_date")),
         "amount": money(cash + mp, allow_zero=True) if kind == "sale" else money(values.get("amount")),
         "cash_amount": cash, "mp_amount": mp,

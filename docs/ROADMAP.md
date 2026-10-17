@@ -1,5 +1,11 @@
 # Roadmap y condiciones de salida
 
+## H12 · Montos vacíos, menú móvil y marca
+- [x] Montos manuales sin valores iniciales, placeholder y edición conservada.
+- [x] Menú móvil desplegable, logo/nombre centrados y Administración al pie.
+- [x] Pruebas aisladas, navegador y documentación.
+- [ ] Publicación y evidencia final de CI.
+
 ## H11 · Acciones centradas y fecha de pago de Fiados
 - [x] Controles de acciones centrados sin margen superior en tablas.
 - [x] Fecha de pago automática, conservada al editar y vacía si no está pagado.

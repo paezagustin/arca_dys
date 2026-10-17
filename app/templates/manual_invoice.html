@@ -2,6 +2,6 @@
 <a href="/page/invoice">← Volver a facturación</a><section class="card narrow"><h1>Factura por importe</h1>
 
 <form method="post" action="/ARCA/invoice/manual/preview"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-<div class="field"><label for="amount">Importe total a facturar</label><input id="amount" name="amount" type="number" inputmode="decimal" min="{{ values.minimum }}" max="{{ values.maximum }}" step="0.01" required autofocus></div>
+<div class="field"><label for="amount">Importe total a facturar</label><input id="amount" name="amount" type="number" inputmode="decimal" min="{{ values.minimum }}" max="{{ values.maximum }}" step="0.01" required autofocus placeholder="0,00"></div>
 <button type="button" class="help-trigger" data-help-next aria-label="Ayuda">?</button><template>Entre ${{ values.minimum }} y ${{ values.maximum }}. Comprobante: Factura C.</template>
 <div class="actions"><button>Revisar factura</button></div></form></section>{% endblock %}

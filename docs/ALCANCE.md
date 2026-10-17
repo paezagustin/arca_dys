@@ -22,7 +22,7 @@ intermedia de facturación parcial. La ampliación H10 incorpora Sueldos y Fiado
 | G04 | Reportes separan ventas, cobros MP y emisión fiscal. Desglose efectivo/MP, Sueldos por empleado y Ganancia = Ventas − Total Egresos − Sueldos; filtros día/período y Excel. |
 | G05 | Sueldos simples: fecha, Francisco/Juan Cruz, monto y efectivo/mercado pago; reporte mensual por defecto filtrable. |
 | G06 | Fiados: nombre, monto, observación, fecha y pagó; listado no pagados por defecto y edición/marcado de pago con fecha automática de Buenos Aires, independiente de caja. |
-| U01 | Logo existente, navegación y diseño responsive; mensajes de éxito/error comprensibles y enlaces de descarga. |
+| U01 | Logo centrado y nombre Dulce y Salado debajo, menú móvil desplegable y Administración al pie; montos nuevos vacíos con placeholder y datos guardados conservados; mensajes de éxito/error comprensibles y enlaces de descarga. |
 | U02 | Paginación SQL de todos los listados, incluido reports-stadistics. Filtros y orden estable. |
 | O01 | Desarrollo Windows 11 con Docker Desktop: simulación sin servicios externos, datos de ejemplo y tests repetibles. |
 | O02 | Compose separados dev/test/prod; PostgreSQL 17.8 de referencia, sin upgrade mayor en este trabajo. |

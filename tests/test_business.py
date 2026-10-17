@@ -91,7 +91,7 @@ def test_zero_is_distinct_from_blank(client):
     assert client.post("/business/entries/new", data=values(amount="0"), follow_redirects=False).status_code == 303
     with Session(engine) as db:
         identifier = db.scalar(select(BusinessEntry.id))
-    assert 'value="0.00" required' in client.get(f"/business/entries/{identifier}").text
+    assert 'value="0.00" placeholder="0,00"' in client.get(f"/business/entries/{identifier}").text
     assert 'name="expense_type"' in client.get("/business/entries/new?kind=expense").text
     assert client.post("/business/entries/new", data=values(kind="expense", amount="0", category="Compra")).status_code == 422
     assert client.post("/business/entries/new", data=values(entry_date="2026-02-30")).status_code == 422

@@ -21,7 +21,7 @@ def index(request: Request):
 async def add_payment(request: Request, db: Session = Depends(get_db)):
     form = await request.form()
     try:
-        amount = Decimal(form.get("amount", "10000"))
+        amount = Decimal(form.get("amount", ""))
         if not amount.is_finite() or amount <= 0 or amount > Decimal("2000000") or amount != amount.quantize(Decimal("0.01")):
             raise ValueError()
         identifier = str(form.get("payment_id") or "").removeprefix("SIM-") or None

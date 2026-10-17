@@ -3,6 +3,10 @@
 Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
+H12 verificado localmente: montos vacíos con placeholder, menú móvil desplegable,
+marca Dulce y Salado centrada y acceso de administración al pie. Pendiente CI y
+cierre de publicación. Evidencia local: 211 pruebas aprobadas, sin omitidas.
+
 H11 implementado y verificado localmente: acciones centradas y fecha automática
 de pago de Fiados. Publicado en main: befdcc104e3621e5d1324ce2280a9da919fb64f6.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38980673926.
@@ -19,6 +23,27 @@ exportación de Resumen y generación privada del INSERT de proveedores.
 H9 completado y publicado: implementación 20c8acf y ensayo final b849534.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38942781766.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
+
+## Evidencia H12
+- Suite completa: 211 passed, 1 warning conocido de TestClient, 61.21s. Incluye
+  cierre con sólo efectivo/MP, ceros explícitos y rechazo de ambos componentes
+  vacíos. Se conservaron las pruebas fiscales, acceso, migraciones, importación,
+  sueldos y fechas de pago. El simulador también rechaza un importe vacío.
+- Backup/restore descartable aprobado: checksum, importe 12345.67 y revisión
+  0012_credit_paid_date. No hay cambios de esquema en H12.
+- Navegador real Edge en modo headless con Playwright local: montos vacíos y
+  placeholder, sugerencia cero vacía al cambiar fecha, cálculo de ambos lados,
+  total vacío al borrar todo y valores anteriores conservados al editar.
+  Móvil 390x844: menú inicialmente cerrado, abrir/cerrar y navegación a Sueldos
+  vuelven al estado esperado. Al redimensionar a escritorio queda visible.
+  Logo y nombre centrados (diferencia 0px), nombre debajo, Administración fuera
+  del encabezado e inmediatamente antes del footer. Sin errores JavaScript;
+  clientWidth=scrollWidth=390. No se guardaron ni alteraron registros de negocio.
+- Capturas privadas revisadas: h12-mobile.png, h12-menu-abierto.png y
+  h12-escritorio.png, dentro de artifacts/. El navegador de pruebas usa un perfil
+  temporal separado. No se usó el navegador embebido de entregas anteriores.
+- Sin dependencias, servicios o migraciones nuevas. ARM64 no se repitió; no se
+  desplegó en Raspberry ni se operó contra ARCA o MP productivos.
 
 ## Evidencia H11
 - Suite completa: 207 passed, 1 warning conocido de Starlette/TestClient, 63.00s;
