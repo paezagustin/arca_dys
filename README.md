@@ -70,6 +70,8 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 - [Versionado, backup y operación](docs/DATOS_Y_OPERACION.md).
 - [Acceso, configuración y PDF](docs/ACCESO_Y_COMPROBANTES.md).
 - [Contratos y operación MP](docs/MERCADO_PAGO.md).
+- [Transición de históricos MP repetidos](docs/MIGRACION_MP_LEGACY.md): ensayo
+  aislado, conservación íntegra y puente explícito hasta 0013_mp_identity.
 - [Gestión y proveedores](docs/GESTION.md), [importación por consola](docs/IMPORTACION_JSON.md)
   y [métricas](docs/METRICAS.md).
 - [Validación ARM y operación](docs/OPERACION_RASPBERRY.md).

@@ -13,6 +13,7 @@ from app.core.database import engine as default_engine
 from app.models.billing import utcnow
 from app.models.mp_event import MPEvent, PaymentChange
 from app.models.payment import Payment
+from app.models.mp_identity import MPPaymentIdentity
 from app.services.mp import get_mp_gateway
 from app.services.payments import normalize_payment, provider_date
 
@@ -87,27 +88,46 @@ class MPInbox:
             if row is None:
                 return False
             row.attempts += 1
+            resources = None
             try:
+                review = False
                 with db.begin_nested():
-                    if row.topic not in TOPICS:
+                    identity = db.get(MPPaymentIdentity, row.resource) if row.topic == "payment" else None
+                    if identity is not None and identity.legacy_duplicate:
+                        # La entrega queda conservada. No consultar un proveedor para
+                        # elegir automáticamente entre filas históricas divergentes.
+                        changed, review = 0, True
+                    elif row.topic not in TOPICS:
                         changed = 0
                     else:
                         resources = self.gateway_factory().fetch(row.topic, row.resource)
                         normalized = sorted([normalize_payment(raw) for raw in resources], key=lambda p: p["id_payment_mp"])
-                        changed = sum(self._apply(db, row, data) for data in normalized)
-                row.state = "processed" if changed else "ignored"
-                row.error, row.processed_at = None, utcnow()
+                        outcomes = [self._apply(db, row, data) for data in normalized]
+                        changed, review = sum(value > 0 for value in outcomes), any(value < 0 for value in outcomes)
+                row.state = "review" if review else ("processed" if changed else "ignored")
+                row.error = "ID MP histórico repetido: entrega conservada, sin modificar ni facturar sus filas. Requiere conciliación manual." if review else None
+                row.processed_at = utcnow()
             except Exception as error:
                 row.state = "error"
                 row.error = f"No se pudo consultar o validar el recurso ({type(error).__name__}). Se reintentará sin facturar."
                 row.next_attempt_at = utcnow() + timedelta(seconds=min(300, 2 ** min(row.attempts, 8)))
+            if resources is not None:
+                row.resource_responses = [*(row.resource_responses or []), {
+                    "attempt": row.attempts, "observed_at": utcnow().isoformat(),
+                    "result": row.state, "resources": resources}]
             db.commit()
             return True
 
     def _apply(self, db, event, data):
         db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"), {"key": "mp:" + data["id_payment_mp"]})
-        payment = db.scalar(select(Payment).where(Payment.id_payment_mp == data["id_payment_mp"]).with_for_update())
+        identity = db.get(MPPaymentIdentity, data["id_payment_mp"], with_for_update=True)
+        if identity is not None and identity.legacy_duplicate:
+            return -1
+        payment = db.get(Payment, identity.payment_id, with_for_update=True) if identity else None
+        if identity is not None and payment is None:
+            raise ValueError("Identidad MP sin fila operativa; revisar integridad")
         previous = payment.status if payment else None
+        previous_data = None
         if payment:
             last = payment.provider_updated_at
             if last is None and payment.raw_json and payment.raw_json.get("date_last_updated"):
@@ -123,13 +143,14 @@ class MPInbox:
                 return 0
             if data["date_approved"] is None:
                 data["date_approved"] = payment.date_approved
+            previous_data = db.scalar(text("SELECT row_to_json(p) FROM payments p WHERE id=:id"), {"id": payment.id})
             for name, value in data.items():
                 setattr(payment, name, value)
         else:
             payment = Payment(**data, registered_arca=False)
             db.add(payment)
             db.flush()
-        db.add(PaymentChange(payment_id=payment.id, event_id=event.id, previous_status=previous,
+        db.add(PaymentChange(payment_id=payment.id, event_id=event.id, previous_status=previous, previous_data=previous_data,
             new_status=data["status"], provider_updated_at=data["provider_updated_at"]))
         return 1
 

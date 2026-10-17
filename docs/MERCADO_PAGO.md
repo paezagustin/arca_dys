@@ -9,8 +9,10 @@ Las consultas GET usan timeout conexión/lectura 5/10s, sin redirects. Nunca se
 invocan endpoints de cobrar, devolver dinero o modificar aplicaciones MP.
 
 Una transacción guarda pago y PaymentChange junto con el resultado del evento.
-Se serializan las actualizaciones por ID externo, y un índice único impide duplicar
-pagos. Eventos anteriores no reemplazan información más reciente del proveedor.
+Se serializan las actualizaciones por ID externo, y la PK de mp_payment_identities
+impide duplicar pagos mediante un trigger transaccional, incluso con INSERT
+concurrentes. payments conserva su índice no único y todas las filas históricas.
+Eventos anteriores no reemplazan información más reciente del proveedor.
 Importes contradictorios o estados distintos con igual timestamp quedan para revisar.
 No se cambian facturas ni el indicador facturado por devoluciones/contracargos.
 Devoluciones parciales se registran como partially_refunded y requieren revisión;
@@ -21,6 +23,23 @@ IPN sin identidad fiable conserva cada entrega; su efecto es idempotente por pag
 y fecha del proveedor. Errores reintentan con espera creciente hasta 300s, sin
 descartar notificaciones. El panel operativo permite revisar/reintentar eventos.
 Nunca se guardan firmas o tokens en el payload ni se imprime el JSON completo.
+
+## Históricos repetidos e integridad
+Los grupos repetidos se conservan completos y bloqueados: no se elige un pago
+canónico, no se actualizan sus estados/JSON/marcas ni se reasignan facturas.
+Quedan fuera de la selección y envío fiscal y de la sugerencia del cierre diario.
+Una notificación directa queda en review (Conciliación pendiente), sin consultar
+al proveedor. Si una orden devuelve ese ID, se conserva la respuesta y se omite
+solo su actualización; el resto de los pagos puede procesarse de forma idempotente.
+review no se reintenta automáticamente ni cambia reservas o documentos fiscales.
+
+0013 conserva snapshots completos de los pagos existentes; una actualización
+posterior de un pago no repetido guarda previous_data en PaymentChange. Las
+respuestas canónicas consultadas se agregan por intento a MPEvent.resource_responses,
+incluso si una validación impide aplicarlas. Un reintento conserva las respuestas
+anteriores con su fecha y resultado. Los campos anteriores no se rellenan con
+datos inventados. La migración/recuperación manual y su compatibilidad con 0004
+se detallan en [MIGRACION_MP_LEGACY.md](MIGRACION_MP_LEGACY.md).
 
 ## Entradas y configuración
 Producción requiere MP_ACCESS_TOKEN y MP_COLLECTOR_ID de la cuenta receptora.

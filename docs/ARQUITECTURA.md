@@ -107,6 +107,18 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0010_simple_business | Egresos white/black, retiro de campos/historiales, sesiones anónimas y propietario de confirmaciones. |
 | 0011_sales_payroll_credits | Desglose nullable de ventas, ENUM de empleados/medios, Sueldos y Fiados; sin alterar totales previos. |
 | 0012_credit_paid_date | paid_date nullable en Fiados; no completa fechas anteriores y exige NULL si no está pagado. |
+| 0013_mp_identity | Identidad MP separada, snapshots originales, evidencia de actualizaciones y protección de grupos históricos repetidos. |
+
+El puente versionado de migrations/mp_legacy_bridge.py permite la transición
+explícita desde 0001-0003 cuando 0004 rechaza duplicados, sin modificar revisiones
+publicadas ni eliminar registros. DDL, validaciones de esquema, registro interno
+de la etapa alternativa y avance a 0013 comparten una única transacción.
+No equivale a un stamp manual. Ver [procedimiento y compatibilidad](MIGRACION_MP_LEGACY.md).
+La identidad externa pasa a mp_payment_identities (PK); el índice de payments es
+no único para conservar los IDs internos originales y todas sus relaciones.
+Grupos repetidos sin representante operativo, inmutables y excluidos de emisión;
+los historiales muestran todas las filas. La sugerencia MP los excluye y las
+agregaciones históricas los señalan, sin consolidar ni recalcular cierres guardados.
 
 Se conserva payments.bill por compatibilidad histórica; la elegibilidad usa estado,
 registered_arca, reservas y vínculos. Otros campos históricos no se eliminan por

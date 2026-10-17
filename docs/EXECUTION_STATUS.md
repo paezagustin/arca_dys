@@ -3,6 +3,40 @@
 Actualizado: 2026-10-17, America/Buenos_Aires.
 
 ## Estado vigente
+H17 implementado y comprobado localmente: transición conservadora de históricos MP
+repetidos a 0013_mp_identity, sin modificar 0001-0012/baseline ni consolidar filas.
+Los 40 grupos ambiguos quedan preservados/bloqueados, sin representante elegido.
+Nueva identidad por ID externo con protecciones transaccionales, snapshots de
+pagos originales y evidencia completa antes/después de futuras actualizaciones.
+Puente explícito desde 0001-0003, transaccional y con auditoría de integridad;
+el upgrade ordinario sigue rechazando duplicados en la revisión histórica 0004.
+Procedimiento manual: MIGRACION_MP_LEGACY.md y OPERACION_RASPBERRY.md.
+Suite completa 269 passed, 1 warning, sin omitidas, 111.96s; backup/restauración y
+ensayo adicional del conjunto sintético completo aprobados. Navegador QA revisado.
+Publicación en main y cierre de CI pendientes al registrar este estado.
+No hubo acceso a Raspberry/backup real, cambios de credenciales/archivos privados,
+actualización de dev ni operaciones productivas. El ensayo real y la conciliación
+manual de los 40 grupos siguen pendientes para el usuario; no hay desbloqueo automático.
+
+### Evidencia local H17
+- 17 casos nuevos de transición y un caso de reintento MP; suite anterior completa
+  conservada, 269 casos finales sin omitidos. Las 40 agrupaciones sintéticas
+  reproducen exactamente 88/74/74/31 y diferencias 0/1/1/5/29, con 3876/3625/181/3624
+  y 175 errores preservados. No se usaron registros del respaldo real.
+- Backup custom/checksum/restauración estándar aprobados en 0013. Ensayo adicional
+  del conjunto sintético completo: informe/huellas/secuencias/esquema iguales tras
+  restaurar, 3876 snapshots, 40 grupos bloqueados, cero identidades inconsistentes
+  y dos triggers activos. Comando check-mp-identities y SQL READ ONLY de la guía
+  ejecutados con resultados esperados sobre esa restauración sintética.
+- Navegador real QA: aviso de 40 referencias, casillas de repetidos deshabilitadas,
+  filas normales habilitadas y marcas originales visibles. Resumen advierte sus
+  87 registros repetidos aprobados; sin desborde exterior de escritorio ni errores
+  de consola en esa vista. Visor GET local terminado; no POST ni emisión fiscal.
+- Enlaces locales válidos, git diff --check aprobado y 29 bloques shell verificados
+  con sh -n sin ejecución de los comandos. Baseline y migraciones 0001-0012 intactos.
+  Sin nuevas dependencias. No se repitió ARM64 ni se certificó el hardware real.
+
+### Estado H16 publicado
 H16 implementado y comprobado localmente: adopt-legacy acepta exclusivamente la
 equivalencia PostgreSQL UNIQUE invoices_invoice_number_key sobre
 invoices(invoice_number) frente al índice explícito del baseline. Normalización

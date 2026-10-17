@@ -185,7 +185,13 @@ conocido (no aplicarlo a una base ya versionada):
 copycmd python -m app.manage adopt-legacy
 ```
 
-Si ya tiene alembic_version, omitir adopt-legacy. Luego:
+Si ya tiene alembic_version, omitir adopt-legacy.
+**Respaldo con IDs MP repetidos:** seguir primero el ensayo completo de
+[MIGRACION_MP_LEGACY.md](MIGRACION_MP_LEGACY.md), con auditoría antes/después,
+`copycmd python -m app.manage migrate-legacy-mp` y control de identidades.
+El upgrade ordinario sigue bloqueándose en 0004 para esos datos; no usar stamp
+manual ni consolidar filas. No pasar a producción hasta aprobar ese ensayo.
+Para bases sin duplicados, o una copia que ya terminó el puente y está en head:
 
 ```sh
 copycmd alembic upgrade head
@@ -222,14 +228,19 @@ Solo si no existe alembic_version:
 maintenance python -m app.manage adopt-legacy
 ```
 
-Si ya está versionada, omitir esa adopción. Aplicar migraciones y comprobar head:
+Si ya está versionada, omitir esa adopción. Para el respaldo con duplicados,
+ejecutar en su lugar la sección de producción de
+[MIGRACION_MP_LEGACY.md](MIGRACION_MP_LEGACY.md), solo después del ensayo correcto
+en restore_check. Incluye maintenance python -m app.manage migrate-legacy-mp y
+comparación completa antes/después. Para bases sin duplicados, o tras terminar
+el puente, aplicar migraciones ordinarias y comprobar head:
 
 ```sh
 maintenance alembic upgrade head
 maintenance alembic current
 ```
 
-Head esperado: **0012_credit_paid_date**. Después ejecutar UNA VEZ la limpieza
+Head esperado: **0013_mp_identity**. Después ejecutar UNA VEZ la limpieza
 solicitada, en transacción y sobre el nombre de base comprobado al principio:
 
 ```sh
@@ -375,6 +386,8 @@ limpieza restringida con datos ficticios. El perfil backup-test restaura datos
 descartables. ARM64 se ensayó bajo emulación en H8; no certifica esta Raspberry,
 sus montajes, locales ni rendimiento. No se accedió al dispositivo ni se emitió
 o cobró para preparar esta guía. El ensayo del respaldo real se ejecuta manualmente.
+H17 incorpora el puente MP con 40 grupos/88 filas sintéticas divergentes y
+preservación de 3876/3625/181/3624; no constituye una prueba del respaldo real.
 
 Ver [TECNOLOGIAS_Y_CONFIGURACION.md](TECNOLOGIAS_Y_CONFIGURACION.md),
 [DATOS_Y_OPERACION.md](DATOS_Y_OPERACION.md), [MERCADO_PAGO.md](MERCADO_PAGO.md) y

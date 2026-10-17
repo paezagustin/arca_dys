@@ -8,6 +8,7 @@ from app.models.payment import Payment
 from app.services.settings import fiscal_configuration
 from app.services.arca.billing import validate_amount
 from app.services.billing import BillingService, BillingConflict
+from app.services.mp_identity import operational_payment
 
 
 def preview_invoice(db, user_id, payment_ids=(), manual_amount=None, *, session_hash=None):
@@ -18,7 +19,7 @@ def preview_invoice(db, user_id, payment_ids=(), manual_amount=None, *, session_
         raise ValueError("Elegí pagos o ingresá un importe independiente")
     settings, version = fiscal_configuration(db)
     if ids:
-        payments = list(db.scalars(select(Payment).where(Payment.id.in_(ids))))
+        payments = list(db.scalars(select(Payment).where(Payment.id.in_(ids), operational_payment())))
         if len(payments) != len(ids) or any(p.status != "approved" or p.registered_arca is not False or p.date_approved is None or p.mont is None or p.mont <= 0 for p in payments):
             raise BillingConflict("Algún pago no está disponible. Actualizá el listado.")
         amount = sum((Decimal(str(p.mont)) for p in payments), Decimal(0))

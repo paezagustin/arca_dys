@@ -135,6 +135,25 @@ def test_conflicting_amount_is_preserved_for_review():
         assert db.get(Payment, 1).mont == 10000
 
 
+def test_retry_preserves_each_canonical_response_instead_of_replacing_evidence():
+    inbox, gateway = inbox_for(resource())
+    inbox.process_one(inbox.receive({"resource": "123"}))
+    conflicting = resource(amount="20000", updated="2026-10-15T13:00:00Z")
+    gateway.fetch.return_value = [conflicting]
+    event_id = inbox.receive({"resource": "123"})
+    inbox.process_one(event_id)
+    gateway.fetch.return_value = [resource()]
+    inbox.retry(event_id)
+    inbox.process_one(event_id)
+    with Session(engine) as db:
+        attempts = db.get(MPEvent, event_id).resource_responses
+        assert [item["attempt"] for item in attempts] == [1, 2]
+        assert attempts[0]["resources"] == [conflicting]
+        assert attempts[1]["resources"] == [resource()]
+        assert [item["result"] for item in attempts] == ["error", "ignored"]
+        assert db.get(Payment, 1).mont == 10000
+
+
 @pytest.mark.parametrize("resource_url", ["http://localhost/secrets", "https://evil.example/v1/payments/123",
     "https://api.mercadopago.com/v1/payments/123?other=1", "https://api.mercadopago.com:443/v1/payments/123"])
 def test_notification_resource_cannot_choose_an_arbitrary_request_destination(resource_url):

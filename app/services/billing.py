@@ -18,6 +18,7 @@ from app.models.payment_invoice import PaymentInvoice
 from app.services.arca.billing import validate_amount
 from app.services.fiscal_gateway import gateway_for, voucher_payload, authorization, FiscalRejected
 from app.services.settings import fiscal_configuration
+from app.services.mp_identity import operational_payment
 
 logger = logging.getLogger(__name__)
 UNCERTAIN_STATES = ["sending", "uncertain", "check_queued", "retry_queued"]
@@ -95,7 +96,7 @@ class BillingService:
                 BillingRequest.voucher_type == 11, BillingRequest.state.in_(UNCERTAIN_STATES)))
             if unresolved:
                 raise BillingConflict("Hay una emisión por verificar. Resolvela antes de emitir otra: " + unresolved)
-            payments = list(db.scalars(select(Payment).where(Payment.id.in_(ids)).order_by(Payment.id).with_for_update())) if ids else []
+            payments = list(db.scalars(select(Payment).where(Payment.id.in_(ids), operational_payment()).order_by(Payment.id).with_for_update())) if ids else []
             if len(payments) != len(ids) or any(p.status != "approved" or p.registered_arca is not False or p.date_approved is None or p.mont is None or p.mont <= 0 for p in payments):
                 raise BillingConflict("Algún pago ya fue facturado o dejó de estar disponible. Actualizá el listado.")
             if ids and (db.scalar(select(BillingReservation.payment_id).where(BillingReservation.payment_id.in_(ids))) is not None
@@ -118,7 +119,7 @@ class BillingService:
             return result(row) if enqueue else self._send(db, row)
 
     def _send(self, db, row, gateway=None):
-        payments = list(db.scalars(select(Payment).where(Payment.id.in_(row.payment_ids)).with_for_update())) if row.payment_ids else []
+        payments = list(db.scalars(select(Payment).where(Payment.id.in_(row.payment_ids), operational_payment()).with_for_update())) if row.payment_ids else []
         if (len(payments) != len(row.payment_ids) or any(p.status != "approved" or p.registered_arca is not False for p in payments)
                 or (row.payment_ids and sum((Decimal(str(p.mont)) for p in payments), Decimal(0)) != row.total)):
             row.state = "uncertain" if row.payload is not None else "rejected"

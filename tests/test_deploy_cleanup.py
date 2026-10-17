@@ -85,7 +85,7 @@ def test_manual_cleanup_rejects_wrong_schema_without_deleting_data():
     try:
         with engine.begin() as db:
             db.execute(text("UPDATE alembic_version SET version_num='stale'"))
-        with pytest.raises(DBAPIError, match="0012_credit_paid_date"):
+        with pytest.raises(DBAPIError, match="0013_mp_identity"):
             with engine.begin() as db:
                 db.exec_driver_sql(SCRIPT)
         with engine.connect() as db:
@@ -93,7 +93,7 @@ def test_manual_cleanup_rejects_wrong_schema_without_deleting_data():
             assert db.scalar(select(func.count()).select_from(Supplier)) == 1
     finally:
         with engine.begin() as db:
-            db.execute(text("UPDATE alembic_version SET version_num='0012_credit_paid_date'"))
+            db.execute(text("UPDATE alembic_version SET version_num='0013_mp_identity'"))
 
 
 def test_unexpected_foreign_key_blocks_cleanup_instead_of_cascading():

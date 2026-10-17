@@ -157,3 +157,36 @@ o FK. Se rechazan sin alembic_version ni alteraciones de registros/secuencias.
 No se incluyó ni restauró un backup productivo: los conteos equivalentes no son
 evidencia de integridad de los registros reales. Ese ensayo sigue siendo manual
 en la copia aislada indicada en OPERACION_RASPBERRY.md.
+
+## Transición MP histórica H17
+test_mp_legacy_transition.py agrega 17 casos sintéticos: 40 grupos/88 filas/48
+adicionales, 74 miembros facturados y vinculados a 31 facturas sin cruces entre
+facturas por identidad; diferencias 0/1/1/5/29 de importes/estados/fechas/marcas/JSON.
+Conserva 3876 pagos, 3625 marcas, 181 facturas, 3624 vínculos y 175 errores, además
+de secuencias, IDs, CAE y JSON. No se suministró el respaldo real.
+
+Prueba desde 0001, 0002 y 0003 por API y CLI, índice/UNIQUE original de facturas,
+solicitudes autorizadas y reservas conservadas, rechazo de solicitudes activas,
+drift, precisión monetaria e integridad forzada con rollback de DDL/versionado.
+Verifica snapshots y recibos, protección de UPDATE/DELETE/INSERT duplicado,
+notificaciones y escrituras concurrentes, JSON anterior y respuestas consultadas,
+ausencia de proveedor ante entrega bloqueada y rechazo en preview/issue/cola.
+El comando de auditoría se comprueba en una transacción READ ONLY que rechaza UPDATE.
+Instalaciones ya en 0004/0012 y bases nuevas mantienen el upgrade Alembic ordinario.
+
+test_mp_inbox.py agrega además un caso de reintento que conserva cada respuesta
+canónica con número de intento, fecha y resultado, sin reemplazar la anterior.
+Suite local final completa: 269 passed, 1 warning conocido, sin omitidas, 111.96s.
+Perfil backup-test: dump custom, checksum y restauración en 0013 aprobados.
+Adicionalmente se respaldó/restauró el conjunto sintético completo en otra DB:
+huellas/secuencias y esquema iguales; 3876 snapshots, 40 grupos bloqueados,
+invalid_groups=0 y dos triggers activos. El SQL READ ONLY de la guía devolvió
+88/74/74/31 y diferencias 0/1/1/5/29 en esa restauración sintética.
+
+Navegador real sobre web QA mock y datos sintéticos: aviso de 40 referencias,
+filas repetidas con casillas deshabilitadas y marcas intactas, filas normales
+habilitadas, advertencia de 87 registros repetidos aprobados en Resumen; sin
+desborde horizontal de documento en escritorio ni errores de consola en esa vista.
+La red Docker interna se mantuvo; la revisión GET pasó por un visor local de solo
+lectura. No se enviaron formularios fiscales ni se probó una emisión productiva.
+No se repitió ARM64: no cambiaron dependencias ni se certifica esta Raspberry.

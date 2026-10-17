@@ -55,6 +55,13 @@ copia de ensayo: ejecuta 0002_cleanup y conserva registros y relaciones. Una bas
 ya versionada en 0001 se actualiza directamente, sin repetir adopt-legacy.
 Todas las siguientes migraciones también deben ser incrementales.
 
+Si 0004_mp detecta IDs MP históricos repetidos, no borrar ni consolidar pagos y
+no usar stamp manual. El procedimiento explícito de
+[MIGRACION_MP_LEGACY.md](MIGRACION_MP_LEGACY.md) conserva las revisiones publicadas,
+valida un contrato alternativo de transición y alcanza 0013_mp_identity en una
+única transacción, con comparación completa de registros/huellas/secuencias.
+Los grupos ambiguos quedan bloqueados, sin elegir automáticamente una fila.
+
 ## Respuesta fiscal conservada
 invoices.raw_afip_response almacena FECAESolicitarResult completo retornado por
 afip.py 1.2.0 con return_response=True: cabecera, detalle, CAE, vencimiento y
@@ -95,12 +102,13 @@ No se agregó CRON, política de borrado ni copia a otro dispositivo.
 
 ## Limpieza manual acordada para la primera actualización
 El usuario confirmó conservar el control de facturación. No se limpia toda la DB.
-Después de respaldar, ensayar en copia y migrar a 0012, puede ejecutar manualmente
+Después de respaldar, ensayar en copia y migrar a 0013_mp_identity, puede ejecutar manualmente
 scripts/reset-business-data.sql con psql --single-transaction y ON_ERROR_STOP=1.
 Retira únicamente Gestión/proveedores/importaciones/Sueldos/Fiados. Conserva cobros
 facturados, CAE/vínculos, solicitudes inciertas/reservas, inbox MP y configuración.
 No usa CASCADE ni cambia el esquema. No es un paso para cada actualización ni se
 ejecuta por CI/arranque. Los comandos completos están en OPERACION_RASPBERRY.md.
+También conserva identidades, snapshots originales y recibos de transición MP.
 
 ## Antes de usar el nuevo Compose en producción
 No actualizar la Raspberry por el solo hecho de recibir un commit: primero hay

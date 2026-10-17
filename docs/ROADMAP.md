@@ -1,5 +1,16 @@
 # Roadmap y condiciones de salida
 
+## H17 · Transición conservadora de pagos MP históricos repetidos
+- [x] Conservar 0001-0012 y baseline; documentar compatibilidad del puente explícito.
+- [x] Nueva 0013: identidad separada, snapshots y evidencia, sin consolidar filas.
+- [x] Bloqueo de grupos ambiguos en webhook, preview, facturación, cola y sugerencia.
+- [x] Migración atómica, recibo, auditoría READ ONLY y verificaciones de integridad.
+- [x] 269 pruebas locales, respaldo/restauración y copia sintética completa comprobados.
+- [x] Navegador QA y guía manual con ensayo restore_check previo a producción.
+- [ ] Publicación y cierre de CI comprobados.
+La conciliación de los 40 grupos y el ensayo del respaldo real quedan para el
+usuario. No son autorización de operación por el agente ni prueba de producción.
+
 ## H16 · Equivalencia PostgreSQL en adopción legacy
 - [x] Reproducir remove_constraint/add_index de la variante con UNIQUE.
 - [x] Aceptar solo invoices_invoice_number_key en invoices(invoice_number), sin DDL.

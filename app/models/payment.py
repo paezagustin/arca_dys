@@ -12,7 +12,7 @@ class Payment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    id_payment_mp = Column(String(50), nullable=False, index=True, unique=True)
+    id_payment_mp = Column(String(50), nullable=False, index=True)
 
     status = Column(String(50), nullable=False)
     status_detail = Column(String(150))

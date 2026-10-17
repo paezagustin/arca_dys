@@ -7,6 +7,7 @@ from app.models.business import BusinessEntry, Supplier
 from app.models.payment import Payment
 from app.models.invoice import Invoice
 from app.models.registers import SalaryPayment, EMPLOYEES
+from app.services.mp_identity import operational_payment
 
 MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 ZERO = Decimal("0.00")
@@ -40,7 +41,7 @@ def collect_metrics(db, start, end, *, monthly):
         "expense_white": None, "expense_black": None, "expense_unknown": None, "expense": None,
         "salary": None, "salary_count": 0, "employees": {name: None for name in EMPLOYEES},
         "result": None, "days": 0, "entries": 0, "min_sale": None, "max_sale": None,
-        "mp": None, "mp_count": 0, "invoices": None, "invoice_count": 0} for n in (range(1, 13) if monthly else [1])]
+        "mp": None, "mp_count": 0, "mp_repeated_count": 0, "invoices": None, "invoice_count": 0} for n in (range(1, 13) if monthly else [1])]
     def group(column):
         return func.extract("month", column) if monthly else func.cast(1, Integer)
     month = group(BusinessEntry.entry_date)
@@ -64,10 +65,12 @@ def collect_metrics(db, start, end, *, monthly):
         row["salary_count"] += count
         row["employees"][employee] = amount
     mp_month = group(Payment.date_approved)
-    for number, count, amount in db.execute(select(mp_month, func.count(), func.sum(Payment.mont)).where(
+    for number, count, amount, repeated in db.execute(select(mp_month, func.count(), func.sum(Payment.mont),
+        func.count().filter(~operational_payment())).where(
         Payment.status == "approved", Payment.mont > 0,
         Payment.date_approved.between(datetime.combine(start, time.min), datetime.combine(end, time.max))).group_by(mp_month)):
         rows[int(number)-1]["mp"], rows[int(number)-1]["mp_count"] = amount, count
+        rows[int(number)-1]["mp_repeated_count"] = repeated
     invoice_month = group(Invoice.invoice_date)
     for number, count, amount in db.execute(select(invoice_month, func.count(), func.sum(Invoice.total_amount)).where(
         Invoice.invoice_date.between(start, end), Invoice.cae.isnot(None), Invoice.cae != "",
@@ -79,7 +82,8 @@ def collect_metrics(db, start, end, *, monthly):
 def period_total(rows):
     result = {"days": sum(row["days"] for row in rows), "entries": sum(row["entries"] for row in rows),
         "salary_count": sum(row["salary_count"] for row in rows),
-        "mp_count": sum(row["mp_count"] for row in rows), "invoice_count": sum(row["invoice_count"] for row in rows)}
+        "mp_count": sum(row["mp_count"] for row in rows), "mp_repeated_count": sum(row["mp_repeated_count"] for row in rows),
+        "invoice_count": sum(row["invoice_count"] for row in rows)}
     result["employees"] = {name: sum((row["employees"][name] for row in rows if row["employees"][name] is not None), ZERO) if any(row["employees"][name] is not None for row in rows) else None for name in EMPLOYEES}
     for key in ("sale", "sale_cash", "sale_mp", "sale_unknown", "salary", "expense_white", "expense_black", "expense_unknown", "expense", "mp", "invoices"):
         values = [row[key] for row in rows if row[key] is not None]

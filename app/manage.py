@@ -12,13 +12,13 @@ BASELINE = "0001_legacy"
 TABLES = {"payments", "invoices", "payment_invoice", "error_logs", "logs_invoice"}
 
 
-def _adoption_metadata(connection):
+def _adoption_metadata(connection, metadata=None):
     """Normaliza solo la equivalencia conocida, en memoria y para comparar.
 
     No ejecuta DDL ni cambia el baseline congelado. Las demás diferencias siguen
     pasando por la comparación completa de Alembic.
     """
-    metadata = legacy_metadata()
+    metadata = legacy_metadata() if metadata is None else metadata
     if connection.dialect.name != "postgresql":
         return metadata
     key = "invoices_invoice_number_key"
@@ -68,13 +68,24 @@ def adopt_legacy(target_engine=engine):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["adopt-legacy", "create-user"])
+    parser.add_argument("action", choices=["adopt-legacy", "create-user", "audit-mp-legacy", "migrate-legacy-mp", "check-mp-identities"])
     parser.add_argument("--username")
     parser.add_argument("--role", choices=["admin", "operator"], default="admin")
     args = parser.parse_args()
     if args.action == "adopt-legacy":
         adopt_legacy()
         print("Baseline adoptado; no se borraron tablas ni registros")
+    elif args.action in {"audit-mp-legacy", "migrate-legacy-mp"}:
+        import json
+        from migrations.mp_legacy_bridge import audit_legacy_mp, migrate_legacy_mp
+        report = audit_legacy_mp() if args.action == "audit-mp-legacy" else migrate_legacy_mp()
+        print(json.dumps(report, sort_keys=True, ensure_ascii=False))
+    elif args.action == "check-mp-identities":
+        import json
+        from migrations.mp_legacy_bridge import check_mp_identities
+        with engine.connect() as connection:
+            connection.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"))
+            print(json.dumps(check_mp_identities(connection), sort_keys=True))
     else:
         from getpass import getpass
         from sqlalchemy.orm import Session

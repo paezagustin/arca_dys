@@ -9,8 +9,8 @@ BEGIN
         RAISE EXCEPTION 'Migrar primero: falta alembic_version';
     END IF;
     IF (SELECT count(*) FROM public.alembic_version) <> 1
-       OR (SELECT version_num FROM public.alembic_version LIMIT 1) <> '0012_credit_paid_date' THEN
-        RAISE EXCEPTION 'Se requiere 0012_credit_paid_date; no se limpio ningun dato';
+       OR (SELECT version_num FROM public.alembic_version LIMIT 1) <> '0013_mp_identity' THEN
+        RAISE EXCEPTION 'Se requiere 0013_mp_identity; no se limpio ningun dato';
     END IF;
 END $$;
 

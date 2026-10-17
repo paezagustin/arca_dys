@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.models.payment import Payment
 from app.models.invoice import Invoice
 from app.models.billing import BillingRequest
+from app.models.mp_identity import MPPaymentIdentity
 from app.services.billing import UNCERTAIN_STATES
 from app.services.settings import read_settings
 from app.services.listings import parse_filters, payment_statement, paginate, payment_totals
@@ -48,11 +49,16 @@ def invoice_page(request: Request, facturado: str = "no", fecha_desde: str | Non
     attempts = date_range(select(BillingRequest), BillingRequest.invoice_date, filters).order_by(BillingRequest.created_at.desc(), BillingRequest.id.desc())
     review = db.scalar(select(func.count()).select_from(BillingRequest).where(BillingRequest.state.in_(UNCERTAIN_STATES + ["prepared", "rejected"])))
     payments_result = paginate(db, payments, payments_page, page_size)
+    legacy_groups = db.scalar(select(func.count()).select_from(MPPaymentIdentity).where(MPPaymentIdentity.legacy_duplicate.is_(True)))
+    legacy_page_ids = set(db.scalars(select(Payment.id).join(MPPaymentIdentity,
+        MPPaymentIdentity.id_payment_mp == Payment.id_payment_mp).where(MPPaymentIdentity.legacy_duplicate.is_(True),
+            Payment.id.in_([p.id for p in payments_result.items]))))
     eligible_page_ids = set(db.scalars(eligible.with_only_columns(Payment.id).where(Payment.id.in_([p.id for p in payments_result.items]))))
     return templates.TemplateResponse(request=request, name="pagina_facturacion.html", context={"filters": filters,
         "payments": payments_result, "eligible_page_ids": eligible_page_ids, "invoices": paginate(db, invoices, invoices_page, page_size),
         "attempts": paginate(db, attempts, requests_page, page_size), "count": count, "total": total,
-        "eligible_count": eligible_count, "eligible_total": eligible_total, "page_size": page_size, "review": review})
+        "eligible_count": eligible_count, "eligible_total": eligible_total, "page_size": page_size, "review": review,
+        "legacy_page_ids": legacy_page_ids, "legacy_groups": legacy_groups})
 
 
 @router.get("/billing-requests")

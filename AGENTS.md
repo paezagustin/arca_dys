@@ -6,6 +6,19 @@ en Raspberry Pi 5. Usar FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Comp
 Leer README, docs/ALCANCE.md, docs/ROADMAP.md y docs/EXECUTION_STATUS.md al retomar.
 Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
+## Transición MP histórica H17
+- Conservar todas las filas/IDs/JSON/marcas y vínculos de pagos repetidos; nunca
+  consolidar ni elegir automáticamente un representante. Grupos ambiguos bloqueados.
+- 0001-0012 y baseline inmutables. 0013_mp_identity agrega identidad operativa,
+  snapshots y protecciones. No cambiar una revisión una vez publicada.
+- El puente versionado migrate-legacy-mp verifica contrato 0003/0004 alternativo,
+  DDL, integridad y head 0013 en una sola transacción. Nunca stamp manual ni
+  aplicación de su estado intermedio. Ver docs/MIGRACION_MP_LEGACY.md.
+- Ensayar con sintéticos aislados; el respaldo real y Raspberry siguen fuera del
+  acceso del agente. Primero ensayo manual en restore_check, luego producción.
+- La limpieza puntual de Gestión ahora exige 0013_mp_identity y conserva las
+  identidades, snapshots y recibos MP. No repetir la limpieza ni actualizar dev aquí.
+
 ## Preparación de despliegue H15 (prevalece sobre la limpieza total propuesta)
 - El usuario confirmó: conservar control de facturación y limpiar el resto de Gestión.
   Solicita comandos para ejecutar ÉL posteriormente en la Raspberry, no ejecución

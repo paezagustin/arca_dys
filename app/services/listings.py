@@ -7,6 +7,7 @@ from sqlalchemy import select, func
 from app.models.payment import Payment
 from app.models.billing import BillingReservation
 from app.models.payment_invoice import PaymentInvoice
+from app.services.mp_identity import operational_payment
 
 
 def business_today():
@@ -48,7 +49,8 @@ def payment_statement(filters, *, eligible=False):
     if eligible and filters.facturado == "si":
         query = query.where(False)
     if eligible:
-        query = query.where(~select(BillingReservation.payment_id).where(BillingReservation.payment_id == Payment.id).exists(),
+        query = query.where(operational_payment(),
+                            ~select(BillingReservation.payment_id).where(BillingReservation.payment_id == Payment.id).exists(),
                             ~select(PaymentInvoice.id).where(PaymentInvoice.payment_id == Payment.id).exists())
     return query.order_by(Payment.date_approved.desc(), Payment.id.desc())
 
