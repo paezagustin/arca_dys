@@ -90,13 +90,6 @@ small,.muted {
 .site-menu>summary {
   display:none;
 }
-.menu-chevron {
-  font-size:24px;
-  line-height:1;
-}
-.site-menu[open] .menu-chevron {
-  transform:rotate(180deg);
-}
 .site-header nav a {
   padding:12px;
   border-radius:8px;

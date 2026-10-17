@@ -15,7 +15,8 @@ El banner de simulación y los PDF indican SIN VALIDEZ FISCAL.
 
 ## Navegación y montos
 El encabezado muestra el logo centrado y Dulce y Salado debajo. En el celular,
-pulsar Menú para desplegar las secciones; al entrar a otra pantalla se cierra.
+pulsar el nombre de la sección actual para desplegar las opciones; no tiene flecha.
+Al entrar a otra pantalla se cierra y muestra el nombre de la sección elegida.
 En escritorio las secciones quedan visibles en la barra lateral. Administración
 está al final de cada página, encima de ARCA DYS; al ingresar, Salir queda allí.
 

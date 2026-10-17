@@ -1,5 +1,10 @@
 # Roadmap y condiciones de salida
 
+## H13 · Nombre de sección en el menú móvil
+- [x] Sin flecha; el texto del desplegable sigue la sección activa.
+- [x] Navegación móvil y teclado comprobados en navegador real.
+- [ ] Suite completa, documentación y publicación verificadas.
+
 ## H12 · Montos vacíos, menú móvil y marca
 - [x] Montos manuales sin valores iniciales, placeholder y edición conservada.
 - [x] Menú móvil desplegable, logo/nombre centrados y Administración al pie.

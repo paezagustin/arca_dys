@@ -3,6 +3,9 @@
 Actualizado: 2026-10-16, America/Buenos_Aires.
 
 ## Estado vigente
+H13: flecha retirada del desplegable móvil y nombre derivado del enlace activo.
+Navegador local y suite de 211 pruebas aprobados; pendiente publicación y CI.
+
 H12 verificado localmente: montos vacíos con placeholder, menú móvil desplegable,
 marca Dulce y Salado centrada y acceso de administración al pie. Publicado en main:
 6a03a2c40095add356a886872531e983f353d918. Evidencia local: 211 pruebas aprobadas,
@@ -25,6 +28,20 @@ exportación de Resumen y generación privada del INSERT de proveedores.
 H9 completado y publicado: implementación 20c8acf y ensayo final b849534.
 CI completo aprobado: https://github.com/paezagustin/arca_dys/actions/runs/38942781766.
 La puesta en producción está separada y no fue ejecutada en la Raspberry.
+
+## Evidencia H13
+- Suite completa: 211 passed, 1 warning conocido de TestClient, 61.72s; sin omitidas.
+- Backup/restauración descartable aprobados: checksum, importe 12345.67 y revisión
+  0012_credit_paid_date. El esquema no cambió en este ajuste.
+- Eliminados el icono y sus estilos; el rótulo usa el enlace con aria-current,
+  sin duplicar reglas de rutas ni modificar permisos o navegación de escritorio.
+- Edge headless con Playwright y perfil temporal, viewport 390x844: navegación
+  por las cinco secciones públicas, rótulo coincidente, cerrado tras navegar,
+  apertura/cierre con Enter y ausencia de flecha/icono. Escritorio 1280x850:
+  navegación visible y rótulo móvil oculto. Sin errores JavaScript ni datos alterados.
+  Captura privada revisada: artifacts/h13-menu.png. Sin nuevas pruebas unitarias
+  que repliquen este ajuste visual; se ejecuta la suite existente exigida por AGENTS.
+- Sin cambios de esquema o dependencias, pruebas productivas ni despliegue Raspberry.
 
 ## Evidencia H12
 - Suite completa: 211 passed, 1 warning conocido de TestClient, 61.21s. Incluye

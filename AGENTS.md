@@ -15,6 +15,8 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 - Marca visible Dulce y Salado, logo centrado y nombre debajo. Menú móvil nativo
   desplegable, cerrado al entrar; escritorio abierto, incluso al cambiar de tamaño.
 - Administración y controles de sesión al final, justo antes de ARCA DYS.
+- El desplegable móvil no lleva flecha; su texto es el nombre de la sección
+  marcada con aria-current. Usar Menú solo si no existe una sección activa.
 
 ## Ampliación H10 solicitada el 16/10/2026 (prevalece sobre exclusiones anteriores)
 - Ventas: fecha, efectivo y MP editable sugerido desde cobros locales aprobados sin
