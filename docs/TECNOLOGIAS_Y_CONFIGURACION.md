@@ -69,7 +69,8 @@ flowchart LR
    alimenta la interpolación de Compose; `env_file: .env.prod` entrega variables
    al contenedor fastapi. Las claves declaradas en environment del servicio tienen
    prioridad sobre env_file; `docker compose run -e ...` puede sustituirlas para
-   un comando puntual. Ese comando no reescribe el archivo.
+   un comando puntual. Ese comando no reescribe el archivo. Las variables exportadas
+   en la terminal prevalecen sobre --env-file para la interpolación de Compose.
 2. `.env` no se carga automáticamente desde Python. APP_ENV_FILE solo permite
    cargar otro archivo cuando se especifica explícitamente; no se necesita en los
    Compose preparados. No ejecutar source .env.prod ni mostrar config completo.
@@ -84,6 +85,7 @@ flowchart LR
 | Variable | Uso y valor a conservar/verificar |
 | --- | --- |
 | ENV / INTEGRATIONS_MODE | production / production para la aplicación real. development o test con mock para ensayos. No combinar producción con mock. |
+| ENVIRONMENT | Alias anterior opcional de ENV. Si ambos están definidos deben coincidir; retirar el alias viejo o corregirlo si contradice ENV. |
 | ALLOW_LIVE_OPERATIONS | true para arrancar la aplicación productiva. false en dev/test. La configuración rechaza combinaciones ambiguas; no es un interruptor para poner en pausa una web productiva. |
 | DATABASE_URL | Conexión a la DB efectiva, normalmente postgresql://arca_user:...@postgres:5432/arca_dys. Codificar caracteres reservados de la contraseña. No imprimirla. |
 | POSTGRES_PASSWORD | Contraseña del rol existente; no cambiarla al actualizar. Cambiar esta variable no actualiza una contraseña de un volumen PostgreSQL ya inicializado. |

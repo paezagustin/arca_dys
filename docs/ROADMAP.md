@@ -8,7 +8,9 @@
 - [x] NGROK: agente externo preservado u override opcional con la misma URL explícita.
 - [x] Catálogo de tecnologías, implementación, variables, redes y volúmenes.
 - [x] 231 pruebas locales y backup/restore; sintaxis de comandos y Compose comprobados.
-- [ ] Publicación y cierre de CI.
+- [x] Publicación y cierre de CI.
+Completado: 5c2beb4, CI 38994221748 aprobado con 231 pruebas, restauración, imagen
+final en simulación y auditoría de dependencias.
 El despliegue en la Raspberry y la limpieza real los ejecutará el usuario después,
 manualmente. No son trabajo pendiente de ejecución por este agente.
 

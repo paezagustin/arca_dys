@@ -6,8 +6,10 @@ Actualizado: 2026-10-16, America/Buenos_Aires.
 H15 preparado para ejecución MANUAL posterior por el usuario: guía de despliegue
 conservando control de facturación/MP y configuración, limpieza restringida de
 Gestión e inventario técnico completo. No ejecutar despliegue o limpieza real desde
-este chat. Suite local de 231 casos y backup/restore aprobados; publicación y CI
-del hito pendientes de registrar. Ver OPERACION_RASPBERRY.md y
+este chat. Publicado en main: 5c2beb4a60f1f9823ad5fe477022d1b892fd21b0.
+Suite local y CI completos de 231 casos, backup/restore, imagen final simulada y
+auditoría aprobados: https://github.com/paezagustin/arca_dys/actions/runs/38994221748.
+Ver OPERACION_RASPBERRY.md y
 TECNOLOGIAS_Y_CONFIGURACION.md.
 
 ### Estado anterior publicado
@@ -80,6 +82,10 @@ La puesta en producción está separada y no fue ejecutada en la Raspberry.
   No se afirma ensayo integral en Raspberry ni conexión fiscal/productiva real.
 - No cambios de interfaz, gateways o esquema. No repetición ARM64 en este hito;
   los comandos de respaldo/ensayo reales quedan para la ventana manual del usuario.
+- CI del commit publicado aprobado: 231 passed, 1 warning, 63.77s; restauración
+  comprobada, pip check y auditoría sin vulnerabilidades conocidas al ejecutar.
+  El entorno dev mantiene sus 107 proveedores y 3113 movimientos: no se volvió
+  a limpiar ni se importaron datos de ensayo allí. Preparación H15 completada.
 
 ## Evidencia H14
 - Destino comprobado antes de limpiar: arca_dys_dev, servicio postgres, usuario
@@ -283,6 +289,7 @@ creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 | H11 | befdcc104e3621e5d1324ce2280a9da919fb64f6 | Acciones centradas y fecha de pago automática de Fiados. CI 38980673926 success; 207 pruebas, restauración, imagen final y navegador. |
 | H12 | 6a03a2c40095add356a886872531e983f353d918 | Montos sin ceros iniciales, menú móvil desplegable, marca centrada y Administración al pie. CI 38986920971 success; 211 pruebas, backup/restauración y navegador real. |
 | H14 | cd59fb0301de2adbf9ae7c740a99d31fd52e2f31 | Carga JSON privada por consola, 107 proveedores/3113 movimientos conciliados en dev, retiro del módulo Excel e icono móvil. CI 38992592914 success; 228 pruebas, backup/restauración, imagen final y navegador. |
+| H15 | 5c2beb4a60f1f9823ad5fe477022d1b892fd21b0 | Guía de despliegue y tecnologías, SQL manual de limpieza limitada conservando control fiscal y override NGROK opcional. CI 38994221748 success; 231 pruebas, backup/restauración, imagen final y auditoría. No ejecutado en Raspberry. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió
