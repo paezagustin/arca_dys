@@ -7,7 +7,9 @@
 - [x] Migración atómica, recibo, auditoría READ ONLY y verificaciones de integridad.
 - [x] 269 pruebas locales, respaldo/restauración y copia sintética completa comprobados.
 - [x] Navegador QA y guía manual con ensayo restore_check previo a producción.
-- [ ] Publicación y cierre de CI comprobados.
+- [x] Publicación y cierre de CI comprobados.
+Completado: 96c0758aaca742934e63f51c0b25f7c0efc932eb; CI 39065791414 aprobado con
+269 pruebas, respaldo/restauración, imagen final simulada y auditoría.
 La conciliación de los 40 grupos y el ensayo del respaldo real quedan para el
 usuario. No son autorización de operación por el agente ni prueba de producción.
 

@@ -13,7 +13,8 @@ el upgrade ordinario sigue rechazando duplicados en la revisión histórica 0004
 Procedimiento manual: MIGRACION_MP_LEGACY.md y OPERACION_RASPBERRY.md.
 Suite completa 269 passed, 1 warning, sin omitidas, 111.96s; backup/restauración y
 ensayo adicional del conjunto sintético completo aprobados. Navegador QA revisado.
-Publicación en main y cierre de CI pendientes al registrar este estado.
+Publicado en main: 96c0758aaca742934e63f51c0b25f7c0efc932eb. CI completo aprobado:
+https://github.com/paezagustin/arca_dys/actions/runs/39065791414.
 No hubo acceso a Raspberry/backup real, cambios de credenciales/archivos privados,
 actualización de dev ni operaciones productivas. El ensayo real y la conciliación
 manual de los 40 grupos siguen pendientes para el usuario; no hay desbloqueo automático.
@@ -35,6 +36,10 @@ manual de los 40 grupos siguen pendientes para el usuario; no hay desbloqueo aut
 - Enlaces locales válidos, git diff --check aprobado y 29 bloques shell verificados
   con sh -n sin ejecución de los comandos. Baseline y migraciones 0001-0012 intactos.
   Sin nuevas dependencias. No se repitió ARM64 ni se certificó el hardware real.
+- CI del commit 96c0758 aprobado: 269 passed, 1 warning, 67.45s; backup/checksum/
+  restauración en 0013, imagen final con servidor/worker en mock, pip check aprobado
+  y auditoría sin vulnerabilidades conocidas al ejecutar. No se contactaron
+  proveedores reales. Entornos locales QA/test detenidos y eliminados al terminar.
 
 ### Estado H16 publicado
 H16 implementado y comprobado localmente: adopt-legacy acepta exclusivamente la
@@ -373,6 +378,7 @@ creado por las migraciones. Los nombres dudosos se mantuvieron separados.
 | H14 | cd59fb0301de2adbf9ae7c740a99d31fd52e2f31 | Carga JSON privada por consola, 107 proveedores/3113 movimientos conciliados en dev, retiro del módulo Excel e icono móvil. CI 38992592914 success; 228 pruebas, backup/restauración, imagen final y navegador. |
 | H15 | 5c2beb4a60f1f9823ad5fe477022d1b892fd21b0 | Guía de despliegue y tecnologías, SQL manual de limpieza limitada conservando control fiscal y override NGROK opcional. CI 38994221748 success; 231 pruebas, backup/restauración, imagen final y auditoría. No ejecutado en Raspberry. |
 | H16 | cf43e13caf079c46f72ab4a29ece46b036300c07 | Equivalencia UNIQUE específica de adopción legacy, sin editar restricciones ni migraciones históricas. CI 39062048816 success; 251 pruebas, backup/restauración, imagen final y auditoría. Integridad fiscal solo con datos sintéticos; sin backup productivo disponible. |
+| H17 | 96c0758aaca742934e63f51c0b25f7c0efc932eb | Puente explícito de duplicados MP, identidad operativa y snapshots sin consolidar históricos; bloqueo fiscal y conservación de respuestas por intento. CI 39065791414 success; 269 pruebas, backup/restauración, imagen final y auditoría. Restauración sintética completa y navegador local comprobados; ensayo real y conciliación pendientes. |
 
 ## Evidencia vigente de H8
 - Suite x86/Windows: 173 passed, 1 warning, 48.15s; cero pruebas omitidas. Se amplió
