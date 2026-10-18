@@ -8,7 +8,10 @@
 - [x] Barrera persistente/lock PostgreSQL, incertidumbre y bloqueo por migración.
 - [x] Recuperación solo de imagen, evidencia, contingencias y guías actualizadas.
 - [ ] Resolver los 13 hallazgos de secretos en historia (no ocultarlos ni rotar aquí).
-- [ ] CI remoto completo y ensayo real de reemplazo/rollback Docker del PR.
+- [x] CI funcional/ARM64 y ensayo real de reemplazo/rollback Docker del PR: run
+  39140208980, código 4e3f0bc, 332 pruebas; mismo PG/datos sintéticos preservados.
+- [ ] CI remoto GLOBAL exitoso: security y ci-required fallan por historia (13),
+  árbol actual sin hallazgos. PR #11 draft, sin integración.
 - [ ] Protección main/plan GitHub: conexión sin administración; consulta 403.
 - [ ] Intervención explícita antes de integrar esta infraestructura a main.
 - [ ] Inventario/instalación, notificación, bootstrap y primera prueba supervisada.

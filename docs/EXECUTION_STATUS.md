@@ -15,12 +15,30 @@ aprobación SHA sensible, PR integrado/checks estrictos, SSD/proyecto/montajes,
 barrera PostgreSQL + marcador persistente, sonda de revisión sin migrar y rollback
 de imagen con mismo esquema. Nunca postgres/ngrok up, limpieza ni importación.
 
-Evidencia local provisional (se actualizará con el cierre): 319 pruebas completas
-aprobadas en PostgreSQL aislado antes de las últimas ampliaciones de preflight;
-backup/checksum/restore 0013_mp_identity; Compose ficticio; imagen ARM64 construida,
-pip check y smoke HTTP/worker/PDF en QEMU con DB temporal propia: OK. pip-audit sin
-vulnerabilidades conocidas. Reemplazo/rollback Docker real se ejecutará en CI Linux;
-pruebas unitarias de fallos/recuperación ya ejecutadas. No es QA visual de navegador.
+Evidencia verificada del código 4e3f0bca8bcd9b79ee3b26637796894b98417472:
+- [CI push 39140208980](https://github.com/paezagustin/arca_dys/actions/runs/39140208980):
+  tests SUCCESS, 332 passed / 1 warning conocida de Starlette/TestClient (112.95s),
+  backup/checksum/restauración 0013_mp_identity, runtime x86 simulado, pip check y
+  pip-audit sin vulnerabilidades conocidas.
+- Ensayo REAL en ese mismo CI Linux: reemplazo app, arranque roto deliberado,
+  recuperación verificada con HTTP/DB/worker y mismo contenedor PostgreSQL/importe
+  sintético 12345.67 preservados. Proyecto efímero, tmpfs/red interna. El transporte
+  HTTP del ensayo usa loopback dentro de la app porque internal:true no expone
+  el puerto al host. El agente productivo usa loopback del host; falta validarlo
+  en la Raspberry. No es simulación de Docker ni prueba productiva.
+- Job ARM64 SUCCESS: imagen exacta, dependencias y smoke HTTP/worker/PDF en QEMU.
+  Artefacto productivo omitido intencionalmente en ramas/PR; publicación/descarga
+  autenticada del artefacto de main aún pendiente de integración y bootstrap.
+- security FAILURE: 13 hallazgos históricos, 0 en árbol actual. ci-required FAILURE
+  confirma que el bloqueo funciona y no acepta el resto verde como éxito global.
+- Local: suite completa previa 328 passed (120.75s), luego 36 casos del agente
+  incluyendo 4 nuevos de orquestación/reintentos/recuperación, aprobados. Backup,
+  Compose ficticio, ARM64/pip check/smoke simulado/audit aprobados. Ensayo Docker
+  real también aprobado en Desktop, con adaptador temporal Windows que omite solo
+  fcntl/fsync de directorio; CI Linux ejecutó esas funciones originales.
+- Pruebas cubren drenaje con emisión simulada lenta, nuevas entradas rechazadas,
+  recepción MP durable, incertidumbre, drift al mismo head y equivalencia UNIQUE
+  histórica solo en metadata temporal. Cero operaciones reales. Sin QA visual nueva.
 
 Bloqueo real de seguridad: gitleaks 8.30.1 encontró 13 hallazgos de generic-api-key/
 private-key en historia anterior (incluidos notebooks/.env). Vigencia desconocida;
@@ -32,11 +50,13 @@ GitHub: privado, conexión push/triage sin admin/maintain, auto-merge desactivad
 squash disponible. Consulta de protección main: 403 por permiso de integración;
 plan y reglas no verificables ni modificables. Pasos de propietario en CI_CD.md.
 
-Pendiente: PR/CI remoto, resolución de hallazgos, protección administrativa,
+Publicado: [PR #11](https://github.com/paezagustin/arca_dys/pull/11), DRAFT, sin merge.
+Commits técnicos ad6ff97, 030f38d y 4e3f0bc; este documento registra su evidencia.
+Pendiente: resolución de hallazgos y CI global verde, protección administrativa,
 intervención explícita previa al merge sensible y bootstrap/prueba/activación
 supervisados en Raspberry. El agente no está instalado ni activado allí.
 
-## Estado vigente
+## Estado anterior H18 (referencia)
 H18 implementado y comprobado localmente: Resumen con importes en una línea,
 separadores/colores en desglose y sueldos, tablas alternadas y totales destacados.
 Administración/sesión y ARCA DYS al pie de la barra lateral con margen; en móvil,

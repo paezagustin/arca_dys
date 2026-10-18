@@ -80,6 +80,10 @@ Su lista positiva permite templates/assets, tests y módulos específicos de Ges
 reportes. Cualquier archivo desconocido, fiscal, seguridad, scripts, Docker, workflows,
 dependencias o migraciones requiere aprobación local del SHA exacto. Una aprobación
 no habilita DDL. Usuarios con root o administración GitHub siguen siendo de confianza.
+La clasificación por rutas no puede demostrar que un cambio dentro de un archivo
+permitido sea inocuo: Codex debe revisar también su significado y pedir intervención
+si afecta datos destructivamente o reglas fiscales/seguridad. No se presenta esa
+revisión semántica como una protección técnica que GitHub ya esté imponiendo.
 
 ## Condiciones y protocolo fiscal
 
@@ -169,7 +173,23 @@ No configurar notificaciones enviando claves por el chat.
 
 En la ventana supervisada, instalar imagen aprobada con APP_COMMIT del SHA completo,
 el montaje control/protocol-v1 y stop_grace_period de este Compose, solo fastapi,
-sin migración automática. Con paused presente, comprobar /health y ambas sondas:
+sin migración automática. Para un checkout limpio del SHA aprobado, después de haber
+cerrado los ingresos y terminado/detenido de forma segura el código antiguo:
+
+```sh
+test -z "$(git status --porcelain)" || { echo 'Revisar cambios locales antes del bootstrap'; exit 1; }
+BOOTSTRAP_SHA="$(git rev-parse HEAD)"
+echo "$BOOTSTRAP_SHA"  # Debe ser el SHA integrado expresamente aprobado.
+test -n "$DEPLOY_PROJECT" || { echo 'Falta inventario del proyecto existente'; exit 1; }
+docker build --platform linux/arm64 --target production --build-arg APP_COMMIT="$BOOTSTRAP_SHA" -t "arca-dys:$BOOTSTRAP_SHA" .
+sudo python3 -c 'import json,sys; from pathlib import Path; Path("/mnt/datos/docker/arca_dys/deploy-state/bootstrap-image.json").write_text(json.dumps({"services":{"fastapi":{"image":sys.argv[1]}}}))' "arca-dys:$BOOTSTRAP_SHA"
+docker compose --env-file .env.prod -p "$DEPLOY_PROJECT" -f docker-compose.prod.yml -f /mnt/datos/docker/arca_dys/deploy-state/bootstrap-image.json config --quiet
+docker compose --env-file .env.prod -p "$DEPLOY_PROJECT" -f docker-compose.prod.yml -f /mnt/datos/docker/arca_dys/deploy-state/bootstrap-image.json up -d --no-deps --no-build --pull never fastapi
+```
+
+No ejecutar si falló un paso anterior. Si las rutas reales difieren, adaptar la
+configuración inventariada; no cambiar proyecto ni montajes para hacer pasar la sonda.
+Con paused presente, comprobar /health y ambas sondas:
 
 ```sh
 docker exec fastapi_app python -m scripts.deploy_guard --drain
@@ -255,6 +275,11 @@ pendiente; el primer fallo guarda failed.json/notifica y detiene reintentos hast
   supervisada según OPERACION_RASPBERRY.md; no editar versiones antiguas, stamp,
   borrar reservas ni ejecutar alembic desde el agente. Rehacer baseline current/previous
   después del mantenimiento; un rollback de código requiere misma revisión.
+  Con timer apagado, aplicación nueva ya instalada/pausada y ninguna operación
+  pendiente, archivar current/previous JSON anteriores en backups (no son la DB),
+  conservar las imágenes y ejecutar --record-bootstrap para registrar el estado
+  verificado de la nueva revisión. No sobrescribir ni inventar un pending para
+  sortear la incompatibilidad. Revalidar antes de quitar paused y reactivar timer.
 - Fallo de nueva imagen con esquema intacto: vuelve a la anterior y la verifica
   MIENTRAS paused está puesto. No toca datos; deja failed.json para revisión.
 - Si tampoco recupera, preserva paused/pending/evidencia y bloquea el worker. Revisar
