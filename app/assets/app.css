@@ -108,8 +108,7 @@ small,.muted {
   box-shadow:inset 3px 0 var(--brand);
 }
 .session-area {
-  margin-top:24px;
-  padding:0 32px;
+  margin:0;
   display:flex;
   align-items:center;
   flex-wrap:wrap;
@@ -146,7 +145,12 @@ main {
 footer {
   color:var(--muted);
   font-size:11px;
-  padding:12px 32px 24px;
+  padding-top:12px;
+}
+.sidebar-footer {
+  margin-top:auto;
+  padding:20px 12px 4px;
+  border-top:1px solid var(--line);
 }
 .card {
   background:var(--paper);
@@ -335,7 +339,9 @@ td {
   font-size:26px;
   font-weight:700;
   font-variant-numeric:tabular-nums;
-  overflow-wrap:anywhere;
+  white-space:nowrap;
+  overflow-wrap:normal;
+  overflow-x:auto;
 }
 .metrics {
   display:grid;
@@ -345,6 +351,7 @@ td {
 .metrics .card {
   margin:12px 0;
   padding:20px;
+  container-type:inline-size;
 }
 .metrics h2 {
   font-size:13px;
@@ -362,9 +369,39 @@ td {
 .dashboard-metrics .card:last-child .metric {
   color:var(--brand);
 }
-.dashboard-metrics .metric {
-  font-size:clamp(20px,1.8vw,28px);
+.metrics .metric { font-size:clamp(18px,10cqi,28px); }
+.dashboard-metrics [data-metric=sale] { border-top:4px solid #169b9b; }
+.dashboard-metrics [data-metric^=expense] { border-top:4px solid #d3487e; }
+.dashboard-metrics [data-metric=salary] { border-top:4px solid #8a62b9; }
+.dashboard-metrics [data-metric=result] { border-top:4px solid var(--brand); }
+.report-panel>h2 { padding-bottom:14px; border-bottom:1px solid var(--line); }
+.report-breakdown { gap:16px; }
+.report-breakdown>div {
+  min-width:0;
+  padding:18px 20px;
+  border:1px solid #cde3f0;
+  border-left:4px solid var(--brand);
+  border-radius:10px;
+  background:#f2f8fc;
 }
+.report-breakdown h3 { margin:0 0 12px; }
+.report-breakdown [data-metric=sale_cash] { background:#eff9f6; border-color:#bfdfd4; border-left-color:#25856b; }
+.report-breakdown [data-metric=sale_unknown] { background:#f5f7fa; border-color:var(--line); border-left-color:var(--muted); }
+.salaries-report .report-breakdown>div { background:#f8f4fc; border-color:#ded1ee; border-left-color:#8a62b9; }
+.report-stats { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; margin:18px 0; border:1px solid var(--line); border-radius:10px; background:#f8fafc; }
+.report-stats p { margin:0; padding:14px 18px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+.report-stats p:nth-child(even) { border-right:0; }
+.report-stats p:nth-last-child(-n+2) { border-bottom:0; }
+.report-panel>a { display:inline-block; margin-top:16px; }
+.dashboard-reports tbody tr:nth-child(even) { background:#f5f8fb; }
+.dashboard-reports tbody tr:hover { background:#eaf4fa; }
+.dashboard-reports th+th,.dashboard-reports td+td { border-left:1px solid var(--line); }
+.dashboard-reports .report-total { background:#eaf5fb; font-weight:700; }
+.row-actions { flex-wrap:nowrap; gap:8px; }
+.row-actions form { margin:0; }
+.delete-button { color:var(--bad); border-color:#e5bec9; }
+.delete-button:hover { background:#fff0f4; color:var(--bad); }
+.entry-delete { max-width:760px; padding-top:8px; margin-bottom:24px; }
 .pagination {
   display:flex;
   gap:12px;
@@ -584,7 +621,7 @@ dialog .actions {
 .legacy-expenses {
   margin-top:12px;
 }
-@media(min-width:1500px) {
+@media(min-width:1800px) {
   .dashboard-metrics {
     grid-template-columns:repeat(6,minmax(0,1fr));
   }
@@ -639,8 +676,11 @@ dialog .actions {
   .site-menu>summary::-webkit-details-marker { display:none; }
   .site-menu[open]>summary { margin-bottom:8px; }
   .session-area {
-    padding:0 20px;
+    padding:0;
   }
+  .sidebar-footer { margin-top:0; padding:16px 12px 4px; }
+  .site-header:has(.site-menu:not([open])) .sidebar-footer { display:none; }
+  .dashboard-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .workspace {
     margin-left:0;
   }
@@ -652,7 +692,7 @@ dialog .actions {
     padding:0 20px;
   }
   footer {
-    padding:12px 20px 24px;
+    padding-top:12px;
   }
   .skip-link:focus {
     left:10px;
@@ -681,7 +721,7 @@ dialog .actions {
     grid-template-columns:1fr;
   }
   .metrics {
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));
     gap:10px;
   }
   .metrics .card {
@@ -693,6 +733,10 @@ dialog .actions {
   .dashboard-metrics .card:last-child {
     grid-column:auto;
   }
+  .dashboard-metrics { grid-template-columns:1fr; }
+  .dashboard-metrics .metric { font-size:26px; }
+  .report-stats p,.report-stats p:nth-last-child(2) { border-right:0; border-bottom:1px solid var(--line); }
+  .report-stats p:last-child { border-bottom:0; }
   .actions {
     gap:10px;
   }

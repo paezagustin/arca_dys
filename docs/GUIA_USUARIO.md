@@ -18,7 +18,8 @@ El encabezado muestra el logo centrado y Dulce y Salado debajo. En el celular,
 pulsar el icono de tres líneas junto al nombre de la sección para desplegar las opciones; no tiene flecha.
 Al entrar a otra pantalla se cierra y muestra el nombre de la sección elegida.
 En escritorio las secciones quedan visibles en la barra lateral. Administración
-está al final de cada página, encima de ARCA DYS; al ingresar, Salir queda allí.
+está abajo a la izquierda en esa barra, con margen y encima de ARCA DYS; al ingresar,
+Salir queda allí. En celular estos controles aparecen al desplegar el menú.
 
 Los montos nuevos empiezan vacíos y muestran 0,00 como ayuda. Los importes guardados
 siguen visibles al editar. En ventas puede completarse efectivo, Mercado Pago o
@@ -48,11 +49,18 @@ se conservan los importes guardados. Los cierres anteriores sin desglose requier
 completar ambos importes reales para editarlos.
 No se pide motivo ni se muestra historial. Solo hay una venta por día; cero es
 válido y un día sin registrar no se interpreta como cero.
+Si cargaste un día por error, usá Eliminar desde Gestión o desde su edición y
+revisá fecha e importe antes de confirmar. Cancelar conserva el registro.
 
 ## Registrar egresos y proveedores
 En Gestión pulsar Registrar egreso. Completar fecha, importe y En Blanco o En Negro.
 Buscar el proveedor escribiendo su nombre y elegirlo de la lista; también se puede
 dejar vacío. La descripción es opcional. Guardar.
+Para un egreso cargado por error, usar Eliminar y confirmar. Se retira de los
+listados y reportes; los datos originales se conservan internamente.
+Los filtros de Gestión siempre están visibles, arriba de los totales. Elegir tipo,
+proveedor y fechas y pulsar Buscar; los totales abarcan todas las coincidencias.
+Elegir un proveedor muestra sus egresos, incluidos los de proveedores archivados.
 Desde Proveedores se puede registrar/editar nombre, contacto y notas. Eliminar sirve
 si no hay registros vinculados; en caso contrario se puede archivar para que deje
 de aparecer al cargar nuevos egresos. Las ayudas se abren pulsando ?.
@@ -67,6 +75,9 @@ Elegir año/mes, Todo el año o completar ambas fechas para consultar un día/pe
 Total Egresos, Pago de sueldos y Ganancia (ventas menos egresos y sueldos).
 También muestra efectivo/MP y cuánto se pagó a cada empleado. Promedio diario,
 gráfico y detalle mensual ayudan a comparar. Los cobros y facturas están separados.
+Las tarjetas mantienen el signo de peso junto al importe. Colores y separadores
+distinguen efectivo, MP, históricos sin desglose y sueldos; las tablas alternan
+filas y destacan las columnas de totales para facilitar la lectura.
 Exportar Excel descarga la hoja de ingresos y egresos del período, con sus seis
 columnas originales, además de las hojas Ventas y Sueldos del mismo período. Varias compras de un día ocupan filas adicionales sin repetir
 la venta. Si un egreso antiguo no tiene tipo, editarlo antes de exportar.

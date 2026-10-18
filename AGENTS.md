@@ -6,6 +6,17 @@ en Raspberry Pi 5. Usar FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Comp
 Leer README, docs/ALCANCE.md, docs/ROADMAP.md y docs/EXECUTION_STATUS.md al retomar.
 Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
+## Ajustes de interfaz y correcciones de Gestión H18
+- Importes destacados con signo y número en la misma línea; tarjetas adaptables.
+- Resumen con separadores/colores y tablas legibles, sin cambiar sus cálculos.
+- Administración/sesión y ARCA DYS al pie de la barra lateral con margen; en móvil,
+  dentro del menú desplegado. Filtros de Gestión siempre visibles antes de totales.
+- Filtrar Gestión por proveedor (incluidos archivados/sin proveedor) y fechas;
+  listado, totales y paginación deben compartir el filtro.
+- Eliminar ventas/egresos mediante baja lógica confirmada, CSRF, bloqueo y versión.
+  Conservar fila/ID/importes/origen/referencias y todo el control fiscal/MP.
+  Un reenvío de alta no reactiva eliminados; otra carga usa UUID nuevo.
+
 ## Transición MP histórica H17
 - Conservar todas las filas/IDs/JSON/marcas y vínculos de pagos repetidos; nunca
   consolidar ni elegir automáticamente un representante. Grupos ambiguos bloqueados.

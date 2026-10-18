@@ -1,5 +1,15 @@
 # Roadmap y condiciones de salida
 
+## H18 · Lectura de Resumen y correcciones en Gestión
+- [x] Signo e importe unidos y tarjetas adaptables; reportes con colores/separadores.
+- [x] Administración/sesión y ARCA DYS abajo de la barra lateral, con margen.
+- [x] Filtros permanentes antes de totales; proveedor incluido en listado y sumas.
+- [x] Eliminar venta/egreso con confirmación, baja lógica, CSRF y control de versión.
+- [x] Originales/importaciones/evidencia fiscal preservados; reenvíos y concurrencia.
+- [x] 279 pruebas locales, backup/checksum/restauración y navegador real QA.
+- [ ] Publicación y cierre de CI.
+Sin migraciones nuevas ni cambios de revisiones publicadas. Sin operaciones reales.
+
 ## H17 · Transición conservadora de pagos MP históricos repetidos
 - [x] Conservar 0001-0012 y baseline; documentar compatibilidad del puente explícito.
 - [x] Nueva 0013: identidad separada, snapshots y evidencia, sin consolidar filas.

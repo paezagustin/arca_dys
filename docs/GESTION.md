@@ -16,12 +16,32 @@ el otro. Los dos vacíos se rechazan; escribir 0 explícito registra una caja de
 La edición conserva los importes guardados, incluidos ceros y totales históricos.
 Una venta por fecha; cero es válido, un día sin registrar sigue sin información.
 El icono de lápiz abre Editar con fecha y ambos importes. No exige motivo.
+Eliminar permite retirar una carga equivocada, por ejemplo un domingo sin ventas.
+Después se puede registrar nuevamente esa fecha con un formulario nuevo.
 
 ## Egresos
 Fecha, importe positivo, tipo En Blanco o En Negro, proveedor opcional y descripción
 opcional. La búsqueda consulta hasta 20 coincidencias por nombre; permite escribir,
 seleccionar con clic o flechas/Enter y borrar para dejar Sin proveedor.
 No hay medios, categorías adicionales, estados de registro ni otros ingresos.
+
+## Filtrar y eliminar cargas equivocadas
+Los filtros quedan siempre visibles encima de Ventas y Total Egresos. Se combinan
+Mostrar, proveedor y fechas; Buscar actualiza listado y totales de todo el filtro,
+incluidas sus otras páginas. El proveedor se aplica a egresos: si se combina con
+Mostrar ventas, no habrá coincidencias. Sin proveedor busca solo egresos sin asignar.
+Los proveedores archivados siguen disponibles para consultar sus registros anteriores.
+
+En el listado o al editar una venta/egreso, pulsar Eliminar. La confirmación muestra
+fecha e importe; Cancelar no cambia nada. Al confirmar se retira de Gestión,
+Resumen y Excel. Se conservan internamente la fila, ID, importes, desglose,
+proveedor, descripción, origen y referencias de importación mediante active=false.
+No se borran pagos MP, facturas, vínculos ni evidencia fiscal. No se ofrece borrado
+fiscal ni eliminación de Sueldos/Fiados en esta pantalla.
+Si otra ventana editó el registro, la eliminación se rechaza y hay que revisar la
+versión actual. Repetir una eliminación no vuelve a modificarlo; reenviar un alta
+antigua no lo reactiva. No hay recuperación desde la interfaz: revisar antes de
+confirmar y usar una carga nueva para reemplazar un registro equivocado.
 
 ## Proveedores
 Nombre, contacto y notas. Editar no pide motivo. Se puede archivar para quitarlo del
@@ -35,8 +55,8 @@ UUID de formulario e índice único impiden duplicados. El bloqueo y número de 
 evitan sobrescribir una edición de otra ventana. Los importes siguen en NUMERIC(18,2).
 No se guardan historiales de cambios, motivos ni copias anterior/posterior de gestión
 o configuración. El historial fiscal de solicitudes permanece intacto.
-El indicador interno active conserva excluidas las anulaciones heredadas; no se
-expone como un campo ni se admite su modificación desde el formulario de registros.
+El indicador interno active conserva excluidas las anulaciones heredadas y las
+eliminaciones confirmadas; no se expone como campo editable del formulario.
 
 ## Migración 0010_simple_business
 Agrega expense_type y copia solo clasificaciones inequívocas del Excel a white/black.

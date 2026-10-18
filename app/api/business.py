@@ -1,4 +1,5 @@
 from uuid import uuid4
+from urllib.parse import urlencode
 from fastapi import APIRouter, Request, Depends, Query, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select, func
@@ -6,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.models.business import BusinessEntry, Supplier
-from app.services.business import KINDS, EXPENSE_TYPES, snapshot, save_entry, save_supplier, record_date
+from app.services.business import KINDS, EXPENSE_TYPES, snapshot, save_entry, save_supplier, record_date, delete_entry
 from app.services.day_closing import unbilled_mp_total
 from app.services.listings import paginate, parse_filters, business_today
 from app.web import templates
@@ -16,16 +17,24 @@ router = APIRouter(prefix="/business", tags=["Gestión"])
 
 @router.get("")
 def entries(request: Request, kind: str = "all", fecha_desde: str = "", fecha_hasta: str = "",
+            supplier_id: str = "",
             page: int = Query(1, ge=1), db: Session = Depends(get_db)):
     try:
         filters = parse_filters("todo", fecha_desde, fecha_hasta, default_today=False)
         if kind not in {"all", *KINDS}:
             raise ValueError("Elegí filtros válidos")
+        if supplier_id not in {"", "none"}:
+            if not supplier_id.isdecimal() or len(supplier_id) > 10 or db.get(Supplier, int(supplier_id)) is None:
+                raise ValueError("Elegí un proveedor válido")
     except ValueError as error:
         raise HTTPException(422, str(error)) from error
     query = select(BusinessEntry).where(BusinessEntry.active.is_(True))
     if kind != "all":
         query = query.where(BusinessEntry.kind == kind)
+    if supplier_id:
+        query = query.where(BusinessEntry.kind == "expense")
+        query = query.where(BusinessEntry.supplier_id.is_(None) if supplier_id == "none"
+                            else BusinessEntry.supplier_id == int(supplier_id))
     if filters.start:
         query = query.where(BusinessEntry.entry_date >= filters.start)
     if filters.end:
@@ -36,7 +45,8 @@ def entries(request: Request, kind: str = "all", fecha_desde: str = "", fecha_ha
     ids = {row.supplier_id for row in result.items if row.supplier_id}
     suppliers = {s.id: s.name for s in db.scalars(select(Supplier).where(Supplier.id.in_(ids)))} if ids else {}
     return templates.TemplateResponse(request=request, name="business.html", context={"entries": result, "filters": filters,
-        "kind": kind, "kinds": KINDS, "expense_types": EXPENSE_TYPES, "suppliers": suppliers, "totals": totals})
+        "kind": kind, "kinds": KINDS, "expense_types": EXPENSE_TYPES, "suppliers": suppliers, "totals": totals,
+        "supplier_id": supplier_id, "supplier_options": list(db.scalars(select(Supplier).order_by(Supplier.name_key, Supplier.id)))})
 
 
 def entry_form(request, db, row=None, values=None, error=None):
@@ -98,6 +108,21 @@ async def create_entry(request: Request, db: Session = Depends(get_db)):
 @router.post("/entries/{entry_id}")
 async def update_entry(entry_id: int, request: Request, db: Session = Depends(get_db)):
     return await store_entry(request, db, entry_id)
+
+
+@router.post("/entries/{entry_id}/delete")
+async def remove_entry(entry_id: int, request: Request, db: Session = Depends(get_db)):
+    values = await request.form()
+    try:
+        delete_entry(db, entry_id, values.get("version"))
+    except LookupError as error:
+        raise HTTPException(404, str(error)) from error
+    except ValueError as error:
+        db.rollback()
+        return entry_form(request, db, db.get(BusinessEntry, entry_id), error=str(error))
+    kept = {"kind", "fecha_desde", "fecha_hasta", "supplier_id", "page"}
+    query = [(key, value) for key, value in request.query_params.multi_items() if key in kept]
+    return RedirectResponse("/business?" + urlencode(query + [("deleted", "1")]), status_code=303)
 
 
 @router.get("/suppliers/search")

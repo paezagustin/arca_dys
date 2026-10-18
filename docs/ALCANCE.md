@@ -1,6 +1,6 @@
 # Alcance acordado
 
-Actualizado: 2026-10-16, con simplificación explícita posterior al roadmap H0-H8. Las anotaciones finales del usuario reemplazan la propuesta
+Actualizado: 2026-10-17, con simplificación explícita posterior al roadmap H0-H8. Las anotaciones finales del usuario reemplazan la propuesta
 intermedia de facturación parcial. La ampliación H10 incorpora Sueldos y Fiados simples.
 
 | ID | Requisito y aceptación |
@@ -20,9 +20,10 @@ intermedia de facturación parcial. La ampliación H10 incorpora Sueldos y Fiado
 | G02 | Solo ventas diarias y egresos En Blanco/En Negro; proveedores buscables. Sin otros ingresos ni medios/categorías adicionales. |
 | G03 | Carga inicial puntual por consola de los tres JSON corregidos: proveedores, ventas y egresos, validación, transacción, conciliación e idempotencia. Sin módulo web Importar Excel ni importación de bloques manuales del dashboard. |
 | G04 | Reportes separan ventas, cobros MP y emisión fiscal. Desglose efectivo/MP, Sueldos por empleado y Ganancia = Ventas − Total Egresos − Sueldos; filtros día/período y Excel. |
+| G07 | Eliminar cargas equivocadas de ventas/egresos mediante baja lógica confirmada, sin perder datos originales ni afectar evidencia fiscal. Gestión con filtros permanentes por proveedor, tipo y fechas arriba de los totales. |
 | G05 | Sueldos simples: fecha, Francisco/Juan Cruz, monto y efectivo/mercado pago; reporte mensual por defecto filtrable. |
 | G06 | Fiados: nombre, monto, observación, fecha y pagó; listado no pagados por defecto y edición/marcado de pago con fecha automática de Buenos Aires, independiente de caja. |
-| U01 | Logo centrado y nombre Dulce y Salado debajo, menú móvil desplegable con icono sencillo y nombre de sección, sin flecha; Administración al pie; montos nuevos vacíos con placeholder y datos guardados conservados; mensajes de éxito/error comprensibles y enlaces de descarga. |
+| U01 | Logo centrado y nombre Dulce y Salado debajo, menú móvil desplegable con icono sencillo y nombre de sección, sin flecha; Administración y ARCA DYS abajo de la barra lateral con margen; Resumen con importes unidos, colores y separadores; montos nuevos vacíos con placeholder y datos guardados conservados; mensajes de éxito/error comprensibles y enlaces de descarga. |
 | U02 | Paginación SQL de todos los listados, incluido reports-stadistics. Filtros y orden estable. |
 | O01 | Desarrollo Windows 11 con Docker Desktop: simulación sin servicios externos, datos de ejemplo y tests repetibles. |
 | O02 | Compose separados dev/test/prod; PostgreSQL 17.8 de referencia, sin upgrade mayor en este trabajo. |

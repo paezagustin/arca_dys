@@ -91,6 +91,8 @@ def save_entry(db, values, actor, entry_id=None):
             raise ValueError("Reabrí el formulario para guardar el registro") from None
         existing = db.scalar(select(BusinessEntry).where(BusinessEntry.entry_key == key))
         if existing:
+            if not existing.active:
+                raise ValueError("Este registro fue eliminado. Abrí un formulario nuevo si querés cargar otro")
             if all(getattr(existing, key) == value for key, value in data.items()):
                 return existing
             raise ValueError("El formulario ya fue utilizado. Abrí uno nuevo")
@@ -102,6 +104,19 @@ def save_entry(db, values, actor, entry_id=None):
         row.version += 1
     db.flush()
     db.commit()
+    return row
+
+
+def delete_entry(db, entry_id, version):
+    row = db.scalar(select(BusinessEntry).where(BusinessEntry.id == entry_id).with_for_update())
+    if row is None:
+        raise LookupError("Registro no encontrado")
+    if row.active:
+        check_version(row, version)
+        # Conservar IDs, datos originales y referencias de importación.
+        row.active = False
+        row.version += 1
+        db.commit()
     return row
 
 

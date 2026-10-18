@@ -3,6 +3,32 @@
 Actualizado: 2026-10-17, America/Buenos_Aires.
 
 ## Estado vigente
+H18 implementado y comprobado localmente: Resumen con importes en una línea,
+separadores/colores en desglose y sueldos, tablas alternadas y totales destacados.
+Administración/sesión y ARCA DYS al pie de la barra lateral con margen; en móvil,
+visibles al abrir el menú. Gestión: filtros permanentes sobre los totales y filtro
+por proveedor, incluidos archivados y Sin proveedor, con sumas y páginas coherentes.
+Eliminar ventas/egresos desde listado o edición, confirmación con fecha/importe y
+baja lógica. Conserva originales, IDs y referencias; rechaza versiones desactualizadas,
+no reactiva formularios antiguos y admite una carga nueva para esa fecha.
+No requiere migración ni cambia las revisiones publicadas o los registros fiscales.
+
+### Evidencia local H18
+- Suite completa en PostgreSQL descartable/red interna: 279 passed, 1 warning
+  conocido de Starlette/TestClient, sin omitidas, 114.80s. Diez casos nuevos cubren
+  eliminación, doble envío, CSRF, concurrencia, preservación fiscal/importación,
+  efecto en métricas/Excel y filtros de proveedor/fechas/paginación/inválidos.
+- Backup custom/checksum/restauración aprobados en 0013_mp_identity.
+- Navegador real con datos ficticios e importes de ocho dígitos: 320, 390, 560,
+  900, 901, 1494 y 1920 px sin desborde exterior ni de los importes de la muestra.
+  Cancelar conserva; confirmar un egreso y una venta desde edición los retira y
+  actualiza totales. Filtro conservado tras eliminar; menú móvil y pie comprobados.
+  Sin errores/advertencias de consola en Resumen. Capturas locales ignoradas en Git.
+- Sin acceso a Raspberry, respaldo real o producción; sin cambios de credenciales,
+  archivos privados ni DB dev. No se emitieron facturas ni se consultaron proveedores.
+- Guías GESTION.md y GUIA_USUARIO.md actualizadas. Publicación/CI pendientes de cierre.
+
+### Estado H17 publicado
 H17 implementado y comprobado localmente: transición conservadora de históricos MP
 repetidos a 0013_mp_identity, sin modificar 0001-0012/baseline ni consolidar filas.
 Los 40 grupos ambiguos quedan preservados/bloqueados, sin representante elegido.
