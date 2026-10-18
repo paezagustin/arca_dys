@@ -131,6 +131,35 @@ def test_schema_mismatch_does_not_migrate(control):
             db.execute(text("UPDATE alembic_version SET version_num='0013_mp_identity'"))
 
 
+def test_schema_drift_with_same_revision_is_blocked(control):
+    (control / "paused").touch()
+    try:
+        with engine.begin() as db:
+            db.execute(text("ALTER TABLE invoices ADD COLUMN unexpected_drift integer"))
+        with pytest.raises(RuntimeError, match="schema-drift-maintenance-required"):
+            probe(drain=True)
+    finally:
+        with engine.begin() as db:
+            db.execute(text("ALTER TABLE invoices DROP COLUMN unexpected_drift"))
+
+
+def test_known_legacy_unique_equivalence_is_read_only_and_accepted(control):
+    # El caso completo de adopción se prueba en test_migrations. Aquí se valida la
+    # sonda final en el destino descartable, sin modificar el metadata global.
+    (control / "paused").touch()
+    try:
+        with engine.begin() as db:
+            db.execute(text("DROP INDEX invoices_invoice_number_key"))
+            db.execute(text("ALTER TABLE invoices ADD CONSTRAINT invoices_invoice_number_key UNIQUE (invoice_number)"))
+        assert probe(drain=True)["revision"] == "0013_mp_identity"
+        with engine.connect() as db:
+            assert db.scalar(text("SELECT count(*) FROM pg_constraint WHERE conname='invoices_invoice_number_key'")) == 1
+    finally:
+        with engine.begin() as db:
+            db.execute(text("ALTER TABLE invoices DROP CONSTRAINT invoices_invoice_number_key"))
+            db.execute(text("CREATE UNIQUE INDEX invoices_invoice_number_key ON invoices(invoice_number)"))
+
+
 def test_http_returns_retryable_maintenance_response_and_health(control, client):
     (control / "paused").touch()
     response = client.post("/ARCA/requests/does-not-exist/retry")

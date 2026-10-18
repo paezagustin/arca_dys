@@ -68,7 +68,7 @@ def main():
             (host.control / "paused").unlink()
             pg = host.command(*host.compose, "ps", "-q", "postgres").strip()
             host.command("docker", "exec", pg, "psql", "-U", "arca_test", "-d", "arca_dys_test", "-c",
-                         "CREATE TABLE deployment_sentinel (value integer); INSERT INTO deployment_sentinel VALUES (12345)")
+                         "INSERT INTO customer_credits (entry_key,customer,amount,observation,entry_date,paid,version) VALUES ('cd-sentinel','Cliente ficticio',12345.67,'CD fixture',CURRENT_DATE,false,1)")
             deploy(host, releases[1], releases[0], lambda: releases[1]["commit"])
             assert host.inspect(config["app_container"])["Image"] == releases[1]["image_id"]
             try:
@@ -82,8 +82,16 @@ def main():
             assert json.loads((host.state / "current.json").read_text())["commit"] == releases[1]["commit"]
             assert host.command(*host.compose, "ps", "-q", "postgres").strip() == pg
             assert host.command("docker", "exec", pg, "psql", "-U", "arca_test", "-d", "arca_dys_test", "-Atc",
-                                "SELECT value FROM deployment_sentinel").strip() == "12345"
+                                "SELECT amount FROM customer_credits WHERE entry_key='cd-sentinel'").strip() == "12345.67"
             print("Docker CD aislado: reemplazo real, arranque fallido, recuperación verificada, mismo PostgreSQL/datos: OK")
+        except Exception:
+            # Solo fixtures de ESTE proyecto: no se admite configuración productiva.
+            app = host.inspect(config["app_container"])
+            print("CD fixture container state:", app["State"], flush=True)
+            subprocess.run(["docker", "logs", "--tail", "60", config["app_container"]], check=False)
+            subprocess.run(["docker", "exec", config["app_container"], "python", "-c",
+                            "from scripts.deploy_guard import probe; print(probe(drain=True))"], check=False)
+            raise
         finally:
             # Solo proyecto generado por este ensayo y PostgreSQL tmpfs ficticio.
             host.command(*host.compose, "down", "--volumes", "--remove-orphans")

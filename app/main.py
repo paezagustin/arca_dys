@@ -44,6 +44,7 @@ async def lifespan(app):
         from app.services.worker import worker
         thread = Thread(target=worker, args=(stop,), daemon=True, name="business-worker")
         thread.start()
+    app.state.business_worker = thread
     try:
         yield
     finally:
@@ -88,10 +89,11 @@ def health():
     with engine.connect() as connection:
         connection.execute(text("SELECT 1"))
     from app.core.deployment import paused
+    worker = getattr(app.state, "business_worker", None)
     return {"status": "ok", "environment": ENV, "integrations": INTEGRATIONS_MODE,
             "revision": ScriptDirectory.from_config(Config("alembic.ini")).get_current_head(),
             "commit": os.environ.get("APP_COMMIT", "unknown"), "deployment_protocol": 1,
-            "paused": paused()}
+            "paused": paused(), "worker_alive": worker.is_alive() if worker else None}
 
 
 @app.middleware("http")

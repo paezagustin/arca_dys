@@ -234,21 +234,26 @@ class Host:
 
     def smoke(self, metadata):
         cfg = self.config
+        stage = "health"
         for _ in range(min(60, max(1, self.config.get("smoke_attempts", 60)))):
             try:
+                stage = "health"
                 with urlopen(cfg["health_url"], timeout=5) as response:
                     health = json.load(response)
                 if (health["status"] == "ok" and health["commit"] == metadata["commit"] and health["paused"] is True
-                        and health["deployment_protocol"] == 1 and health["revision"] == metadata["revision"]):
+                        and health["deployment_protocol"] == 1 and health["revision"] == metadata["revision"]
+                        and health["worker_alive"] is True):
+                    stage = "database-guard"
                     self.command("docker", "exec", cfg["app_container"], "python", "-m", "scripts.deploy_guard", "--drain")
                     # GET sin sesión/escrituras, sin consultar proveedores ni crear cookies.
+                    stage = "login-page"
                     with urlopen(cfg["health_url"].removesuffix("/health") + "/login", timeout=5) as page:
                         require(page.status == 200 and b"<form" in page.read(), "web-smoke-failed")
                     return
             except Exception:
                 pass
             time.sleep(2)
-        raise Blocked("post-deploy-smoke-failed")
+        raise Blocked("post-deploy-smoke-failed-" + stage)
 
 
 def deploy(host, metadata, previous, current_head):
