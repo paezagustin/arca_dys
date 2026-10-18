@@ -27,8 +27,10 @@ Evidencia verificada del código 4e3f0bca8bcd9b79ee3b26637796894b98417472:
   el puerto al host. El agente productivo usa loopback del host; falta validarlo
   en la Raspberry. No es simulación de Docker ni prueba productiva.
 - Job ARM64 SUCCESS: imagen exacta, dependencias y smoke HTTP/worker/PDF en QEMU.
-  Artefacto productivo omitido intencionalmente en ramas/PR; publicación/descarga
+  Upload productivo omitido intencionalmente en ramas/PR; publicación/descarga
   autenticada del artefacto de main aún pendiente de integración y bootstrap.
+  El workflow ahora prepara tar/metadatos también en PR para validar ese empaquetado
+  antes del merge; ese paso adicional debe comprobarse en la última ejecución.
 - security FAILURE: 13 hallazgos históricos, 0 en árbol actual. ci-required FAILURE
   confirma que el bloqueo funciona y no acepta el resto verde como éxito global.
 - Local: suite completa previa 328 passed (120.75s), luego 36 casos del agente

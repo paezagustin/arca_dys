@@ -24,6 +24,8 @@ alcanzan. Corre en PR y push. Solo un push a main produce el artefacto, con SHA,
 revisión, protocolo, image ID y SHA256 del tar. Aunque el artefacto exista antes
 de terminar otro job, el agente espera el éxito de TODO el run y cada job requerido.
 La validación HTTP funcional no es revisión visual en navegador.
+Las ramas/PR también preparan el tar/metadatos para probar el empaquetado antes
+del merge, pero no lo suben como release: el upload sigue restringido a main.
 
 Se elige **pull systemd saliente** en lugar de self-hosted runner: no recibe jobs
 arbitrarios de Actions/PR, no abre SSH/Docker/DB ni guarda secretos productivos en

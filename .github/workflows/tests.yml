@@ -71,8 +71,7 @@ jobs:
           docker compose -f docker-compose.test.yml up -d --wait postgres
           docker run --rm --platform linux/arm64 "arca-dys:$COMMIT" pip check
           docker run --rm --platform linux/arm64 --network arca-dys-test_isolated -e ENV=test -e INTEGRATIONS_MODE=mock -e ALLOW_LIVE_OPERATIONS=false -e DATABASE_URL=postgresql://arca_test:local-test-only@postgres:5432/arca_dys_test "arca-dys:$COMMIT" python -m scripts.smoke_runtime
-      - name: Preparar artefacto solo para main integrado
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Verificar empaquetado ARM64 sin publicar desde ramas o PR
         env:
           COMMIT: ${{ github.sha }}
         run: |
