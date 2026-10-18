@@ -53,6 +53,14 @@ integration. `allow_auto_merge=false`; squash está disponible, también merge/r
 No se pudo conocer el plan, verificar protecciones existentes ni configurarlas.
 El 403 NO demuestra que no exista protección ni que el plan sea gratuito.
 
+Comprobación adicional de lectura: `GET branches/main` sí informa **protected=false**,
+`protection.enabled=false` y checks obligatorios vacíos. `GET rulesets` responde 403
+con **Upgrade to GitHub Pro or make this repository public to enable this feature**.
+Por tanto main está sin protección reportada y rulesets no está habilitado en las
+condiciones actuales del repositorio privado. No se consultó facturación ni el
+nombre exacto del plan. Mantenerlo privado: el propietario debe revisar la mejora
+de plan y habilitar las reglas; la integración no puede efectuar esos cambios.
+
 La auditoría local de historia gitleaks v8.30.1 detectó 13 hallazgos (generic-api-key
 y private-key) en commits anteriores, incluidos notebooks y un .env antiguo. No se
 comprobó vigencia ni se copiaron valores. El job security queda deliberadamente en

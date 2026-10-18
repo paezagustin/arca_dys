@@ -12,7 +12,9 @@
   39140208980, código 4e3f0bc, 332 pruebas; mismo PG/datos sintéticos preservados.
 - [ ] CI remoto GLOBAL exitoso: security y ci-required fallan por historia (13),
   árbol actual sin hallazgos. PR #11 draft, sin integración.
-- [ ] Protección main/plan GitHub: conexión sin administración; consulta 403.
+- [ ] Protección main/plan GitHub: main protected=false/checks vacíos; rulesets
+  responde 403 requiriendo Pro o repo público. Mantener privado, revisar mejora
+  de plan y configurar como propietario; conexión sin administración.
 - [ ] Intervención explícita antes de integrar esta infraestructura a main.
 - [ ] Inventario/instalación, notificación, bootstrap y primera prueba supervisada.
 - [ ] Activación del timer después de comprobar seguridad en la instalación real.

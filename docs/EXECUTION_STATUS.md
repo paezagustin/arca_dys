@@ -49,8 +49,12 @@ historia. security/ci-required deben fallar hasta revisión/revocación y eventu
 baseline puntual expresamente autorizada; rotación sola no elimina historia.
 
 GitHub: privado, conexión push/triage sin admin/maintain, auto-merge desactivado,
-squash disponible. Consulta de protección main: 403 por permiso de integración;
-plan y reglas no verificables ni modificables. Pasos de propietario en CI_CD.md.
+squash disponible. Endpoint de protección detallada: 403 por permiso de integración.
+Lectura adicional branches/main: protected=false, protection.enabled=false, checks
+obligatorios vacíos. Endpoint rulesets: 403, exige Upgrade to GitHub Pro or make this
+repository public. El plan exacto no se consultó, pero esa función no está habilitada
+para este repo privado y main figura sin protección. Mantener privado; mejora de
+plan/reglas a cargo del propietario. Pasos y distinción de garantías en CI_CD.md.
 
 Publicado: [PR #11](https://github.com/paezagustin/arca_dys/pull/11), DRAFT, sin merge.
 Commits técnicos ad6ff97, 030f38d y 4e3f0bc; este documento registra su evidencia.

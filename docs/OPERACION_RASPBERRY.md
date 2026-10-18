@@ -4,6 +4,10 @@ Procedimiento para ejecutar posteriormente en la Raspberry, en una terminal Bash
 Este procedimiento de datos/migraciones no se ejecuta por CI ni por un push.
 H19 reemplaza la prohibición general de CD: ver [CI_CD.md](CI_CD.md) para las
 actualizaciones rutinarias automáticas y su primera activación supervisada.
+Con el código H19, preparar también el directorio de control persistente y sus
+marcadores según CI_CD.md ANTES de iniciar fastapi: el bind obligatorio no crea
+la ruta ausente y el worker productivo no opera sin protocol-v1. No usar el arranque
+de esta guía para eludir el cierre seguro del código antiguo o la pausa de bootstrap.
 Reutiliza el SSD montado en /mnt,
 el directorio /mnt/datos/docker/arca_dys y PostgreSQL existente.
 
