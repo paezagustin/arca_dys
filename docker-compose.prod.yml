@@ -18,6 +18,7 @@ services:
     restart: unless-stopped
   fastapi:
     container_name: fastapi_app
+    stop_grace_period: 5m
     build:
       context: .
       target: production
@@ -26,9 +27,16 @@ services:
       ENV: production
       INTEGRATIONS_MODE: production
       ALLOW_LIVE_OPERATIONS: ${ALLOW_LIVE_OPERATIONS:?Configurar explícitamente ALLOW_LIVE_OPERATIONS}
+      DEPLOY_CONTROL_PATH: /run/arca-deploy
     volumes:
       - ${ARCA_CERTIFICATES_PATH:-/mnt/datos/docker/arca_dys/certificates}:/run/arca:ro
       - ${APP_LOGS_PATH:-/mnt/datos/docker/arca_dys/logs}:/app/logs
+      - type: bind
+        source: ${DEPLOY_CONTROL_PATH:-/mnt/datos/docker/arca_dys/deploy-control}
+        target: /run/arca-deploy
+        read_only: true
+        bind:
+          create_host_path: false
     ports:
       - 127.0.0.1:8001:8000
     depends_on:

@@ -1,0 +1,11 @@
+[Unit]
+Description=Check integrated ARCA DYS release every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+RandomizedDelaySec=15
+Unit=arca-dys-deploy.service
+
+[Install]
+WantedBy=timers.target

@@ -6,6 +6,25 @@ en Raspberry Pi 5. Usar FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Comp
 Leer README, docs/ALCANCE.md, docs/ROADMAP.md y docs/EXECUTION_STATUS.md al retomar.
 Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
+## CI/CD seguro H19 (reemplaza la prohibición anterior de autodespliegue)
+- Trabajar en ramas temporales task/* o fix/*; PR a main, CI obligatorio, squash y
+  eliminar la rama al integrar. No crear dev permanente ni publicar directo a main.
+- Codex puede integrar tareas rutinarias tras comprobar TODOS los jobs y el SHA
+  definitivo. No tratar skipped/neutral/pending como éxito. Ver docs/CI_CD.md.
+- Cambios fiscales, destructivos, DB, infraestructura, seguridad, dependencias o
+  credenciales requieren intervención explícita ANTES de integrar. Esta primera
+  implementación H19 queda en PR hasta esa intervención, aun con CI verde.
+- CI GitHub alojado, nunca secretos/certificados productivos ni runner en Raspberry.
+  Agente pull local instala solo imagen del main validado; política y código del
+  agente instalados por root, no actualizados desde el artefacto.
+- Rutinas permitidas por lista positiva en el agente; cualquier otro cambio exige
+  aprobación local del SHA. Migraciones SIEMPRE mantenimiento con backup/ensayo;
+  la aprobación del SHA no autoriza migrar automáticamente.
+- No activar timer ni efectuar primer despliegue sin instalación inventariada,
+  bootstrap supervisado del protocolo y prueba de drenaje/recuperación.
+- Mantener PostgreSQL/NGROK existentes. Nunca limpieza/importación al desplegar,
+  rollback fiscal/de datos ni servicios nuevos sobre sus volúmenes.
+
 ## Ajustes de interfaz y correcciones de Gestión H18
 - Importes destacados con signo y número en la misma línea; tarjetas adaptables.
 - Resumen con separadores/colores y tablas legibles, sin cambiar sus cálculos.
@@ -33,7 +52,8 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 ## Preparación de despliegue H15 (prevalece sobre la limpieza total propuesta)
 - El usuario confirmó: conservar control de facturación y limpiar el resto de Gestión.
   Solicita comandos para ejecutar ÉL posteriormente en la Raspberry, no ejecución
-  productiva por el agente. No acceder ni desplegar allí en esta sesión.
+  productiva por el agente. H19 habilita CD futuro tras bootstrap supervisado;
+  la limpieza H15 permanece exclusivamente manual y separada.
 - Reutilizar /mnt/datos/docker/arca_dys y el cluster PostgreSQL existente. Guardar
   respaldo/configuración/imagen, ensayar en copia, migrar a head y recién limpiar.
 - scripts/reset-business-data.sql es una operación MANUAL puntual de datos, no una
@@ -130,12 +150,13 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 
 ## Autonomía y publicación
 El usuario autorizó cambios, dependencias necesarias, pruebas locales, commits y
-push directo a GitHub sin revisión ni aprobación por tarea. Continuar los pasos
+push a ramas temporales. Integrar mediante PR y squash según H19. Continuar los pasos
 ordinarios del hito solicitado; registrar decisiones y evidencia. Publicar solo
 cambios comprobados y nunca usar force-push ni descartar cambios ajenos.
 El roadmap es la secuencia de trabajo, no evidencia de funcionalidades completadas.
 No modificar configuración global de Codex ni intentar anular su sandbox.
-No desplegar en la Raspberry como efecto de un push. No crear auto-deploy.
+El despliegue ordinario solo sigue a main integrado con CI exitoso y agente activado.
+La primera activación es supervisada; cambios sensibles requieren intervención.
 No rotar claves ni reescribir historial como parte de este trabajo: el usuario
 hará esa rotación después. No introducir nuevas claves ni datos privados en Git.
 
@@ -171,7 +192,7 @@ No ejecutar DROP/TRUNCATE ni importar fixtures sobre la base productiva desde el
 agente. El único reset manual futuro autorizado es el SQL restringido H15 que el
 usuario ejecutará luego según la guía y con respaldo; no borrado fiscal/cluster.
 Los retiros de esquema autorizados solo se aplican mediante su migración probada,
-durante una actualización coordinada con backup; esta sesión no despliega en Raspberry.
+durante una actualización coordinada con backup; nunca como parte del CD ordinario.
 Conservar originales privados fuera de Git; hashes y recibo de carga JSON trazables.
 Los metadatos Excel anteriores quedan sin rutas de lectura/escritura ni pantallas.
 Dinero nuevo: Decimal/NUMERIC. Migrar Float heredado en una tarea con conciliación.

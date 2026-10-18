@@ -22,7 +22,10 @@ def confirm_and_process(client, response):
 
 
 def test_startup_health_and_logo(client):
-    assert client.get("/health").json() == {"status": "ok", "environment": "test", "integrations": "mock"}
+    health = client.get("/health").json()
+    assert health == {"status": "ok", "environment": "test", "integrations": "mock",
+                      "commit": "unknown", "deployment_protocol": 1,
+                      "paused": False, "revision": "0013_mp_identity", "worker_alive": None}
     assert "Modo simulado" in client.get("/dev").text
     assert client.get("/assets/logo-dulce-salado.jpg").status_code == 200
 

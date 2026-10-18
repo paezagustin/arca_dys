@@ -1,7 +1,14 @@
-# Despliegue manual en Raspberry Pi
+# Mantenimiento inicial y migraciones en Raspberry Pi
 
 Procedimiento para ejecutar posteriormente en la Raspberry, en una terminal Bash.
-No se ejecuta desde Windows, CI ni por un push. Reutiliza el SSD montado en /mnt,
+Este procedimiento de datos/migraciones no se ejecuta por CI ni por un push.
+H19 reemplaza la prohibición general de CD: ver [CI_CD.md](CI_CD.md) para las
+actualizaciones rutinarias automáticas y su primera activación supervisada.
+Con el código H19, preparar también el directorio de control persistente y sus
+marcadores según CI_CD.md ANTES de iniciar fastapi: el bind obligatorio no crea
+la ruta ausente y el worker productivo no opera sin protocol-v1. No usar el arranque
+de esta guía para eludir el cierre seguro del código antiguo o la pausa de bootstrap.
+Reutiliza el SSD montado en /mnt,
 el directorio /mnt/datos/docker/arca_dys y PostgreSQL existente.
 
 **Decisión confirmada:** conservar el control de facturación y limpiar el resto
@@ -377,7 +384,8 @@ después del backup, conciliarlas antes de retroceder; el backup no las deshace 
 En actualizaciones posteriores no se repite limpieza ni importación inicial:
 respaldo, ensayo de migraciones, actualización de código/imagen, migración manual
 y recreación solo de fastapi. NGROK/MP/certificados y volúmenes siguen iguales.
-No se agrega auto-deploy, CRON ni rotación de claves.
+H19 agrega CD ordinario sin migración mediante agente pull, según CI_CD.md.
+No se agrega CRON de backups ni rotación de claves.
 
 ## Evidencia y límites
 

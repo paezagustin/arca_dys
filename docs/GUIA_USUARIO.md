@@ -98,7 +98,9 @@ docker compose -f docker-compose.dev.yml up -d
 
 No usar down --volumes para detener desarrollo. Si no abre, comprobar Docker y el
 puerto 8001 y consultar los logs de fastapi. La actualización de la Raspberry se
-hace por separado siguiendo OPERACION_RASPBERRY.md; ningún push la despliega.
+hace siguiendo OPERACION_RASPBERRY.md para mantenimiento inicial/migraciones.
+Tras activar de forma supervisada el CI/CD de CI_CD.md, los cambios rutinarios
+integrados en main con pruebas exitosas se publican automáticamente.
 
 ## Sueldos
 Elegir fecha, empleado y monto. Tipo empieza en Mercado Pago y se puede cambiar

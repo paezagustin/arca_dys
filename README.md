@@ -62,7 +62,8 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 
 ## Documentación
 
-- [Reglas para Codex](AGENTS.md): autonomía, push directo y prohibición de pruebas productivas.
+- [Reglas para Codex](AGENTS.md): ramas temporales, PR/squash y pruebas aisladas.
+- [CI/CD seguro](docs/CI_CD.md): controles, instalación supervisada y recuperación.
 - [Alcance definitivo](docs/ALCANCE.md): decisiones, exclusiones y requisitos.
 - [Roadmap](docs/ROADMAP.md) y [estado reanudable](docs/EXECUTION_STATUS.md).
 - [Arquitectura y revisión de campos](docs/ARQUITECTURA.md).
@@ -83,7 +84,9 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 `docker-compose.prod.yml` está separado del entorno local. Requiere .env.prod,
 certificados y configuración explícita. Antes de cualquier actualización, identificar
 la instalación efectiva, hacer backup en el SSD, ensayar adopción/migración en copia
-y seguir la [guía de despliegue manual](docs/OPERACION_RASPBERRY.md). El usuario
+y seguir la [guía de mantenimiento inicial](docs/OPERACION_RASPBERRY.md). Después
+del bootstrap supervisado, el [agente CI/CD](docs/CI_CD.md) publica imágenes ARM64
+del main validado sin migraciones automáticas. El usuario
 confirmó conservar cobros/facturas/control fiscal y limpiar únicamente Gestión,
 Sueldos y Fiados con el comando puntual documentado, después de migrar. No borrar
 la DB ni el directorio PostgreSQL. Mantener el dominio NGROK y las credenciales

@@ -2,6 +2,7 @@
 import logging
 from app.services.mp_inbox import MPInbox
 from app.services.billing import BillingService
+from app.core.deployment import DeploymentBlocked
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,9 @@ def worker(stop):
                 return
             try:
                 processed = operation() or processed
+            except DeploymentBlocked:
+                stop.wait(3)
+                break
             except Exception as error:
                 logger.error("Error de procesamiento | módulo=%s | tipo=%s", name, type(error).__name__)
         if not processed:

@@ -111,6 +111,10 @@ ejecuta por CI/arranque. Los comandos completos están en OPERACION_RASPBERRY.md
 También conserva identidades, snapshots originales y recibos de transición MP.
 
 ## Antes de usar el nuevo Compose en producción
+H19 habilita actualizaciones automáticas sin DDL después de una instalación y
+activación supervisadas. Las instrucciones siguientes siguen siendo obligatorias
+para el primer mantenimiento y para cualquier migración. Ver [CI_CD.md](CI_CD.md).
+
 No actualizar la Raspberry por el solo hecho de recibir un commit: primero hay
 que verificar su configuración efectiva y ensayar sobre una copia del respaldo real.
 No ejecutar este compose contra producción para probarlo.

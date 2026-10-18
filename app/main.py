@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
+import os
+import asyncio
 import logging
 from threading import Thread, Event
 from fastapi import FastAPI, Depends
@@ -42,12 +44,16 @@ async def lifespan(app):
         from app.services.worker import worker
         thread = Thread(target=worker, args=(stop,), daemon=True, name="business-worker")
         thread.start()
+    app.state.business_worker = thread
     try:
         yield
     finally:
         stop.set()
         if thread:
-            thread.join(timeout=2)
+            # No abandonar deliberadamente el hilo en mitad de una llamada fiscal.
+            # El CD drena antes de enviar SIGTERM; esto cubre también cierre normal.
+            while thread.is_alive():
+                await asyncio.to_thread(thread.join, 1)
 
 
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None,
@@ -82,7 +88,12 @@ def home():
 def health():
     with engine.connect() as connection:
         connection.execute(text("SELECT 1"))
-    return {"status": "ok", "environment": ENV, "integrations": INTEGRATIONS_MODE}
+    from app.core.deployment import paused
+    worker = getattr(app.state, "business_worker", None)
+    return {"status": "ok", "environment": ENV, "integrations": INTEGRATIONS_MODE,
+            "revision": ScriptDirectory.from_config(Config("alembic.ini")).get_current_head(),
+            "commit": os.environ.get("APP_COMMIT", "unknown"), "deployment_protocol": 1,
+            "paused": paused(), "worker_alive": worker.is_alive() if worker else None}
 
 
 @app.middleware("http")
@@ -126,3 +137,11 @@ async def invalid_request(request, error):
 async def unexpected_error(request, error):
     logger.error("Error web inesperado | tipo=%s", type(error).__name__)
     return error_response(request, 500, "La operación no pudo confirmarse. Si estabas facturando, revisá las solicitudes guardadas antes de repetirla.")
+
+
+from app.core.deployment import DeploymentBlocked
+
+
+@app.exception_handler(DeploymentBlocked)
+async def deployment_blocked(request, error):
+    return error_response(request, 503, str(error), {"Retry-After": "30"})

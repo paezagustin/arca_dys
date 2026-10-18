@@ -26,7 +26,8 @@ Los nombres y montajes efectivos de la Raspberry se verifican antes de actualiza
 | Adminer 5 | Consultar PostgreSQL manualmente. | Perfil tools, puerto 127.0.0.1:8081. No es la fuente de datos ni reemplaza pg_dump. No es necesario recrear el Adminer existente. |
 | Uptime Kuma | Monitor de disponibilidad. | Perfil monitoring opcional; volumen propio en /mnt/datos/docker/uptime-kuma/data. Conservar el contenedor/volumen existente. El tag actual es latest: no hacer pull ni actualizarlo por efecto de desplegar esta app. |
 | pytest y herramientas de pruebas | Verificación aislada. | requirements-dev.txt, tests/ y Compose test con PostgreSQL descartable/red interna. APIs simuladas, sin secretos productivos. Las pruebas de navegador usan un perfil temporal. |
-| GitHub Actions | Verificar los commits publicados. | .github/workflows/tests.yml: suite, backup/restore, imagen de producción en mock y auditoría de paquetes. Un push no despliega la Raspberry. |
+| GitHub Actions | Validar PR y main integrado. | tests.yml conserva suite/backup/auditoría; agrega secretos, ARM64 y gate estricto. Solo main publica un artefacto; no conecta con Raspberry. |
+| Agente pull systemd | Publicar main validado por conexión saliente. | scripts/deploy_agent.py instalado por root; sin runner/SSH entrante. Imagen exacta, drenaje PostgreSQL/marcador persistente, misma DB/NGROK y recuperación sin datos. Bootstrap supervisado en CI_CD.md. |
 | Samba | Compartir archivos en la Raspberry. | Servicio externo al proyecto. Ya no interviene en la operación de Gestión: los datos están en PostgreSQL. Se puede usar para copiar JSON privados/respaldo; desplegar la app no modifica Samba. |
 
 ## Procesos y flujos
@@ -57,7 +58,9 @@ flowchart LR
 - **Worker:** app/services/worker.py ejecuta MP y solicitudes fiscales en un hilo
   del proceso; espera tres segundos cuando no hay trabajo. La cola vive en DB.
   Reiniciar puede retomar solicitudes previamente confirmadas: antes del despliegue
-  hay que revisar las pendientes, no crear otra solicitud ni borrar su evidencia.
+  hay que drenar con el protocolo H19. Una barrera compartida cubre entrada,
+  procesamiento y recuperación; paused impide operaciones nuevas mientras el host
+  espera el bloqueo exclusivo. El cierre espera al hilo; nunca reemite como prueba.
 - **Gestión:** ventas/egresos son independientes de cobros/facturas. Sueldos reducen
   Ganancia una vez; Fiados es un registro independiente. Los históricos JSON sin
   desglose conservan efectivo/MP NULL. Importación solo por consola, con transacción

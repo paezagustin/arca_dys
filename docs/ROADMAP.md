@@ -1,5 +1,25 @@
 # Roadmap y condiciones de salida
 
+## H19 · CI/CD fiscalmente seguro
+- [x] Investigación de main 9509fbb, worker, persistencia, montajes y CI existentes.
+- [x] Ramas task/fix, PR/squash y separación de cambios sensibles/rutinarios.
+- [x] CI conservado/ampliado, ARM64, secretos, Compose y gate sin skipped.
+- [x] Agente pull local, política root, commit/artefacto exactos y main integrado.
+- [x] Barrera persistente/lock PostgreSQL, incertidumbre y bloqueo por migración.
+- [x] Recuperación solo de imagen, evidencia, contingencias y guías actualizadas.
+- [ ] Resolver los 13 hallazgos de secretos en historia (no ocultarlos ni rotar aquí).
+- [x] CI funcional/ARM64 y ensayo real de reemplazo/rollback Docker del PR: run
+  39140208980, código 4e3f0bc, 332 pruebas; mismo PG/datos sintéticos preservados.
+- [ ] CI remoto GLOBAL exitoso: security y ci-required fallan por historia (13),
+  árbol actual sin hallazgos. PR #11 draft, sin integración.
+- [ ] Protección main/plan GitHub: main protected=false/checks vacíos; rulesets
+  responde 403 requiriendo Pro o repo público. Mantener privado, revisar mejora
+  de plan y configurar como propietario; conexión sin administración.
+- [ ] Intervención explícita antes de integrar esta infraestructura a main.
+- [ ] Inventario/instalación, notificación, bootstrap y primera prueba supervisada.
+- [ ] Activación del timer después de comprobar seguridad en la instalación real.
+
+
 ## H18 · Lectura de Resumen y correcciones en Gestión
 - [x] Signo e importe unidos y tarjetas adaptables; reportes con colores/separadores.
 - [x] Administración/sesión y ARCA DYS abajo de la barra lateral, con margen.
