@@ -29,8 +29,8 @@ intermedia de facturación parcial. La ampliación H10 incorpora Sueldos y Fiado
 | O02 | Compose separados dev/test/prod; PostgreSQL 17.8 de referencia, sin upgrade mayor en este trabajo. |
 | O03 | Alembic y adopción comprobada del esquema existente; backup manual en SSD antes de migrar. |
 | O04 | Facturación/Gestión/Resumen/Sueldos/Fiados sin login con sesión local y CSRF. Otras secciones solo admin; webhook con contrato propio. |
-| O05 | Despliegue MANUAL futuro por el usuario: conservar control fiscal/MP/configuración; tras backup y ensayo, migrar y limpiar solo Gestión/proveedores/importaciones/Sueldos/Fiados. Reutilizar SSD y dominio NGROK actuales. Sin despliegue por el agente. |
-| D01 | Roadmap, estado reanudable, documentación técnica y guía de uso actualizados; commits/push directos con evidencia. |
+| O05 | H19: CD automático de main validado tras bootstrap supervisado; conservar control fiscal/MP, SSD y NGROK. Mantenimiento/migraciones/limpieza inicial separados, manuales, con backup/ensayo. Ver CI_CD.md. |
+| D01 | Roadmap, estado y guías actualizados; ramas temporales, PR, CI obligatorio, squash y evidencia. Cambios sensibles requieren intervención explícita. |
 
 ## Exclusiones
 Facturación parcial, importes aplicados y saldos de pagos; métricas de pendientes

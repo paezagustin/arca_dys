@@ -1,0 +1,17 @@
+{
+  "checkout": "/opt/arca-dys",
+  "compose_file": "/opt/arca-dys/docker-compose.prod.yml",
+  "env_file": "/opt/arca-dys/.env.prod",
+  "project": "REEMPLAZAR_POR_PROYECTO_EXISTENTE",
+  "ssd_mount": "/mnt",
+  "ssd_uuid": "REEMPLAZAR_POR_UUID_REAL",
+  "postgres_container": "pg_dys",
+  "app_container": "fastapi_app",
+  "postgres_data": "/mnt/datos/docker/arca_dys/postgres",
+  "certificates": "/mnt/datos/docker/arca_dys/certificates",
+  "logs": "/mnt/datos/docker/arca_dys/logs",
+  "control_directory": "/mnt/datos/docker/arca_dys/deploy-control",
+  "state_directory": "/mnt/datos/docker/arca_dys/deploy-state",
+  "token_file": "/etc/arca-dys-deploy/github-token",
+  "health_url": "http://127.0.0.1:8001/health"
+}

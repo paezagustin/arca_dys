@@ -1,6 +1,40 @@
 # Estado de ejecución
 
-Actualizado: 2026-10-17, America/Buenos_Aires.
+Actualizado: 2026-10-18, America/Buenos_Aires.
+
+## H19 · CI/CD implementado, activación bloqueada y pendiente
+
+Base main verificada por fetch: 9509fbb304e59abc53ac5000a756c98999b386a0.
+Rama task/secure-cicd. Workflows/scripts/servicios systemd y docs/CI_CD.md listos
+para revisión. No se accedió a Raspberry ni DB dev/productiva; cero operaciones
+fiscales/MP reales. No se presume terminada la instalación H15/H17.
+
+Arquitectura: CI alojado GitHub, artefacto ARM64 solo main, agente pull saliente
+root local sin runner ni secretos productivos en GitHub. Lista positiva rutinaria,
+aprobación SHA sensible, PR integrado/checks estrictos, SSD/proyecto/montajes,
+barrera PostgreSQL + marcador persistente, sonda de revisión sin migrar y rollback
+de imagen con mismo esquema. Nunca postgres/ngrok up, limpieza ni importación.
+
+Evidencia local provisional (se actualizará con el cierre): 319 pruebas completas
+aprobadas en PostgreSQL aislado antes de las últimas ampliaciones de preflight;
+backup/checksum/restore 0013_mp_identity; Compose ficticio; imagen ARM64 construida,
+pip check y smoke HTTP/worker/PDF en QEMU con DB temporal propia: OK. pip-audit sin
+vulnerabilidades conocidas. Reemplazo/rollback Docker real se ejecutará en CI Linux;
+pruebas unitarias de fallos/recuperación ya ejecutadas. No es QA visual de navegador.
+
+Bloqueo real de seguridad: gitleaks 8.30.1 encontró 13 hallazgos de generic-api-key/
+private-key en historia anterior (incluidos notebooks/.env). Vigencia desconocida;
+valores no mostrados. No se rotaron claves, ignoraron fingerprints ni reescribió
+historia. security/ci-required deben fallar hasta revisión/revocación y eventual
+baseline puntual expresamente autorizada; rotación sola no elimina historia.
+
+GitHub: privado, conexión push/triage sin admin/maintain, auto-merge desactivado,
+squash disponible. Consulta de protección main: 403 por permiso de integración;
+plan y reglas no verificables ni modificables. Pasos de propietario en CI_CD.md.
+
+Pendiente: PR/CI remoto, resolución de hallazgos, protección administrativa,
+intervención explícita previa al merge sensible y bootstrap/prueba/activación
+supervisados en Raspberry. El agente no está instalado ni activado allí.
 
 ## Estado vigente
 H18 implementado y comprobado localmente: Resumen con importes en una línea,

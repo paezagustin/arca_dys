@@ -5,6 +5,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 FROM base AS production
+ARG APP_COMMIT=unknown
+ENV APP_COMMIT=$APP_COMMIT
+LABEL org.opencontainers.image.revision=$APP_COMMIT
 # PDF local con ReportLab: sin navegador ni servicio remoto.
 COPY . .
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

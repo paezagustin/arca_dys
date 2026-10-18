@@ -17,6 +17,14 @@ Ejecutar suite y perfil de backup en secuencia: comparten la DB descartable y no
 deben modificarla al mismo tiempo.
 
 ## Cobertura crítica
+H19 incorpora `tests/test_deployment_barrier.py` (concurrencia PostgreSQL y gateway
+simulado lento) y `test_deploy_agent.py` (jobs omitidos/fallidos, PR/squash, SSD y
+montajes, SHA fuera de orden, rollback y artefactos). CI ejecuta además
+`python -m scripts.test_cd` en Linux: reemplaza contenedores REALES de un proyecto
+efímero con DB tmpfs/red interna, arranque fallido deliberado, recuperación y sentinel
+de datos preservado. No utiliza token ni preflight del host productivo. No es una
+prueba de Raspberry/systemd real. Ver CI_CD.md y EXECUTION_STATUS.md para resultados.
+
 | Área | Verificación ejecutable |
 | --- | --- |
 | Aislamiento | Combinaciones de configuración rechazadas, clientes reales bloqueados, URLs test comprobadas y rutas dev ausentes en producción. |

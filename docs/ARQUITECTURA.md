@@ -157,7 +157,13 @@ vez; no se insertan también en business_entries. customer_credits es independie
 marcar pagado no produce movimientos. Excel añade hojas de desglose y sueldos sin
 alterar las seis columnas originales. No hay nuevas dependencias/procesos/servicios.
 
-## Despliegue manual y limpieza inicial
+## Mantenimiento inicial y CD
+H19 incorpora un agente pull systemd fuera de la aplicación: lee CI/artefactos de
+GitHub con token local de lectura; reemplaza solo fastapi. La aplicación conserva
+el worker interno y añade una barrera PostgreSQL compartida y marcador persistente
+de mantenimiento. No agrega broker, otra DB ni agente NGROK. El supervisor no se
+actualiza desde el artefacto. Ver CI_CD.md para confianza, límites y recuperación.
+
 La preparación H15 conserva íntegro el control fiscal/MP y configuración. El SQL
 puntual de mantenimiento trunca solo siete tablas de Gestión con RESTRICT; requiere
 head y transacción. No es una revisión Alembic ni se ejecuta al arrancar. El usuario

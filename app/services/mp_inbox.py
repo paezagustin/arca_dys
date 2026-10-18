@@ -16,6 +16,7 @@ from app.models.payment import Payment
 from app.models.mp_identity import MPPaymentIdentity
 from app.services.mp import get_mp_gateway
 from app.services.payments import normalize_payment, provider_date
+from app.core.deployment import coordinated
 
 TOPICS = {"payment", "merchant_order", "order", "point_integration_wh"}
 
@@ -79,6 +80,7 @@ class MPInbox:
             db.commit()
             return event_id
 
+    @coordinated
     def process_one(self, event_id=None):
         with Session(self.engine) as db:
             query = select(MPEvent).where(MPEvent.state.in_(["pending", "error"]), MPEvent.next_attempt_at <= utcnow())

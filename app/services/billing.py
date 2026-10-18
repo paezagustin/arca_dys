@@ -19,6 +19,7 @@ from app.services.arca.billing import validate_amount
 from app.services.fiscal_gateway import gateway_for, voucher_payload, authorization, FiscalRejected
 from app.services.settings import fiscal_configuration
 from app.services.mp_identity import operational_payment
+from app.core.deployment import coordinated
 
 logger = logging.getLogger(__name__)
 UNCERTAIN_STATES = ["sending", "uncertain", "check_queued", "retry_queued"]
@@ -66,6 +67,7 @@ class BillingService:
                 connection.execute(text("SELECT pg_advisory_unlock(72421, :key)"), {"key": point * 100 + 11})
                 connection.commit()
 
+    @coordinated
     def issue(self, payment_ids=(), *, manual_amount=None, idempotency_key=None, expected_total=None, settings_version=None, enqueue=False):
         ids = sorted(set(payment_ids))
         if manual_amount is None and not ids:
@@ -189,6 +191,7 @@ class BillingService:
         db.commit()  # Factura + todos los vínculos + todas las marcas + resultado, juntos.
         return result(row)
 
+    @coordinated
     def recover(self, request_id, *, retry=False):
         with Session(self.engine) as read:
             found = read.get(BillingRequest, request_id)
@@ -234,6 +237,7 @@ class BillingService:
             raise ValueError("El emisor del intento no coincide con los certificados configurados")
         return self.gateway_factory(self.engine)
 
+    @coordinated
     def schedule(self, request_id, *, retry=False):
         with Session(self.engine, expire_on_commit=False) as db:
             row = db.scalar(select(BillingRequest).where(BillingRequest.id == request_id).with_for_update())
@@ -246,6 +250,7 @@ class BillingService:
             db.commit()
             return result(row)
 
+    @coordinated
     def process_one_queued(self):
         # Detectar un proceso interrumpido sin confundirlo con una emisión activa.
         # Solo una consulta se agenda automáticamente; jamás una nueva emisión.

@@ -2,12 +2,19 @@ name: Pruebas aisladas
 on: [push, pull_request]
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+      - name: Validar Compose sin secretos
+        run: python -m scripts.check_compose
       - name: Probar con PostgreSQL y servicios simulados
         run: docker compose -f docker-compose.test.yml run --build --rm test
       - name: Verificar backup y restauración con datos ficticios
@@ -19,6 +26,77 @@ jobs:
           docker run --rm --network arca-dys-test_isolated -e ENV=test -e INTEGRATIONS_MODE=mock -e ALLOW_LIVE_OPERATIONS=false -e DATABASE_URL=postgresql://arca_test:local-test-only@postgres:5432/arca_dys_test arca-dys-runtime python -m scripts.smoke_runtime
       - name: Auditar dependencias públicas de ejecución
         run: docker run --rm -v "$PWD/requirements.txt:/scan/requirements.txt:ro" python:3.11-slim-bookworm sh -c 'pip install -q pip-audit==2.10.1 && pip-audit -r /scan/requirements.txt --progress-spinner off'
+      - name: Reemplazo y recuperación reales en Docker aislado
+        run: python -m scripts.test_cd
       - name: Limpiar únicamente el entorno de esta suite
         if: always()
         run: docker compose -f docker-compose.test.yml down --volumes --remove-orphans
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Auditar secretos en historia y árbol actual (salida redactada)
+        run: |
+          curl -fsSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o /tmp/gitleaks.tar.gz
+          echo '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  /tmp/gitleaks.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          history=0
+          tree=0
+          /tmp/gitleaks git --redact=100 --no-banner --log-level error --report-format json --report-path "$RUNNER_TEMP/history.json" . || history=$?
+          /tmp/gitleaks dir --redact=100 --no-banner --log-level error --report-format json --report-path "$RUNNER_TEMP/tree.json" . || tree=$?
+          python -c 'import json,os,pathlib; root=pathlib.Path(os.environ["RUNNER_TEMP"]); print({name: len(json.loads((root/(name+".json")).read_text())) if (root/(name+".json")).is_file() else "scan-error" for name in ("history","tree")})'
+          test "$history" -eq 0 && test "$tree" -eq 0
+  arm64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+        with:
+          platforms: arm64
+      - name: Construir imagen productiva ARM64 del commit exacto
+        env:
+          COMMIT: ${{ github.sha }}
+        run: docker build --platform linux/arm64 --target production --build-arg APP_COMMIT="$COMMIT" -t "arca-dys:$COMMIT" .
+      - name: Smoke HTTP, worker simulado y dependencias en ARM64
+        env:
+          COMMIT: ${{ github.sha }}
+        run: |
+          docker compose -f docker-compose.test.yml up -d --wait postgres
+          docker run --rm --platform linux/arm64 "arca-dys:$COMMIT" pip check
+          docker run --rm --platform linux/arm64 --network arca-dys-test_isolated -e ENV=test -e INTEGRATIONS_MODE=mock -e ALLOW_LIVE_OPERATIONS=false -e DATABASE_URL=postgresql://arca_test:local-test-only@postgres:5432/arca_dys_test "arca-dys:$COMMIT" python -m scripts.smoke_runtime
+      - name: Preparar artefacto solo para main integrado
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          COMMIT: ${{ github.sha }}
+        run: |
+          mkdir release
+          docker save "arca-dys:$COMMIT" -o release/image.tar
+          python -m scripts.release_metadata "$COMMIT" release
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: production-arm64-${{ github.sha }}
+          path: release/*
+          retention-days: 14
+          compression-level: 0
+          if-no-files-found: error
+      - name: Limpiar únicamente PostgreSQL descartable
+        if: always()
+        run: docker compose -f docker-compose.test.yml down --volumes --remove-orphans
+  ci-required:
+    if: always()
+    needs: [tests, security, arm64]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Exigir éxito explícito de todos los controles
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: python -c 'import json,os; results=json.loads(os.environ["RESULTS"]); assert all(r["result"] == "success" for r in results.values()), results'
