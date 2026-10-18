@@ -7,7 +7,9 @@
 - [x] Eliminar venta/egreso con confirmación, baja lógica, CSRF y control de versión.
 - [x] Originales/importaciones/evidencia fiscal preservados; reenvíos y concurrencia.
 - [x] 279 pruebas locales, backup/checksum/restauración y navegador real QA.
-- [ ] Publicación y cierre de CI.
+- [x] Publicación y cierre de CI.
+Completado: 096e757d00936c8001445eaf5ccd93c4bf30c06a; CI 39084144898 aprobado:
+279 pruebas, restauración, imagen final simulada, pip check y auditoría.
 Sin migraciones nuevas ni cambios de revisiones publicadas. Sin operaciones reales.
 
 ## H17 · Transición conservadora de pagos MP históricos repetidos

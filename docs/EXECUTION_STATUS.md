@@ -26,7 +26,13 @@ No requiere migración ni cambia las revisiones publicadas o los registros fisca
   Sin errores/advertencias de consola en Resumen. Capturas locales ignoradas en Git.
 - Sin acceso a Raspberry, respaldo real o producción; sin cambios de credenciales,
   archivos privados ni DB dev. No se emitieron facturas ni se consultaron proveedores.
-- Guías GESTION.md y GUIA_USUARIO.md actualizadas. Publicación/CI pendientes de cierre.
+- Guías GESTION.md y GUIA_USUARIO.md actualizadas. git diff --check aprobado;
+  sin archivos privados ni migraciones modificadas. Contenedores QA/test y visor
+  localhost detenidos y retirados; dev conservado.
+- Publicado en main: 096e757d00936c8001445eaf5ccd93c4bf30c06a. CI completo aprobado:
+  https://github.com/paezagustin/arca_dys/actions/runs/39084144898.
+  Evidencia: 279 passed, 1 warning, 80.64s; backup/checksum/restauración 0013,
+  imagen de ejecución simulada, pip check y auditoría sin vulnerabilidades conocidas.
 
 ### Estado H17 publicado
 H17 implementado y comprobado localmente: transición conservadora de históricos MP
