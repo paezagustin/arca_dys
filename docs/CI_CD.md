@@ -20,7 +20,8 @@ backup/checksum/restauración, producción x86 en mock, pip check y pip-audit.
 Se agregan Compose ficticio, gitleaks redactado sobre historia/árbol, construcción
 productiva ARM64 y smoke HTTP/worker/PDF bajo QEMU, sin credenciales productivas.
 `ci-required` exige success de tests/security/arm64: skipped/neutral/pending no
-alcanzan. Corre en PR y push. Solo un push a main produce el artefacto, con SHA,
+alcanzan. Corre en PR y push a main, evitando dos builds QEMU por cada cambio del PR.
+Solo un push a main produce el artefacto publicable, con SHA,
 revisión, protocolo, image ID y SHA256 del tar. Aunque el artefacto exista antes
 de terminar otro job, el agente espera el éxito de TODO el run y cada job requerido.
 La validación HTTP funcional no es revisión visual en navegador.
