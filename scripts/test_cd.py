@@ -5,15 +5,28 @@ token ni preflight de producción. Los SHA de las tres imágenes son ficticios.
 """
 import json
 from pathlib import Path
-import socket
+import io
 import subprocess
 import tempfile
 from uuid import uuid4
+from urllib.parse import urlparse
 from scripts.deploy_agent import Host, Blocked, atomic_json, deploy
 
 
 def run(*args, **kwargs):
     return subprocess.check_output(args, text=True, **kwargs).strip()
+
+
+class FixtureHost(Host):
+    def open_url(self, url):
+        # Red Docker internal:true no publica puertos al host. Mismo smoke HTTP,
+        # con transporte loopback DENTRO de la app y sin abrir salida a Internet.
+        path = urlparse(url).path
+        body = self.command("docker", "exec", self.config["app_container"], "python", "-c",
+                            "import sys,urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8000'+sys.argv[1],timeout=5).read().decode(),end='')", path)
+        response = io.BytesIO(body.encode())
+        response.status = 200
+        return response
 
 
 def main():
@@ -23,9 +36,6 @@ def main():
         for directory in ("control", "state", "certs", "logs"):
             (root / directory).mkdir()
         (root / "control" / "protocol-v1").touch()
-        with socket.socket() as connection:
-            connection.bind(("127.0.0.1", 0))
-            port = connection.getsockname()[1]
         releases = []
         for index, char in enumerate("abc"):
             commit = char * 40
@@ -46,7 +56,7 @@ def main():
                          "tmpfs": ["/var/lib/postgresql/data"], "networks": ["isolated"],
                          "healthcheck": {"test": ["CMD-SHELL", "pg_isready -U arca_test -d arca_dys_test"], "interval": "1s", "timeout": "3s", "retries": 30}},
             "fastapi": {"container_name": project + "-app", "image": releases[0]["image_id"], "environment": fake_env,
-                        "networks": ["isolated"], "ports": [f"127.0.0.1:{port}:8000"],
+                        "networks": ["isolated"],
                         "volumes": [{"type": "bind", "source": str(root / source), "target": target, "read_only": source != "logs"}
                                     for source, target in [("control", "/run/arca-deploy"), ("certs", "/run/arca"), ("logs", "/app/logs")]]}},
             "networks": {"isolated": {"internal": True}}}
@@ -55,8 +65,8 @@ def main():
         config = {"state_directory": str(root / "state"), "control_directory": str(root / "control"), "checkout": str(root),
                   "env_file": str(root / "fake.env"), "compose_file": str(root / "compose.json"), "project": project,
                   "app_container": project + "-app", "certificates": str(root / "certs"), "logs": str(root / "logs"),
-                  "health_url": f"http://127.0.0.1:{port}/health", "smoke_attempts": 4}
-        host = Host(config)
+                  "health_url": "http://127.0.0.1:8000/health", "smoke_attempts": 4}
+        host = FixtureHost(config)
         atomic_json(host.state / "current.json", releases[0])
         host.use_image(releases[0]["image_id"])
         try:

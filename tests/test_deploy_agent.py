@@ -287,3 +287,90 @@ def test_missing_ssd_and_protocol_fail_closed(configured_host, monkeypatch):
     (host.control / "protocol-v1").unlink()
     with pytest.raises(Blocked, match="bootstrap-required"):
         host.preflight()
+
+
+@pytest.fixture
+def agent_main(tmp_path, monkeypatch):
+    import scripts.deploy_agent as agent
+    import sys
+    host = FakeHost(tmp_path)
+    host.config["token_file"] = str(tmp_path / "token")
+    (tmp_path / "token").write_text("synthetic-token")
+    configuration = tmp_path / "config.json"
+    configuration.write_text(json.dumps(host.config))
+    atomic_json(host.state / "current.json", metadata(OLD, OLD_IMAGE))
+    (host.state / "enabled").touch()
+    api = API()
+    original_get = api.get
+    api.get = lambda path: {"object": {"sha": NEW}} if path == "/git/ref/heads/main" else original_get(path)
+    api.download = lambda artifact, target: target.write_bytes(b"fixture")
+    monkeypatch.setattr(agent, "Host", lambda config: host)
+    monkeypatch.setattr(agent, "GitHub", lambda token: api)
+    monkeypatch.setattr(agent, "unpack", lambda *args: metadata())
+    monkeypatch.setattr(host, "preflight", lambda **kwargs: {"Image": OLD_IMAGE}, raising=False)
+
+    def command(*args, **kwargs):
+        if args[:3] == ("docker", "image", "inspect"):
+            return json.dumps([{"Architecture": "arm64", "Config": {"Labels": {"org.opencontainers.image.revision": NEW}}}])
+        if args[:2] == ("docker", "load"):
+            return "loaded"
+        assert (host.control / "paused").exists()
+        return json.dumps({"protocol": 1, "revision": REVISION})
+
+    monkeypatch.setattr(host, "command", command)
+    monkeypatch.setattr(sys, "argv", ["agent", "--config", str(configuration)])
+    return agent, host, api, configuration
+
+
+def test_agent_pending_ci_is_quiet_and_does_not_lock_out_next_tick(agent_main):
+    agent, host, api, _ = agent_main
+    api.run["status"] = "in_progress"
+    agent.main()
+    assert not (host.state / "failed.json").exists()
+    assert not (host.state / "events.jsonl").exists()
+    assert not host.events
+
+
+def test_agent_failure_blocks_and_notifies_once_then_explicit_retry_can_succeed(agent_main, monkeypatch):
+    import sys
+    agent, host, api, config = agent_main
+    api.run["conclusion"] = "failure"
+    with pytest.raises(SystemExit):
+        agent.main()
+    assert json.loads((host.state / "failed.json").read_text())["error"] == "ci-not-successful"
+    agent.main()
+    assert len((host.state / "events.jsonl").read_text().splitlines()) == 1
+    api.run["conclusion"] = "success"
+    monkeypatch.setattr(sys, "argv", ["agent", "--config", str(config), "--retry"])
+    agent.main()
+    assert json.loads((host.state / "current.json").read_text())["commit"] == NEW
+    assert not (host.state / "failed.json").exists()
+
+
+def test_agent_requires_exact_local_approval_for_sensitive_sha(agent_main, monkeypatch):
+    import sys
+    agent, host, api, config = agent_main
+    api.comparison["files"] = [{"filename": "Dockerfile"}]
+    (host.state / "approved-sha").write_text(OLD)
+    with pytest.raises(SystemExit):
+        agent.main()
+    assert not host.events
+    (host.state / "approved-sha").write_text(NEW)
+    monkeypatch.setattr(sys, "argv", ["agent", "--config", str(config), "--retry"])
+    agent.main()
+    assert json.loads((host.state / "current.json").read_text())["commit"] == NEW
+
+
+def test_agent_manual_recovery_uses_pending_previous_and_keeps_review_block(agent_main, monkeypatch):
+    import sys
+    agent, host, api, config = agent_main
+    (host.control / "paused").touch()
+    atomic_json(host.state / "pending.json", {"previous": metadata(OLD, OLD_IMAGE), "target": metadata()})
+    atomic_json(host.state / "failed.json", {"error": "synthetic"})
+    monkeypatch.setattr(host, "preflight", lambda **kwargs: {"Image": NEW_IMAGE})
+    monkeypatch.setattr(sys, "argv", ["agent", "--config", str(config), "--recover"])
+    agent.main()
+    assert host.events[-2:] == [("replace", OLD_IMAGE), ("smoke", OLD_IMAGE)]
+    assert not (host.control / "paused").exists()
+    assert (host.state / "failed.json").exists()
+    assert json.loads((host.state / "events.jsonl").read_text())["commit"] == OLD

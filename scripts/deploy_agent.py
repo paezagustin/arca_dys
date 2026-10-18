@@ -54,7 +54,11 @@ def atomic_json(path, value):
         os.fsync(output.fileno())
     temporary.chmod(0o600)
     temporary.replace(path)
-    descriptor = os.open(path.parent, os.O_DIRECTORY)
+    sync_directory(path.parent)
+
+
+def sync_directory(path):
+    descriptor = os.open(path, os.O_DIRECTORY)
     try:
         os.fsync(descriptor)
     finally:
@@ -232,13 +236,18 @@ class Host:
         self.use_image(image)
         self.command(*self.compose, "up", "-d", "--no-deps", "--no-build", "--pull", "never", "fastapi", timeout=360)
 
+    def open_url(self, url):
+        parsed = urlparse(url)
+        require(parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "::1"}, "loopback-smoke-required")
+        return urlopen(url, timeout=5)
+
     def smoke(self, metadata):
         cfg = self.config
         stage = "health"
         for _ in range(min(60, max(1, self.config.get("smoke_attempts", 60)))):
             try:
                 stage = "health"
-                with urlopen(cfg["health_url"], timeout=5) as response:
+                with self.open_url(cfg["health_url"]) as response:
                     health = json.load(response)
                 if (health["status"] == "ok" and health["commit"] == metadata["commit"] and health["paused"] is True
                         and health["deployment_protocol"] == 1 and health["revision"] == metadata["revision"]
@@ -247,7 +256,7 @@ class Host:
                     self.command("docker", "exec", cfg["app_container"], "python", "-m", "scripts.deploy_guard", "--drain")
                     # GET sin sesión/escrituras, sin consultar proveedores ni crear cookies.
                     stage = "login-page"
-                    with urlopen(cfg["health_url"].removesuffix("/health") + "/login", timeout=5) as page:
+                    with self.open_url(cfg["health_url"].removesuffix("/health") + "/login") as page:
                         require(page.status == 200 and b"<form" in page.read(), "web-smoke-failed")
                     return
             except Exception:
@@ -259,7 +268,11 @@ class Host:
 def deploy(host, metadata, previous, current_head):
     marker = host.control / "paused"
     require(not marker.exists(), "previous-maintenance-unresolved")
-    marker.write_text("deployment\n")
+    with marker.open("x") as output:
+        output.write("deployment\n")
+        output.flush()
+        os.fsync(output.fileno())
+    sync_directory(host.control)
     try:
         old_probe = json.loads(host.command("docker", "exec", host.config["app_container"], "python", "-m", "scripts.deploy_guard", "--drain"))
         require(old_probe["protocol"] == 1 and old_probe["revision"] == previous["revision"] == metadata["revision"], "maintenance-required")
@@ -307,7 +320,7 @@ def main():
         try:
             if not args.record_bootstrap and not (host.state / "enabled").is_file():
                 return
-            if not args.retry and not args.recover and (host.state / "failed.json").exists():
+            if not args.retry and not args.recover and not args.record_bootstrap and (host.state / "failed.json").exists():
                 return  # El primer fallo ya notificó; requiere revisión explícita.
             app = host.preflight(recovery=args.recover)
             if args.record_bootstrap:
@@ -321,12 +334,14 @@ def main():
                 host.smoke(metadata)
                 host.command("docker", "image", "tag", app["Image"], "arca-dys:rollback-" + commit)
                 atomic_json(host.state / "current.json", metadata)
+                (host.state / "failed.json").unlink(missing_ok=True)
                 print("Bootstrap recorded; paused remains set; timer was not enabled", flush=True)
                 return
             previous = read_json(host.state / "current.json")
             if args.recover:
                 pending = read_json(host.state / "pending.json")
                 old = pending["previous"]
+                commit = old["commit"]
                 require((host.control / "paused").is_file(), "pause-marker-required")
                 require(host.probe(old["image_id"])["revision"] == old["revision"], "rollback-schema-mismatch")
                 host.replace(old["image_id"])

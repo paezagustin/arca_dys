@@ -98,11 +98,14 @@ ejecuta únicamente la sonda sin iniciar web/worker ni clientes externos.
    rechazan con 503 Retry-After (worker espera). La recepción MP sigue guardándose
    antes del ACK; durante el reemplazo el proveedor debe reintentar entregas fallidas.
 4. Bloquear si hay sending/uncertain/check_queued/retry_queued, revisión incompatible
-   o protocolo ausente. No borrar ni cambiar solicitudes para eludir el control.
+   o protocolo ausente. Comparar también el esquema Alembic (tipos, columnas,
+   nulabilidad, índices/FK), sin DDL, conservando solo la equivalencia UNIQUE-vs-index
+   conocida en metadata temporal. Validar presencia de certificados/tokens y emisor
+   local sin consultar proveedores. No borrar solicitudes para eludir el control.
 5. Sonda de la candidata debe coincidir con la antigua. Releer main. Guardar pending,
    imagen/commit/revisión previos; reemplazar solo fastapi. El marcador persiste en
    la versión nueva y durante recuperación: no se consumen colas hasta el smoke.
-6. Verificar HTTP health (commit/revisión/pausa/protocolo), DB y GET /login. No emitir
+6. Verificar HTTP health (commit/revisión/pausa/protocolo/hilo worker vivo), DB y GET /login. No emitir
    ni consultar proveedores como smoke. Guardar current/previous y retirar paused.
 
 Una consulta puntual de actividad NO autoriza reiniciar. La seguridad depende de
