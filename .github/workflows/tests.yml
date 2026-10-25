@@ -29,6 +29,7 @@ jobs:
       - name: Probar imagen de ejecución sin proveedores reales
         run: |
           docker build --target production -t arca-dys-runtime .
+          test "$(docker image inspect arca-dys-runtime --format '{{.Architecture}}')" = "${DOCKER_DEFAULT_PLATFORM#linux/}"
           docker run --rm arca-dys-runtime pip check
           docker run --rm --network arca-dys-test_isolated -e ENV=test -e INTEGRATIONS_MODE=mock -e ALLOW_LIVE_OPERATIONS=false -e DATABASE_URL=postgresql://arca_test:local-test-only@postgres:5432/arca_dys_test arca-dys-runtime python -m scripts.smoke_runtime
       - name: Auditar dependencias públicas de ejecución
