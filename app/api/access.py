@@ -1,3 +1,4 @@
+from app.core.access_cookies import cookie_secure
 import hmac
 import secrets
 from dataclasses import dataclass
@@ -64,7 +65,7 @@ def login_page(request: Request):
     nonce = secrets.token_urlsafe(32)
     response = templates.TemplateResponse(request=request, name="login.html", context={"login_csrf": nonce, "error": None})
     response.set_cookie("arca_login_csrf", nonce, max_age=600, httponly=True,
-                        secure=config.ENV == "production", samesite="strict")
+                        secure=cookie_secure(request, production=config.ENV == "production"), samesite="strict")
     return response
 
 
@@ -88,7 +89,7 @@ async def login(request: Request, db: Session = Depends(get_db)):
         db.delete(previous[0])
         db.commit()
     response = RedirectResponse("/page/invoice", status_code=303)
-    response.set_cookie(COOKIE, token, max_age=43200, httponly=True, secure=config.ENV == "production", samesite="lax")
+    response.set_cookie(COOKIE, token, max_age=43200, httponly=True, secure=cookie_secure(request, production=config.ENV == "production"), samesite="lax")
     response.delete_cookie("arca_login_csrf")
     return response
 

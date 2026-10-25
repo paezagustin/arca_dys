@@ -1,6 +1,29 @@
 # Estado de ejecución
 
-Actualizado: 2026-10-17, America/Buenos_Aires.
+Actualizado: 2026-10-25, America/Buenos_Aires.
+
+## Acceso privado comprobado el 25/10/2026
+
+Se restringió el agente ngrok existente a POST sobre la ruta heredada exacta
+observada en Mercado Pago. Dominio y autenticación existentes conservados;
+política y credenciales reales fuera de Git. Se limitaron los enlaces de
+puertos a las direcciones privadas requeridas y el inspector a loopback.
+
+El usuario autorizó y comprobó el ajuste de cookies para HTTP privado. Este
+código fuente coincide con el ajuste desplegado: dos archivos de acceso
+modificados y un helper nuevo, sin cambios fiscales, de pagos o de esquema.
+
+Evidencia: 83 comprobaciones públicas aprobadas, siete pruebas del selector de
+cookies y sesiones/CSRF desde otra PC por LAN y Tailscale. Un identificador
+deliberadamente inválido llega a 422 con CSRF correcto; sin CSRF devuelve 403.
+Datos comerciales comparados por huellas en nueve tablas. Solo se recrearon
+fastapi_app y ngrok; los otros doce contenedores conservaron su estado.
+
+El usuario confirmó funcionamiento posterior. No se generaron notificaciones
+MP válidas ni operaciones fiscales para probar. La suite integral de esta
+publicación se verifica mediante el CI del PR; no se ejecuta contra producción.
+Ver [acceso privado](ACCESO_PRIVADO.md). Publicar estos fuentes no actualiza
+automáticamente la imagen fijada en el overlay productivo.
 
 ## Estado vigente
 H18 implementado y comprobado localmente: Resumen con importes en una línea,
