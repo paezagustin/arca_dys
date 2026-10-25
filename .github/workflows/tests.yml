@@ -7,11 +7,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        include:
+          - runner: ubuntu-latest
+            platform: linux/amd64
+            architecture: x86_64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            architecture: aarch64
     runs-on: ${{ matrix.runner }}
+    env:
+      DOCKER_DEFAULT_PLATFORM: ${{ matrix.platform }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Comprobar arquitectura del runner
+        run: test "$(uname -m)" = '${{ matrix.architecture }}'
       - name: Probar con PostgreSQL y servicios simulados
         run: docker compose -f docker-compose.test.yml run --build --rm test
       - name: Verificar backup y restauración con datos ficticios
