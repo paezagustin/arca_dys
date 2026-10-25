@@ -90,3 +90,9 @@ Una actualización futura debe conservar el overlay, la política y las listas
 privadas, y revisar la referencia de imagen fijada en el overlay. El Compose
 original por sí solo no incorpora la política privada. No publicar archivos
 privados para resolver esa diferencia.
+
+## Dependencias del repositorio
+
+La publicacion incluye la actualizacion autorizada a Certifi 2026.10.19 y
+Pillow 13.0.0 para resolver la auditoria del CI. Se comprueban x86_64 y ARM64.
+Esto no cambia las dependencias de la imagen que ya funciona en la Raspberry.

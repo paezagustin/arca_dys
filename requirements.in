@@ -14,3 +14,7 @@ alembic==1.20.0
 reportlab==4.5.1
 openpyxl==3.1.5
 defusedxml==0.7.1
+
+# Restricciones de seguridad de dependencias transitivas; validar PDF y ARM64.
+certifi==2026.10.19
+pillow==13.0.0

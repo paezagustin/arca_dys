@@ -25,6 +25,16 @@ publicación se verifica mediante el CI del PR; no se ejecuta contra producción
 Ver [acceso privado](ACCESO_PRIVADO.md). Publicar estos fuentes no actualiza
 automáticamente la imagen fijada en el overlay productivo.
 
+### Dependencias autorizadas para el repositorio
+
+El CI del primer commit aprobó 286 pruebas, respaldo/restauración e imagen
+simulada, pero detectó 38 hallazgos en Certifi 2026.7.22 y Pillow 12.3.0.
+El usuario autorizó actualizar exclusivamente el repositorio a Certifi
+2026.10.19 y Pillow 13.0.0. La matriz de CI valida x86_64 y ARM64 con la suite,
+restauración, PDF simulado, pip check y auditoría. El resultado vigente se
+consulta en los checks del SHA. No se actualiza la imagen productiva de la
+Raspberry mediante este push.
+
 ## Estado vigente
 H18 implementado y comprobado localmente: Resumen con importes en una línea,
 separadores/colores en desglose y sueldos, tablas alternadas y totales destacados.
