@@ -4,10 +4,24 @@ permissions:
   contents: read
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            platform: linux/amd64
+            architecture: x86_64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            architecture: aarch64
+    runs-on: ${{ matrix.runner }}
+    env:
+      DOCKER_DEFAULT_PLATFORM: ${{ matrix.platform }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Comprobar arquitectura del runner
+        run: test "$(uname -m)" = '${{ matrix.architecture }}'
       - name: Probar con PostgreSQL y servicios simulados
         run: docker compose -f docker-compose.test.yml run --build --rm test
       - name: Verificar backup y restauración con datos ficticios
@@ -15,6 +29,7 @@ jobs:
       - name: Probar imagen de ejecución sin proveedores reales
         run: |
           docker build --target production -t arca-dys-runtime .
+          test "$(docker image inspect arca-dys-runtime --format '{{.Architecture}}')" = "${DOCKER_DEFAULT_PLATFORM#linux/}"
           docker run --rm arca-dys-runtime pip check
           docker run --rm --network arca-dys-test_isolated -e ENV=test -e INTEGRATIONS_MODE=mock -e ALLOW_LIVE_OPERATIONS=false -e DATABASE_URL=postgresql://arca_test:local-test-only@postgres:5432/arca_dys_test arca-dys-runtime python -m scripts.smoke_runtime
       - name: Auditar dependencias públicas de ejecución

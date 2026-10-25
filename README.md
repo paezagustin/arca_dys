@@ -62,6 +62,8 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 
 ## Documentación
 
+- [Acceso privado y webhook público](docs/ACCESO_PRIVADO.md): ngrok restringido y sesiones HTTP privadas explícitas.
+
 - [Reglas para Codex](AGENTS.md): autonomía, push directo y prohibición de pruebas productivas.
 - [Alcance definitivo](docs/ALCANCE.md): decisiones, exclusiones y requisitos.
 - [Roadmap](docs/ROADMAP.md) y [estado reanudable](docs/EXECUTION_STATUS.md).

@@ -1,3 +1,4 @@
+from app.core.access_cookies import cookie_secure
 from contextlib import asynccontextmanager
 from pathlib import Path
 import logging
@@ -91,7 +92,7 @@ async def privacy_headers(request, call_next):
     if getattr(request.state, "new_session_token", None):
         from app.services.access import COOKIE
         response.set_cookie(COOKIE, request.state.new_session_token, max_age=43200,
-                            httponly=True, secure=ENV == "production", samesite="lax")
+                            httponly=True, secure=cookie_secure(request, production=ENV == "production"), samesite="lax")
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "same-origin"

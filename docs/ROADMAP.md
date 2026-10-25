@@ -1,5 +1,16 @@
 # Roadmap y condiciones de salida
 
+## H20 · Acceso privado y webhook público
+
+- [x] Inventario efectivo de Raspberry, ngrok, redes, puertos y autenticación MP.
+- [x] Política exacta por método y ruta; dominio y validaciones conservados.
+- [x] Acceso por LAN/Tailscale y ajuste de cookies privado autorizado.
+- [x] 83 comprobaciones públicas, siete pruebas de cookies y verificación CSRF.
+- [x] Respaldos y recuperación concretos, sin modificar datos comerciales.
+- [x] Código desplegado incorporado al repositorio sin archivos privados.
+El CI integral de cada SHA se consulta en los checks del PR.
+
+
 ## H18 · Lectura de Resumen y correcciones en Gestión
 - [x] Signo e importe unidos y tarjetas adaptables; reportes con colores/separadores.
 - [x] Administración/sesión y ARCA DYS abajo de la barra lateral, con margen.
