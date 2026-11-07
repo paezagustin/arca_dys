@@ -229,10 +229,17 @@ esa exposición antes de dar el corte por terminado.
 
 ## Instalar en el teléfono
 
-Hacer la prueba desde `https://arcadys.dulceysalado.ar` en la Wi-Fi autorizada.
-La dirección HTTP por IP de la Raspberry queda fuera de los orígenes seguros
-que exige la instalación PWA en Android.
-[Criterios de instalación](https://web.dev/articles/install-criteria)
+Hacer la prueba de aceptación desde `https://arcadys.dulceysalado.ar` en la
+Wi-Fi autorizada. HTTPS protege las sesiones y los datos fiscales en tránsito.
+Algunos navegadores también permiten añadir sitios HTTP a la pantalla de
+inicio. La opción del menú y la forma de apertura dependen del navegador.
+[Instalación web en Android](https://chromium.googlesource.com/experimental/chromium/src/+/HEAD/docs/webapps/README.md)
+
+Para diagnosticar la versión servida, abrir `/assets/manifest.json` en el mismo
+host y puerto de ARCA DYS. Debe devolver JSON con `name` igual a `ARCA DYS`,
+`display` igual a `standalone` y `start_url` igual a `/page/invoice`. Si devuelve
+404 o una página HTML, comprobar qué imagen está sirviendo el sitio y si la
+ruta del manifiesto llega a FastAPI.
 
 - **Android Chrome.** En la Wi-Fi autorizada, abrir Facturación en la URL HTTPS.
   En **⋮**, elegir **Instalar aplicación** o **Instalar y crear acceso directo**
