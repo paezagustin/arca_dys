@@ -2,7 +2,7 @@
 
 Actualizado: 2026-11-07, America/Buenos_Aires.
 
-## H21 · PWA preparada para el corte manual
+## H21 · PWA desplegada en la LAN por HTTP
 
 El manifiesto estático abre `/page/invoice` en modo standalone. Incluye iconos
 192×192 y 512×512, más Apple Touch Icon de 180×180. No incorpora service worker
@@ -25,10 +25,28 @@ y la protección de Administración. No requiere migraciones ni dependencias nue
 - Configuración de Compose validada. Se ensayó la imagen derivada con los archivos
   PWA y una plantilla anterior simulada, y compiló la plantilla Jinja resultante.
 - El DNS público mostró delegación en Cloudflare y NXDOMAIN para el subdominio y
-  el nombre de control. Siguen pendientes el inventario real, los túneles y firewall
-  efectivos, DNS de Pi-hole, emisión y renovación públicas, pruebas desde fuera de
-  la LAN e instalación en Android/iOS físicos. La Raspberry quedó fuera del
-  alcance de esta sesión. El procedimiento manual está en [PWA y HTTPS en LAN](PWA_LAN.md).
+  el nombre de control. Para completar HTTPS quedan la revisión de Cloudflare y
+  el router, el filtro de red, DNS de Pi-hole, emisión y renovación públicas, y
+  comprobaciones externas. Ver [PWA y HTTPS en LAN](PWA_LAN.md).
+
+### Actualización en la Raspberry del 07/11/2026
+
+Con autorización explícita se comprobó que la imagen activa carecía del manifiesto
+y que el puerto 8001 devolvía 404. La actualización derivó de esa imagen y aplicó
+los recursos PWA de `3ddde5a`. El candidato pasó en ARM64 aislado y la comparación
+del Compose efectivo mostró un único cambio en `services.fastapi.image`. El SSD
+conserva el respaldo privado de la imagen y el overlay original, junto con el
+script de rollback. El primer corte restauró la imagen anterior al detectar una
+conexión interrumpida durante el arranque. El segundo corte esperó la disponibilidad
+de FastAPI y pasó las comprobaciones.
+
+Se recreó únicamente `fastapi_app`. La revisión `0013_mp_identity` permaneció
+igual y la cola fiscal estaba inactiva al corte. Los otros 19 contenedores
+conservaron identidad, estado y hora de arranque. Desde otra PC por LAN, el puerto
+8001 devolvió 200 en el manifiesto, tres iconos, Facturación, Gestión y Resumen.
+Administración siguió pidiendo login. Ngrok rechazó con 403 las solicitudes GET
+al manifiesto y a Facturación. La instalación en teléfonos físicos y el acceso
+HTTPS local quedan pendientes de comprobación.
 
 ## Acceso privado comprobado el 25/10/2026
 
