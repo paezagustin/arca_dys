@@ -1,5 +1,17 @@
 # Roadmap y condiciones de salida
 
+## H21 · PWA en la LAN
+
+- [x] Manifiesto, iconos y arranque en Facturación. Operación en línea.
+- [x] Suite aislada, respaldo y restauración.
+- [x] Manifiesto reconocido por Chrome y navegación móvil y de escritorio ensayada.
+- [x] DNS público consultado y proxy candidato probado en red Docker interna.
+- [ ] Auditoría efectiva de Raspberry, Portainer, Cloudflare y router.
+- [ ] Corte manual, DNS local, certificado público y exclusión de rutas externas.
+- [ ] Instalación en teléfonos físicos y confirmación del primer ciclo de renovación.
+
+Guía de inventario, despliegue y recuperación en [PWA y HTTPS en LAN](PWA_LAN.md).
+
 ## H20 · Acceso privado y webhook público
 
 - [x] Inventario efectivo de Raspberry, ngrok, redes, puertos y autenticación MP.

@@ -1,0 +1,13 @@
+http:
+  routers:
+    arca-dys:
+      entryPoints: [lan]
+      rule: Host(`arcadys.dulceysalado.ar`) && ClientIP(`192.168.0.0/24`) && !ClientIP(`192.168.0.80`)
+      service: arca-dys
+      tls:
+        certResolver: pwa
+  services:
+    arca-dys:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:8001

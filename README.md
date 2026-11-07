@@ -77,6 +77,7 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 - [Gestión y proveedores](docs/GESTION.md), [importación por consola](docs/IMPORTACION_JSON.md)
   y [métricas](docs/METRICAS.md).
 - [Validación ARM y operación](docs/OPERACION_RASPBERRY.md).
+- [PWA y HTTPS en la LAN](docs/PWA_LAN.md).
 - [Tecnologías y configuración](docs/TECNOLOGIAS_Y_CONFIGURACION.md): función,
   implementación, variables, redes, volúmenes y servicios opcionales.
 

@@ -1,6 +1,34 @@
 # Estado de ejecución
 
-Actualizado: 2026-10-25, America/Buenos_Aires.
+Actualizado: 2026-11-07, America/Buenos_Aires.
+
+## H21 · PWA preparada para el corte manual
+
+El manifiesto estático abre `/page/invoice` en modo standalone. Incluye iconos
+192×192 y 512×512, más Apple Touch Icon de 180×180. No incorpora service worker
+ni caché offline. Se conservan sesión familiar, CSRF, `no-store` en datos y PDF,
+y la protección de Administración. No requiere migraciones ni dependencias nuevas.
+
+- La suite local aislada aprobó 288 pruebas en 107,75 s, con una advertencia
+  conocida de Starlette/TestClient. Backup custom, checksum y restauración
+  aprobados en 0013.
+- En Chrome 156 se validó el manifiesto sin errores de instalabilidad. A 390 y
+  1440 px se comprobó el menú, la sesión anónima persistente, el formulario con
+  confirmación simulada y el error del navegador al desconectar la red. Chrome
+  recibió el PDF completo con `no-store` e inició la descarga, que el perfil
+  headless canceló al guardarla. La apertura instalada queda pendiente.
+- Con certificado de ensayo en Docker interno, Traefik devolvió 200 al
+  hostname y origen autorizados. El hostname ajeno, el origen fuera de la red y el propio host
+  reciben 404 aunque envíen cabeceras de origen manipuladas. Se comprobó el bind
+  IPv4 único, la ausencia de 443 en IPv6 y el redirect por HTTPS en el laboratorio.
+  El digest incluye ARM64 y su binario se ejecutó en emulación sin red.
+- Configuración de Compose validada. Se ensayó la imagen derivada con los archivos
+  PWA y una plantilla anterior simulada, y compiló la plantilla Jinja resultante.
+- El DNS público mostró delegación en Cloudflare y NXDOMAIN para el subdominio y
+  el nombre de control. Siguen pendientes el inventario real, los túneles y firewall
+  efectivos, DNS de Pi-hole, emisión y renovación públicas, pruebas desde fuera de
+  la LAN e instalación en Android/iOS físicos. La Raspberry quedó fuera del
+  alcance de esta sesión. El procedimiento manual está en [PWA y HTTPS en LAN](PWA_LAN.md).
 
 ## Acceso privado comprobado el 25/10/2026
 

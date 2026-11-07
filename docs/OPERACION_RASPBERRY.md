@@ -4,6 +4,10 @@ Procedimiento para ejecutar posteriormente en la Raspberry, en una terminal Bash
 No se ejecuta desde Windows, CI ni por un push. Reutiliza el SSD montado en /mnt,
 el directorio /mnt/datos/docker/arca_dys y PostgreSQL existente.
 
+Para preparar exclusivamente la instalación PWA, usar la
+[guía PWA y HTTPS en LAN](PWA_LAN.md). Ese cambio de imagen y acceso no
+requiere migración ni limpieza de Gestión.
+
 **Decisión confirmada:** conservar el control de facturación y limpiar el resto
 de los datos de Gestión. No vaciar toda la base. Se migrará primero el esquema y
 después se limpiarán únicamente las tablas conocidas de Gestión; hacerlo antes

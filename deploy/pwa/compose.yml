@@ -1,0 +1,38 @@
+name: arca-dys-pwa
+services:
+  https:
+    image: traefik:v3.7.17@sha256:f4bb143d1135a579b630ed491e17ec50f6f7c9c6a30585ff3d385471d2a86f5a
+    network_mode: host
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    command:
+      - --entrypoints.lan.address=192.168.0.80:443/tcp
+      - --providers.file.filename=/etc/traefik/routes.yml
+      - --certificatesresolvers.pwa.acme.email=${PWA_ACME_EMAIL:?Configurar el correo ACME}
+      - --certificatesresolvers.pwa.acme.storage=/data/acme.json
+      - --certificatesresolvers.pwa.acme.caserver=${PWA_ACME_DIRECTORY:-https://acme-staging-v02.api.letsencrypt.org/directory}
+      - --certificatesresolvers.pwa.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.pwa.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+    environment:
+      CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare-token
+    volumes:
+      - type: bind
+        source: ./routes.yml
+        target: /etc/traefik/routes.yml
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PWA_ACME_STATE:?Configurar el directorio privado de ACME}
+        target: /data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PWA_CLOUDFLARE_TOKEN_FILE:?Configurar la ruta del archivo privado de Cloudflare}
+        target: /run/secrets/cloudflare-token
+        read_only: true
+        bind:
+          create_host_path: false

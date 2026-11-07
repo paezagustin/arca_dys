@@ -30,6 +30,7 @@ intermedia de facturación parcial. La ampliación H10 incorpora Sueldos y Fiado
 | O03 | Alembic y adopción comprobada del esquema existente; backup manual en SSD antes de migrar. |
 | O04 | Facturación/Gestión/Resumen/Sueldos/Fiados sin login con sesión local y CSRF. Otras secciones solo admin; webhook con contrato propio. |
 | O05 | Despliegue MANUAL futuro por el usuario: conservar control fiscal/MP/configuración; tras backup y ensayo, migrar y limpiar solo Gestión/proveedores/importaciones/Sueldos/Fiados. Reutilizar SSD y dominio NGROK actuales. Sin despliegue por el agente. |
+| O06 | PWA en línea con inicio en Facturación. HTTPS privado por DNS local y DNS-01, con restricción de red, sin acceso público a la interfaz. Despliegue manual después del inventario. |
 | D01 | Roadmap, estado reanudable, documentación técnica y guía de uso actualizados; commits/push directos con evidencia. |
 
 ## Exclusiones
