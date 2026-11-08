@@ -9,18 +9,22 @@ import sys
 from unittest.mock import Mock
 
 import pytest
+from fastapi.testclient import TestClient
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from sqlalchemy import MetaData, func, inspect, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.database import Base
+from app.core.database import Base, get_db
+from app.main import app
 from app.manage import _adoption_metadata, adopt_legacy
 from app.models.billing import BillingRequest, BillingReservation
 from app.models.mp_event import MPEvent, PaymentChange
 from app.models.mp_identity import MPPaymentIdentity, MPLegacyPaymentSnapshot, MPLegacyTransition
 from app.models.payment import Payment
+from app.models.settings import User
+from app.services.access import COOKIE, ensure_local_admin, start_session
 from app.services.billing import BillingConflict, BillingService
 from app.services.billing_preview import preview_invoice
 from app.services.day_closing import approved_mp_total
@@ -253,7 +257,7 @@ def test_unique_legacy_updates_keep_initial_snapshot_and_previous_json(scratch_d
         assert db.get(MPEvent, event).resource_responses[0]["resources"] == [raw]
 
 
-def test_bridge_with_explicit_invoice_index_preserves_existing_fiscal_evidence(scratch_database):
+def test_bridge_with_explicit_invoice_index_preserves_existing_fiscal_evidence(scratch_database, monkeypatch):
     seed_legacy_duplicates(scratch_database, invoice_constraint=False)
     migrate(scratch_database, "0003_billing")
     with scratch_database.begin() as db:
@@ -272,9 +276,39 @@ def test_bridge_with_explicit_invoice_index_preserves_existing_fiscal_evidence(s
         assert db.scalar(select(BillingReservation.request_id)) == "SIM-AUTH"
     with Session(scratch_database) as db:
         metrics = period_metrics(db, date(2026,10,1), date(2026,10,2))
-        assert metrics["mp_repeated_count"] == 87
-        assert metrics["mp_count"] > metrics["mp_repeated_count"]
+        count, total = db.execute(text("""SELECT count(*), sum(mont) FROM payments
+            WHERE id > 88 AND status='approved' AND mont > 0
+            AND date_approved::date BETWEEN '2026-10-01' AND '2026-10-02'""")).one()
+        history_count = db.scalar(text("""SELECT count(*) FROM payments
+            WHERE id > 88 AND status='approved'
+            AND coalesce(date_approved,created_at)::date BETWEEN '2026-10-01' AND '2026-10-02'"""))
+        assert metrics["mp_count"] == count and metrics["mp"] == total
         assert metrics["invoice_count"] == 181
+        ensure_local_admin(db)
+        token, _ = start_session(db, db.scalar(select(User).where(User.role == "admin")))
+
+    def scratch_session():
+        with Session(scratch_database) as db:
+            yield db
+
+    monkeypatch.setitem(app.dependency_overrides, get_db, scratch_session)
+    browser = TestClient(app)
+    assert browser.get("/page/reports-stadistics", follow_redirects=False).status_code == 303
+    browser.cookies.set(COOKIE, token)
+    dates = "fecha_desde=2026-10-01&fecha_hasta=2026-10-02"
+    invoice = browser.get(f"/page/invoice?facturado=todo&{dates}")
+    assert invoice.status_code == 200 and invoice.context["count"] == count
+    assert "SIM-DUP-" not in invoice.text and "históricos repetidos" not in invoice.text
+    payments = browser.get(f"/page/payments?status=approved&{dates}")
+    assert payments.status_code == 200 and payments.context["payments"].total == history_count
+    assert "SIM-DUP-" not in payments.text
+    assert 'href="/page/reports-stadistics#identidades-repetidas"' in payments.text
+    report = browser.get(f"/dashboard?year=2026&month=10&{dates}")
+    assert report.status_code == 200 and report.context["summary"]["mp"] == total
+    assert "pendientes de conciliación" not in report.text
+    audit = browser.get("/page/reports-stadistics?page_size=100")
+    assert audit.status_code == 200 and audit.context["by_id"].total == 88
+    assert {row.id for row in audit.context["by_id"].items} == set(range(1, 89))
 
 
 def test_audit_runs_in_a_database_read_only_transaction(scratch_database, monkeypatch):

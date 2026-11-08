@@ -37,7 +37,8 @@ def parse_filters(facturado="no", start=None, end=None, *, default_today=True):
 
 
 def payment_statement(filters, *, eligible=False):
-    query = select(Payment).where(Payment.status == "approved", Payment.mont > 0, Payment.date_approved.isnot(None))
+    query = select(Payment).where(
+        Payment.status == "approved", Payment.mont > 0, Payment.date_approved.isnot(None), operational_payment())
     if eligible or filters.facturado == "no":
         query = query.where(Payment.registered_arca.is_(False))
     elif filters.facturado == "si":
@@ -49,8 +50,7 @@ def payment_statement(filters, *, eligible=False):
     if eligible and filters.facturado == "si":
         query = query.where(False)
     if eligible:
-        query = query.where(operational_payment(),
-                            ~select(BillingReservation.payment_id).where(BillingReservation.payment_id == Payment.id).exists(),
+        query = query.where(~select(BillingReservation.payment_id).where(BillingReservation.payment_id == Payment.id).exists(),
                             ~select(PaymentInvoice.id).where(PaymentInvoice.payment_id == Payment.id).exists())
     return query.order_by(Payment.date_approved.desc(), Payment.id.desc())
 

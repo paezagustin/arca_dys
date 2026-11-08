@@ -383,6 +383,10 @@ td {
   color:var(--brand);
 }
 .metrics .metric { font-size:clamp(18px,10cqi,28px); }
+.metrics.summary-metrics {
+  grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));
+}
+.metrics.summary-metrics .metric { font-size:clamp(16px,7cqi,28px); }
 .dashboard-metrics [data-metric=sale] { border-top:4px solid #169b9b; }
 .dashboard-metrics [data-metric^=expense] { border-top:4px solid #d3487e; }
 .dashboard-metrics [data-metric=salary] { border-top:4px solid #8a62b9; }

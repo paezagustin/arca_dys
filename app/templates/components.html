@@ -1,3 +1,11 @@
+{% macro metric_card(label, value, detail=none, note=none) -%}
+<section class="card">
+  <h2>{{ label }}</h2>
+  <strong class="metric">{{ value }}</strong>
+  {% if detail is not none %}<p><span class="money">{{ detail }}</span>{% if note %} · {{ note }}{% endif %}</p>{% endif %}
+</section>
+{%- endmacro %}
+
 {% macro pager(page, key='page') -%}
 <nav class="pagination" aria-label="Páginas de {{ key }}">
 {% if page.number > 1 %}<a href="{{ page_url(request,key,page.number-1) }}">Anterior</a>{% endif %}

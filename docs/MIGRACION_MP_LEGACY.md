@@ -202,14 +202,13 @@ imagen únicamente cuando corresponda según OPERACION_RASPBERRY.md.
 
 ## Efectos visibles y revisión pendiente
 
-- Facturación muestra las filas históricas y sus marcas originales; los grupos
-  repetidos no admiten selección, TODO, POST de IDs ni envío de solicitudes en cola.
-  Un aviso explica el bloqueo; no se los presenta como una solicitud fiscal nueva.
+- Facturación muestra cobros con una identidad operativa. Los grupos repetidos
+  quedan bloqueados para selección, TODO, POST de IDs y solicitudes en cola.
 - La sugerencia MP del cierre excluye los grupos repetidos. No cambia cierres de
   caja ya guardados, ventas, Ganancia, importes de facturas ni sus vínculos.
-- Historial y estadísticas conservan todas las filas. Resumen sigue agregando
-  registros aprobados y advierte cuántos son históricos repetidos; ese importe
-  no se presenta como total conciliado de pagos únicos.
+- Auditoría conserva las filas repetidas y sus marcas. Desde Cobros MP se accede
+  a la sección de identidades repetidas. El total de cobros de Resumen suma las
+  identidades operativas aprobadas del período.
 - Conexión MP conserva entregas/respuestas y muestra Conciliación pendiente para
   los IDs bloqueados. No reintenta automáticamente su resolución ni emite facturas.
 

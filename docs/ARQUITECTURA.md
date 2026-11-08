@@ -118,9 +118,9 @@ de la etapa alternativa y avance a 0013 comparten una única transacción.
 No equivale a un stamp manual. Ver [procedimiento y compatibilidad](MIGRACION_MP_LEGACY.md).
 La identidad externa pasa a mp_payment_identities (PK); el índice de payments es
 no único para conservar los IDs internos originales y todas sus relaciones.
-Grupos repetidos sin representante operativo, inmutables y excluidos de emisión;
-los historiales muestran todas las filas. La sugerencia MP los excluye y las
-agregaciones históricas los señalan, sin consolidar ni recalcular cierres guardados.
+Los grupos repetidos quedan disponibles en Auditoría con todas sus filas.
+Facturación, Cobros MP, el total de cobros de Resumen y la sugerencia de Gestión
+usan las identidades operativas. Los cierres guardados conservan sus importes.
 
 Se conserva payments.bill por compatibilidad histórica; la elegibilidad usa estado,
 registered_arca, reservas y vínculos. Otros campos históricos no se eliminan por
