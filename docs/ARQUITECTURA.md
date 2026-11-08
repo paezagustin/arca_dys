@@ -109,6 +109,7 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0011_sales_payroll_credits | Desglose nullable de ventas, ENUM de empleados/medios, Sueldos y Fiados; sin alterar totales previos. |
 | 0012_credit_paid_date | paid_date nullable en Fiados; no completa fechas anteriores y exige NULL si no está pagado. |
 | 0013_mp_identity | Identidad MP separada, snapshots originales, evidencia de actualizaciones y protección de grupos históricos repetidos. |
+| 0014_credit_timestamps | Hora de alta y pago de Fiados con zona horaria. Conserva las fechas históricas y deja nulas las horas desconocidas. |
 
 El puente versionado de migrations/mp_legacy_bridge.py permite la transición
 explícita desde 0001-0003 cuando 0004 rechaza duplicados, sin modificar revisiones

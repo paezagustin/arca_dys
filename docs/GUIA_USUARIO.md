@@ -124,7 +124,9 @@ Ingresar nombre, monto y, si hace falta, observación. Fecha empieza en hoy y Pa
 en No. Guardar. El listado muestra todos los no pagados; permite buscar por nombre,
 fechas o pago. Marcar pagado vuelve a la lista de impagos con el rango de fechas
 que estabas consultando. El lápiz permite corregir cualquiera de los campos.
-Al marcar Sí se guarda y muestra automáticamente la
-Fecha de pago del día. Editar otros datos no cambia esa fecha; volver a No la
-quita. Los fiados pagados antes de esta mejora conservan la fecha vacía cuando
-no se conoce. El registro no suma ventas ni modifica la caja automáticamente.
+Fecha muestra el día elegido y, en las altas nuevas, el día y la hora reales
+del registro en Buenos Aires. Los filtros buscan por el día elegido completo.
+Al marcar Sí se guarda la fecha y hora del pago. Editar otros datos conserva
+esa marca. Volver a No la quita y un nuevo pago registra el momento nuevo.
+Los fiados históricos muestran la fecha disponible y la hora cuando se conoce.
+El registro no suma ventas ni modifica la caja automáticamente.

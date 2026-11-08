@@ -1,8 +1,18 @@
 from uuid import UUID
+from zoneinfo import ZoneInfo
 from sqlalchemy import select
+from app.models.billing import utcnow
 from app.models.registers import SalaryPayment, CustomerCredit, EMPLOYEES, SALARY_MEDIA
 from app.services.business import money, record_date, clean_text, check_version
-from app.services.listings import business_today
+
+
+def set_credit_paid(row, paid, *, at=None):
+    if not paid:
+        row.paid_date = row.paid_at = None
+    elif not row.paid:
+        row.paid_at = at if at is not None else utcnow()
+        row.paid_date = row.paid_at.astimezone(ZoneInfo("America/Argentina/Buenos_Aires")).date()
+    row.paid = paid
 
 
 def save_register(db, model, values, identifier=None):
@@ -34,11 +44,11 @@ def save_register(db, model, values, identifier=None):
                 return previous
             raise ValueError("Este formulario ya fue guardado. Abrí uno nuevo")
         row = model(entry_key=key, version=0)
+        if model is CustomerCredit:
+            row.created_at = utcnow()
         db.add(row)
     if model is CustomerCredit:
-        data["paid_date"] = None
-        if data["paid"]:
-            data["paid_date"] = row.paid_date if row.paid else business_today()
+        set_credit_paid(row, data.pop("paid"), at=row.created_at if identifier is None else None)
     for key, value in data.items():
         setattr(row, key, value)
     row.version += 1

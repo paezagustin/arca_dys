@@ -1,5 +1,5 @@
 """Registros simples, sin cuentas corrientes ni cálculo de nómina."""
-from sqlalchemy import Column, Integer, String, Text, Boolean, Date, Numeric, Enum, Index, CheckConstraint, false
+from sqlalchemy import Column, Integer, String, Text, Boolean, Date, DateTime, Numeric, Enum, Index, CheckConstraint, false
 from app.core.database import Base
 
 EMPLOYEES = ("Francisco", "Juan Cruz")
@@ -23,6 +23,10 @@ class CustomerCredit(Base):
     __tablename__ = "customer_credits"
     __table_args__ = (CheckConstraint("amount>0", name="ck_credit_amount"),
         CheckConstraint("paid OR paid_date IS NULL", name="ck_credit_payment_date"),
+        CheckConstraint(
+            "paid_at IS NULL OR (paid AND paid_date IS NOT NULL AND "
+            "paid_date = CAST(paid_at AT TIME ZONE 'America/Argentina/Buenos_Aires' AS date))",
+            name="ck_credit_payment_timestamp"),
         Index("ix_credit_paid_date", "paid", "entry_date", "id"))
     id = Column(Integer, primary_key=True)
     entry_key = Column(String(36), nullable=False, unique=True)
@@ -30,6 +34,8 @@ class CustomerCredit(Base):
     amount = Column(Numeric(18, 2), nullable=False)
     observation = Column(Text, nullable=False, default="")
     entry_date = Column(Date, nullable=False)
+    created_at = Column(DateTime(timezone=True))
     paid = Column(Boolean, nullable=False, server_default=false())
     paid_date = Column(Date)
+    paid_at = Column(DateTime(timezone=True))
     version = Column(Integer, nullable=False, default=1)

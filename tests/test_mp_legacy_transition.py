@@ -27,7 +27,7 @@ from app.services.day_closing import approved_mp_total
 from app.services.listings import parse_filters, payment_statement
 from app.services.mp_inbox import MPInbox
 from app.services.metrics import period_metrics
-from migrations.mp_legacy_bridge import audit_legacy_mp, integrity_report, migrate_legacy_mp, TARGET
+from migrations.mp_legacy_bridge import audit_legacy_mp, integrity_report, migrate_legacy_mp, SUPPORTED_HEAD, TARGET
 from tests.test_migrations import (scratch_database, migrate, load_export,
     use_legacy_invoice_constraint, seed_fiscal_history, fiscal_snapshot)
 from tests.test_mp_inbox import resource
@@ -97,12 +97,13 @@ def test_bridge_preserves_complete_report_and_original_rows(scratch_database, so
     assert audit_legacy_mp(scratch_database) == before
     assert fiscal_snapshot(scratch_database) == rows
     with scratch_database.connect() as db:
-        assert db.scalar(text("SELECT version_num FROM alembic_version")) == TARGET
+        assert db.scalar(text("SELECT version_num FROM alembic_version")) == SUPPORTED_HEAD
         assert db.execute(text("SELECT oid,conindid FROM pg_constraint WHERE conrelid='invoices'::regclass AND conname='invoices_invoice_number_key'")).one() == constraint
         assert db.scalar(select(func.count()).select_from(MPPaymentIdentity)) == 3828
         assert db.scalar(select(func.count()).select_from(MPPaymentIdentity).where(MPPaymentIdentity.legacy_duplicate)) == 40
         assert db.scalar(select(func.count()).select_from(MPLegacyPaymentSnapshot)) == 3876
         assert db.scalar(select(MPLegacyTransition.source_revision)) == source
+        assert db.scalar(select(MPLegacyTransition.target_revision)) == TARGET
         expected = MetaData()
         for table in Base.metadata.sorted_tables:
             table.to_metadata(expected)

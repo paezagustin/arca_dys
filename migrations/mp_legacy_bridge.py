@@ -2,7 +2,8 @@
 
 0004_mp permanece inmutable y sigue rechazando duplicados en upgrade ordinario.
 Este puente aplica su contrato de esquema EXCEPTO el índice único incompatible,
-lo comprueba antes de registrar 0004 y continúa a 0013 en la MISMA transacción.
+lo comprueba antes de registrar 0004, conserva el recibo de 0013 y aplica
+la revisión compatible de Fiados dentro de la misma transacción.
 Nunca se debe ejecutar stamp manual ni iniciar la aplicación en el estado puente.
 """
 from datetime import datetime, timezone
@@ -18,6 +19,7 @@ from app.manage import _adoption_metadata
 from migrations.baseline import legacy_metadata
 
 TARGET = "0013_mp_identity"
+SUPPORTED_HEAD = "0014_credit_timestamps"
 RECEIPT = "legacy-mp-bridge-v1"
 REMOVED = {"payments": {"id_arca"}, "error_logs": {
     "resolved", "resolved_at", "resolved_by", "resolution_notes"}}
@@ -196,13 +198,13 @@ def _check_initial_snapshots(connection, expected_count):
 
 def migrate_legacy_mp(target_engine=engine):
     config = Config("alembic.ini")
-    if ScriptDirectory.from_config(config).get_current_head() != TARGET:
+    if ScriptDirectory.from_config(config).get_current_head() != SUPPORTED_HEAD:
         raise RuntimeError("Revisar el puente MP para el nuevo head antes de continuar")
     with target_engine.begin() as connection:
         connection.execute(sa.text("SET LOCAL lock_timeout = '5s'"))
         connection.execute(sa.text("LOCK TABLE payments, invoices, payment_invoice, error_logs IN ACCESS EXCLUSIVE MODE"))
         versions = connection.scalars(sa.text("SELECT version_num FROM alembic_version")).all()
-        if versions == [TARGET]:
+        if versions in ([TARGET], [SUPPORTED_HEAD]):
             from app.models.mp_identity import MPLegacyTransition
             receipt = connection.scalar(sa.select(MPLegacyTransition.report).where(MPLegacyTransition.id == RECEIPT))
             if receipt is None or receipt != integrity_report(connection):
@@ -228,10 +230,6 @@ def migrate_legacy_mp(target_engine=engine):
         # No puede observarse 0004 con duplicados fuera de esta transacción.
         command.stamp(config, "0004_mp")
         command.upgrade(config, TARGET)
-        current = sa.MetaData()
-        for table in Base.metadata.sorted_tables:
-            table.to_metadata(current)
-        _check_schema(connection, _adoption_metadata(connection, current))
         _check_initial_snapshots(connection, before["counts"]["payments"])
         after = integrity_report(connection)
         if after != before:
@@ -239,4 +237,9 @@ def migrate_legacy_mp(target_engine=engine):
         from app.models.mp_identity import MPLegacyTransition
         connection.execute(sa.insert(MPLegacyTransition).values(id=RECEIPT, source_revision=source,
             target_revision=TARGET, report=after, completed_at=datetime.now(timezone.utc)))
+        command.upgrade(config, SUPPORTED_HEAD)
+        current = sa.MetaData()
+        for table in Base.metadata.sorted_tables:
+            table.to_metadata(current)
+        _check_schema(connection, _adoption_metadata(connection, current))
         return after

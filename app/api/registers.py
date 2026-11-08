@@ -10,7 +10,7 @@ from app.core.database import get_db
 from app.models.registers import SalaryPayment, CustomerCredit, EMPLOYEES, SALARY_MEDIA
 from app.services.business import check_version
 from app.services.money import require_whole_pesos
-from app.services.registers import save_register
+from app.services.registers import save_register, set_credit_paid
 from app.services.listings import business_today, parse_filters, paginate
 from app.web import templates
 
@@ -119,8 +119,8 @@ async def mark_paid(identifier: int, request: Request, fecha_desde: str = "", fe
             check_version(row, values.get("version"))
         except ValueError as exc:
             raise HTTPException(409, str(exc)) from exc
-        row.paid_date = business_today()
-        row.paid, row.version = True, row.version + 1
+        set_credit_paid(row, True)
+        row.version += 1
         db.commit()
     query = {"paid": "no", "stored": "1"}
     if filters.start:

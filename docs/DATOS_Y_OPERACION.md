@@ -58,8 +58,9 @@ Todas las siguientes migraciones también deben ser incrementales.
 Si 0004_mp detecta IDs MP históricos repetidos, no borrar ni consolidar pagos y
 no usar stamp manual. El procedimiento explícito de
 [MIGRACION_MP_LEGACY.md](MIGRACION_MP_LEGACY.md) conserva las revisiones publicadas,
-valida un contrato alternativo de transición y alcanza 0013_mp_identity en una
-única transacción, con comparación completa de registros/huellas/secuencias.
+valida un contrato alternativo de transición y conserva el recibo de 0013_mp_identity.
+También aplica 0014_credit_timestamps en la misma transacción y compara
+los registros, huellas y secuencias fiscales.
 Los grupos ambiguos quedan bloqueados, sin elegir automáticamente una fila.
 
 ## Respuesta fiscal conservada

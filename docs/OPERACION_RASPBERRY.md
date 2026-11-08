@@ -244,7 +244,8 @@ maintenance alembic upgrade head
 maintenance alembic current
 ```
 
-Head esperado: **0013_mp_identity**. Después ejecutar UNA VEZ la limpieza
+Esta limpieza corresponde a **0013_mp_identity** y su imagen de esa etapa.
+La revisión 0014 de Fiados se aplica sin ese procedimiento. En 0013, ejecutar UNA VEZ la limpieza
 solicitada, en transacción y sobre el nombre de base comprobado al principio:
 
 ```sh
