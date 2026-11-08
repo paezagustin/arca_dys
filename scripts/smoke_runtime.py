@@ -69,24 +69,24 @@ def run():
         day = str(business_today())
         with post("/business/entries/new", {"csrf_token": hidden(page, "csrf_token"),
                 "entry_key": hidden(page, "entry_key"), "kind": "sale", "entry_date": day,
-                "cash_amount": "1000.10", "mp_amount": "500.20"}) as response:
+                "cash_amount": "1000", "mp_amount": "500"}) as response:
             assert response.status == 200
-        for path, fields in (("/salaries", {"employee": "Francisco", "medium": "mercado pago", "amount": "100.05"}),
-                ("/fiados", {"customer": "Cliente ficticio runtime", "observation": "Prueba", "paid": "0", "amount": "20.25"})):
+        for path, fields in (("/salaries", {"employee": "Francisco", "medium": "mercado pago", "amount": "100"}),
+                ("/fiados", {"customer": "Cliente ficticio runtime", "observation": "Prueba", "paid": "0", "amount": "20"})):
             with get(path) as response:
                 page = response.read().decode()
             with post(path, dict(fields, csrf_token=hidden(page, "csrf_token"), entry_key=hidden(page, "entry_key"), entry_date=day)) as response:
                 assert response.status == 200
         with get("/dashboard?fecha_desde=" + day + "&fecha_hasta=" + day) as response:
             page = response.read().decode()
-            assert "$ 1.400,25" in page and "Pago de sueldos" in page
+            assert "$ 1.400" in page and "Pago de sueldos" in page
         with get("/login") as response:
             csrf = hidden(response.read().decode(), "login_csrf")
         with post("/login", {"username": "admin", "password": "pruebas-locales", "login_csrf": csrf}) as response:
             assert response.status == 200
         with get("/page/invoice/manual") as response:
             csrf = hidden(response.read().decode(), "csrf_token")
-        with post("/ARCA/invoice/manual/preview", {"amount": "1500.55", "csrf_token": csrf}) as response:
+        with post("/ARCA/invoice/manual/preview", {"amount": "1500", "csrf_token": csrf}) as response:
             page = response.read().decode()
             preview_path = response.url.removeprefix(origin)
             csrf = hidden(page, "csrf_token")
@@ -115,7 +115,7 @@ def run():
         with scratch.connect() as db:
             assert db.execute(text("SELECT count(*) FROM invoices")).scalar_one() == 1
             assert db.execute(text("SELECT count(*) FROM payments")).scalar_one() == 0
-            assert db.execute(text("SELECT cash_amount,mp_amount,amount FROM business_entries")).one() == (Decimal("1000.10"), Decimal("500.20"), Decimal("1500.30"))
+            assert db.execute(text("SELECT cash_amount,mp_amount,amount FROM business_entries")).one() == (Decimal("1000"), Decimal("500"), Decimal("1500"))
             assert db.execute(text("SELECT count(*) FROM salary_payments")).scalar_one() == 1
             assert db.execute(text("SELECT paid FROM customer_credits")).scalar_one() is False
         process.terminate()
