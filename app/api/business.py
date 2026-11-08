@@ -16,12 +16,20 @@ from app.web import templates
 router = APIRouter(prefix="/business", tags=["Gestión"])
 
 
+def month_to_today():
+    today = business_today()
+    return today.replace(day=1), today
+
+
 @router.get("")
 def entries(request: Request, kind: str = "all", fecha_desde: str = "", fecha_hasta: str = "",
             supplier_id: str = "",
             page: int = Query(1, ge=1), db: Session = Depends(get_db)):
+    start, end = fecha_desde, fecha_hasta
+    if not any(key in request.query_params for key in ("kind", "supplier_id", "fecha_desde", "fecha_hasta")):
+        start, end = month_to_today()
     try:
-        filters = parse_filters("todo", fecha_desde, fecha_hasta, default_today=False)
+        filters = parse_filters("todo", start, end, default_today=False)
         if kind not in {"all", *KINDS}:
             raise ValueError("Elegí filtros válidos")
         if supplier_id not in {"", "none"}:
@@ -102,7 +110,12 @@ async def store_entry(request, db, entry_id=None):
         db.rollback()
         message = str(error) if isinstance(error, ValueError) else "Ya existe una venta para esa fecha o este formulario fue guardado. Revisá el listado antes de repetirlo."
         return entry_form(request, db, db.get(BusinessEntry, entry_id) if entry_id else None, values, message)
-    return RedirectResponse(f"/business?stored={row.id}", status_code=303)
+    query = {"stored": row.id}
+    start, end = month_to_today()
+    if not start <= row.entry_date <= end:
+        day = row.entry_date.isoformat()
+        query.update(fecha_desde=day, fecha_hasta=day)
+    return RedirectResponse("/business?" + urlencode(query), status_code=303)
 
 
 @router.post("/entries/new")

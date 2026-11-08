@@ -146,7 +146,30 @@ def test_supplier_filter_totals_pagination_dates_archived_and_without_supplier(c
     assert f"supplier_id={selected_id}&amp;kind=all&amp;fecha_desde=2026-01-01&amp;fecha_hasta=2026-01-31&amp;page=2" in page.text
     assert client.get("/business?supplier_id=none").context["totals"] == {"expense": Decimal("25")}
     assert client.get(f"/business?kind=sale&supplier_id={selected_id}").context["entries"].total == 0
-    assert client.get("/business").context["entries"].total == 31
+    assert client.get("/business?kind=all").context["entries"].total == 31
+
+
+def test_management_defaults_to_month_start_through_today(client, monkeypatch):
+    with Session(engine) as db:
+        save_entry(db, values(entry_date="2026-02-28", amount="100"), "test")
+        save_entry(db, values(entry_date="2026-03-01", amount="200"), "test")
+        for _ in range(25):
+            save_entry(db, values(kind="expense", entry_date="2026-03-01", amount="10"), "test")
+        save_entry(db, values(kind="expense", entry_date="2026-03-02", amount="300"), "test")
+    monkeypatch.setattr("app.api.business.business_today", lambda: date(2026, 2, 28))
+    february = client.get("/business").context
+    assert (february["filters"].start, february["filters"].end) == (date(2026, 2, 1), date(2026, 2, 28))
+    assert february["totals"] == {"sale": Decimal("100")}
+
+    monkeypatch.setattr("app.api.business.business_today", lambda: date(2026, 3, 1))
+    first = client.get("/business").context
+    second = client.get("/business?page=2").context
+    assert first["kind"] == "all"
+    assert first["filters"].start == first["filters"].end == date(2026, 3, 1)
+    assert first["filters"] == second["filters"]
+    assert first["totals"] == second["totals"] == {"sale": Decimal("200"), "expense": Decimal("250")}
+    assert first["entries"].total == second["entries"].total == 26
+    assert len(first["entries"].items) == 25 and len(second["entries"].items) == 1
 
 
 @pytest.mark.parametrize("supplier", ["invalid", "-1", "0", "99999999999999999999999", "999999"])

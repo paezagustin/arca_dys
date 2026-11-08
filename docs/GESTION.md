@@ -28,6 +28,8 @@ seleccionar con clic o flechas/Enter y borrar para dejar Sin proveedor.
 No hay medios, categorías adicionales, estados de registro ni otros ingresos.
 
 ## Filtrar y eliminar cargas equivocadas
+Gestión abre desde el primer día del mes hasta hoy en Buenos Aires y muestra
+ventas y egresos. Si guardás un movimiento fuera de ese rango, se abre su fecha.
 Los filtros quedan siempre visibles encima de Ventas y Total Egresos. Se combinan
 Mostrar, proveedor y fechas; Buscar actualiza listado y totales de todo el filtro,
 incluidas sus otras páginas. El proveedor se aplica a egresos: si se combina con

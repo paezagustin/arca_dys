@@ -58,7 +58,8 @@ Buscar el proveedor escribiendo su nombre y elegirlo de la lista; también se pu
 dejar vacío. La descripción es opcional. Guardar.
 Para un egreso cargado por error, usar Eliminar y confirmar. Se retira de los
 listados y reportes; los datos originales se conservan internamente.
-Los filtros de Gestión siempre están visibles, arriba de los totales. Elegir tipo,
+Gestión abre con Mostrar en Todos y el rango desde el primer día del mes hasta hoy.
+Los filtros siempre están visibles, arriba de los totales. Elegir tipo,
 proveedor y fechas y pulsar Buscar; los totales abarcan todas las coincidencias.
 Elegir un proveedor muestra sus egresos, incluidos los de proveedores archivados.
 Desde Proveedores se puede registrar/editar nombre, contacto y notas. Eliminar sirve

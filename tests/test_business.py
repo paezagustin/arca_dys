@@ -24,9 +24,12 @@ def values(**changes):
     return data
 
 
-def test_sales_are_independent_idempotent_and_other_income_is_rejected(client):
+def test_sales_are_independent_idempotent_and_other_income_is_rejected(client, monkeypatch):
+    monkeypatch.setattr("app.api.business.business_today", lambda: date(2026, 2, 1))
     data = values()
-    assert client.post("/business/entries/new", data=data).status_code == 200
+    page = client.post("/business/entries/new", data=data)
+    assert page.status_code == 200
+    assert page.url.params["fecha_desde"] == page.url.params["fecha_hasta"] == data["entry_date"]
     assert client.post("/business/entries/new", data=data).status_code == 200
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(BusinessEntry)) == 1
@@ -34,7 +37,6 @@ def test_sales_are_independent_idempotent_and_other_income_is_rejected(client):
         assert db.scalar(select(func.count()).select_from(Invoice)) == 0
         with pytest.raises(ValueError):
             save_entry(db, values(kind="income", amount="50.20"), "admin")
-    page = client.get("/business")
     assert "$ 1.500" in page.text and "Otro ingreso" not in page.text
 
 
