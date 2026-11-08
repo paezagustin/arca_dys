@@ -7,6 +7,80 @@ document.querySelectorAll('.site-menu').forEach(menu => {
   adapt();
 });
 
+document.querySelectorAll('form[method="get"][data-auto-filter]').forEach(form => {
+  const dates = [...form.querySelectorAll('input[type="date"]')];
+  const [from, to] = dates;
+  const calendar = [...form.querySelectorAll('[data-calendar-period]')];
+  const hint = 'Los cambios se aplican automáticamente.';
+  const feedback = document.createElement('span');
+  feedback.className = 'muted';
+  feedback.setAttribute('role', 'status');
+  feedback.textContent = hint;
+  form.querySelector('.actions').append(feedback);
+  let timer, typingDate = false;
+
+  function rangeError(requirePair) {
+    if (!from || !to) return '';
+    if (dates.some(field => field.validity.badInput || (field.value && field.value.length !== 10))) {
+      return 'Revisá las fechas ingresadas.';
+    }
+    if (requirePair && Boolean(from.value) !== Boolean(to.value)) {
+      return calendar.length ? 'Completá las dos fechas para aplicar el rango.'
+        : 'Completá las dos fechas o pulsá Buscar para filtrar con una sola.';
+    }
+    return from.value && to.value && from.valueAsNumber > to.valueAsNumber
+      ? 'La fecha desde no puede ser posterior a la fecha hasta.' : '';
+  }
+
+  function datesChanged() {
+    return dates.some(field => field.value !== field.defaultValue);
+  }
+
+  function schedule(control) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (calendar.includes(control) && calendar.every(field => field.validity.valid)) {
+        dates.forEach(field => { field.value = ''; });
+      }
+      const error = rangeError(calendar.length > 0 || datesChanged());
+      feedback.textContent = error || hint;
+      if (!error && form.checkValidity()) form.requestSubmit();
+    }, dates.includes(control) ? 300 : 0);
+  }
+
+  // Al escribir una fecha, esperar hasta que termine de editar el rango.
+  form.addEventListener('input', event => {
+    if (dates.includes(event.target)) clearTimeout(timer);
+  });
+  form.addEventListener('keydown', event => {
+    if (dates.includes(event.target) && !event.altKey &&
+        (event.key.length === 1 || ['Backspace', 'Delete', 'ArrowUp', 'ArrowDown'].includes(event.key))) {
+      clearTimeout(timer);
+      typingDate = true;
+    }
+  });
+  form.addEventListener('focusout', event => {
+    if (typingDate && dates.includes(event.target) && !dates.includes(event.relatedTarget)) {
+      typingDate = false;
+      if (datesChanged()) schedule(event.target);
+    }
+  });
+  form.addEventListener('change', event => {
+    const control = event.target;
+    if (dates.includes(control) ? !typingDate : control.matches('select, [data-calendar-period]')) {
+      schedule(control);
+    }
+  });
+  form.addEventListener('submit', event => {
+    clearTimeout(timer);
+    const error = rangeError(calendar.length > 0);
+    if (error) {
+      event.preventDefault();
+      feedback.textContent = error;
+    }
+  });
+});
+
 document.querySelectorAll('[data-select-all]').forEach(control => {
   const form = control.closest('form');
   const choices = Array.from(form.querySelectorAll('input[name="payment_ids"]:not(:disabled)'));

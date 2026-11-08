@@ -31,6 +31,8 @@ flechas para sumar o restar. En ventas podés completar efectivo, Mercado Pago
 o ambos. El que se deja vacío se toma como cero y debe completarse al menos uno.
 
 ## Facturar
+En Facturación, cambiar Facturado, las fechas o las filas por página actualiza
+los resultados y vuelve a la primera página. Buscar sigue disponible.
 En Facturación elegir cobros y FACTURAR SELECCIONADOS, o FACTURAR TODO para los pagos
 disponibles del filtro completo, incluso en otras páginas. Revisar importe/cantidad
 y confirmar. Factura por importe permite ingresar un total independiente de MP.
@@ -63,8 +65,10 @@ dejar vacío. La descripción es opcional. Guardar.
 Para un egreso cargado por error, usar Eliminar y confirmar. Se retira de los
 listados y reportes; los datos originales se conservan internamente.
 Gestión abre con Mostrar en Todos y el rango desde el primer día del mes hasta hoy.
-Los filtros siempre están visibles, arriba de los totales. Elegir tipo,
-proveedor y fechas y pulsar Buscar; los totales abarcan todas las coincidencias.
+Los filtros siempre están visibles, arriba de los totales. Cambiar el tipo o
+proveedor actualiza los resultados. Para cambiar el rango, completá fechas
+en orden; si querés filtrar con una sola fecha, usá Buscar. Los totales abarcan
+todas las coincidencias.
 Elegir un proveedor muestra sus egresos, incluidos los de proveedores archivados.
 Desde Proveedores se puede registrar/editar nombre, contacto y notas. Eliminar sirve
 si no hay registros vinculados; en caso contrario se puede archivar para que deje
@@ -76,8 +80,10 @@ importación ni hace falta ejecutar SQL en Adminer. Después se modifican provee
 y registros desde sus formularios habituales.
 
 ## Resumen
-Resumen abre en el mes actual. Para consultar otro período, elegí Año y Mes,
-seleccioná Todo el año o completá ambas fechas. Se muestran Ventas, Egresos en blanco, Egresos en negro,
+Resumen abre en el mes actual. Elegir Año o Mes aplica el período de calendario
+y reemplaza las fechas personalizadas. Si completás ambas fechas en orden, se
+aplica el rango y el Excel usa esas mismas fechas. Ver resumen sigue disponible.
+Se muestran Ventas, Egresos en blanco, Egresos en negro,
 Total Egresos, Pago de sueldos y Ganancia (ventas menos egresos y sueldos).
 También muestra efectivo/MP y cuánto se pagó a cada empleado. Promedio diario,
 gráfico y detalle mensual ayudan a comparar. Los cobros y facturas están separados.
