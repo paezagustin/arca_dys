@@ -11,6 +11,13 @@ from app.web import templates
 router = APIRouter(prefix="/dashboard", tags=["Resumen"])
 
 
+def report_year_month(year, month):
+    if year is None:
+        today = business_today()
+        return today.year, today.month if month is None else month
+    return year, 0 if month is None else month
+
+
 def selected_period(year, month, start, end):
     if not start and not end:
         return (*bounds(year, month), False)
@@ -24,10 +31,10 @@ def selected_period(year, month, start, end):
 
 
 @router.get("/export")
-def export(year: int | None = Query(None, ge=2, le=9998), month: int = Query(0, ge=0, le=12),
+def export(year: int | None = Query(None, ge=2, le=9998), month: int | None = Query(None, ge=0, le=12),
            fecha_desde: str = "", fecha_hasta: str = "", db: Session = Depends(get_db)):
     from app.services.excel_export import export_business
-    year = year or business_today().year
+    year, month = report_year_month(year, month)
     start, end, custom = selected_period(year, month, fecha_desde, fecha_hasta)
     try:
         content = export_business(db, start, end)
@@ -39,9 +46,9 @@ def export(year: int | None = Query(None, ge=2, le=9998), month: int = Query(0, 
 
 
 @router.get("")
-def dashboard(request: Request, year: int | None = Query(None, ge=2, le=9998), month: int = Query(0, ge=0, le=12),
+def dashboard(request: Request, year: int | None = Query(None, ge=2, le=9998), month: int | None = Query(None, ge=0, le=12),
               fecha_desde: str = "", fecha_hasta: str = "", suppliers_page: int = Query(1, ge=1), categories_page: int = Query(1, ge=1), db: Session = Depends(get_db)):
-    year = year or business_today().year
+    year, month = report_year_month(year, month)
     rows = year_metrics(db, year)
     start, end, custom = selected_period(year, month, fecha_desde, fecha_hasta)
     selected = period_metrics(db, start, end) if custom else (rows[month-1] if month else period_total(rows))

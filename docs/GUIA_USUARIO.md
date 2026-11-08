@@ -71,7 +71,8 @@ importación ni hace falta ejecutar SQL en Adminer. Después se modifican provee
 y registros desde sus formularios habituales.
 
 ## Resumen
-Elegir año/mes, Todo el año o completar ambas fechas para consultar un día/período. Se muestran Ventas, Egresos en blanco, Egresos en negro,
+Resumen abre en el mes actual. Para consultar otro período, elegí Año y Mes,
+seleccioná Todo el año o completá ambas fechas. Se muestran Ventas, Egresos en blanco, Egresos en negro,
 Total Egresos, Pago de sueldos y Ganancia (ventas menos egresos y sueldos).
 También muestra efectivo/MP y cuánto se pagó a cada empleado. Promedio diario,
 gráfico y detalle mensual ayudan a comparar. Los cobros y facturas están separados.

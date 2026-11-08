@@ -1,6 +1,10 @@
 from datetime import date, datetime
 from decimal import Decimal
+from html import unescape
+from io import BytesIO
+import re
 import pytest
+from openpyxl import load_workbook
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 from app.core.database import engine
@@ -75,6 +79,35 @@ def test_leap_day_and_timestamp_boundaries():
         assert rows[11]["mp"] == Decimal("2.02")
     assert bounds(2024, 2)[1] == date(2024,2,29)
     assert change(Decimal(1), Decimal(0))["percent"] is None
+
+
+@pytest.mark.parametrize(("query", "year", "month", "start", "end"), [
+    ("", 2027, 1, date(2027, 1, 1), date(2027, 1, 31)),
+    ("?year=2026&month=2", 2026, 2, date(2026, 2, 1), date(2026, 2, 28)),
+    ("?year=2025", 2025, 0, date(2025, 1, 1), date(2025, 12, 31)),
+    ("?month=0", 2027, 0, date(2027, 1, 1), date(2027, 12, 31)),
+    ("?year=2026&month=2&fecha_desde=2026-12-31&fecha_hasta=2027-01-01",
+     2026, 2, date(2026, 12, 31), date(2027, 1, 1)),
+])
+def test_dashboard_period_matches_export(client, monkeypatch, query, year, month, start, end):
+    monkeypatch.setattr("app.api.dashboard.business_today", lambda: date(2027, 1, 1))
+    page = client.get("/dashboard" + query)
+    assert page.status_code == 200
+    assert (page.context["year"], page.context["month"]) == (year, month)
+    assert (page.context["start"], page.context["end"]) == (start, end)
+    href = re.search(r'href="(/dashboard/export\?[^"]+)"', page.text).group(1)
+    response = client.get(unescape(href))
+    assert response.status_code == 200
+    with BytesIO(response.content) as data:
+        book = load_workbook(data, read_only=True)
+        dates = [day.date() for day, in book.active.iter_rows(min_row=2, max_col=1, values_only=True)]
+        book.close()
+    assert dates[0] == start and dates[-1] == end
+    assert len(dates) == (end - start).days + 1
+    if not query:
+        direct = client.get("/dashboard/export")
+        assert direct.status_code == 200
+        assert direct.headers["content-disposition"] == response.headers["content-disposition"]
 
 
 @pytest.mark.parametrize("query", ["year=0", "year=10000", "month=13", "month=-1", "year=no"])

@@ -1,5 +1,6 @@
 # Resumen y exportación
 
+Al abrir Resumen se seleccionan el mes y el año actuales de Buenos Aires.
 El período admite año completo, un mes o ambas fechas Desde/Hasta (inclusive),
 incluido un único día. Las fechas explícitas prevalecen sobre año/mes; el gráfico
 y detalle mensual siguen mostrando el año seleccionado. Los cálculos SQL usan NUMERIC:
