@@ -28,7 +28,7 @@ def register(**changes):
         "employee": "Francisco", "customer": "Cliente ficticio", "observation": "Prueba"}, **changes)
 
 
-def test_mp_suggestion_uses_only_local_approved_unbilled_payments_and_day_boundaries(client):
+def test_mp_suggestion_includes_billed_approved_payments_within_the_selected_day(client):
     today = business_today()
     with Session(engine) as db:
         for n, (status, billed, day, amount) in enumerate([
@@ -36,6 +36,7 @@ def test_mp_suggestion_uses_only_local_approved_unbilled_payments_and_day_bounda
             ("approved", False, datetime.combine(today, time.max), "20.20"),
             ("approved", True, datetime.combine(today, time.min), "30"),
             ("refunded", False, datetime.combine(today, time.min), "40"),
+            ("rejected", True, datetime.combine(today, time.min), "45"),
             ("approved", False, datetime.combine(today-timedelta(days=1), time.max), "50"),
             ("approved", False, datetime.combine(today+timedelta(days=1), time.min), "60"),
             ("approved", False, None, "70"),
@@ -43,9 +44,11 @@ def test_mp_suggestion_uses_only_local_approved_unbilled_payments_and_day_bounda
             db.add(Payment(id_payment_mp=f"SIM-CLOSING-{n}", status=status, registered_arca=billed,
                 date_approved=day, mont=Decimal(amount)))
         db.commit()
-    assert client.get(f"/business/sales/mp-total?date={today}").json() == {"total": "30.30"}
+    assert client.get(f"/business/sales/mp-total?date={today}").json() == {"total": "60.30"}
+    assert client.get(f"/business/sales/mp-total?date={today + timedelta(days=1)}").json() == {"total": "60.00"}
+    assert client.get(f"/business/sales/mp-total?date={today + timedelta(days=2)}").json() == {"total": "0.00"}
     page = client.get("/business/entries/new?kind=sale")
-    assert 'value="30.30" placeholder="0,00"' in page.text and 'name="cash_amount"' in page.text
+    assert 'value="60.30" placeholder="0,00"' in page.text and 'name="cash_amount"' in page.text
     assert client.get("/business/sales/mp-total?date=2026-02-30").status_code == 422
 
 

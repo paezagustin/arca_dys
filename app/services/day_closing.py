@@ -6,7 +6,7 @@ from app.models.payment import Payment
 from app.services.mp_identity import operational_payment
 
 
-def unbilled_mp_total(db, day):
+def approved_mp_total(db, day):
     return db.scalar(select(func.coalesce(func.sum(Payment.mont), 0)).where(
-        Payment.status == "approved", Payment.registered_arca.is_(False), Payment.mont > 0, operational_payment(),
+        Payment.status == "approved", Payment.mont > 0, operational_payment(),
         Payment.date_approved.between(datetime.combine(day, time.min), datetime.combine(day, time.max)))) or Decimal("0.00")

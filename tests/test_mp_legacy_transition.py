@@ -23,7 +23,7 @@ from app.models.mp_identity import MPPaymentIdentity, MPLegacyPaymentSnapshot, M
 from app.models.payment import Payment
 from app.services.billing import BillingConflict, BillingService
 from app.services.billing_preview import preview_invoice
-from app.services.day_closing import unbilled_mp_total
+from app.services.day_closing import approved_mp_total
 from app.services.listings import parse_filters, payment_statement
 from app.services.mp_inbox import MPInbox
 from app.services.metrics import period_metrics
@@ -171,9 +171,9 @@ def test_duplicates_remain_frozen_and_cannot_be_billed_or_reinserted(scratch_dat
         eligible = list(db.scalars(payment_statement(parse_filters("no", default_today=False), eligible=True)))
         assert all(not row.id_payment_mp.startswith("SIM-DUP-") for row in eligible)
         expected = db.scalar(text("""SELECT coalesce(sum(mont),0) FROM payments
-            WHERE status='approved' AND registered_arca=false AND mont>0
+            WHERE status='approved' AND mont>0
             AND date_approved::date='2026-10-01' AND id>88"""))
-        assert unbilled_mp_total(db, date(2026,10,1)) == expected
+        assert approved_mp_total(db, date(2026,10,1)) == expected
     gateway.assert_not_called()
     for statement in ("UPDATE payments SET registered_arca=true WHERE id=12",
                       "UPDATE payments SET raw_json='{}' WHERE id=12",

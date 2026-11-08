@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.models.business import BusinessEntry, Supplier
 from app.services.business import KINDS, EXPENSE_TYPES, snapshot, save_entry, save_supplier, record_date, delete_entry
-from app.services.day_closing import unbilled_mp_total
+from app.services.day_closing import approved_mp_total
 from app.services.listings import paginate, parse_filters, business_today
 from app.web import templates
 
@@ -60,7 +60,7 @@ def entry_form(request, db, row=None, values=None, error=None):
         # Un total enviado por el navegador no participa ni del guardado ni del error.
         data.pop("amount", None)
     if not row and values is None and kind == "sale":
-        suggested_mp = unbilled_mp_total(db, record_date(data["entry_date"]))
+        suggested_mp = approved_mp_total(db, record_date(data["entry_date"]))
         data.update(cash_amount="", mp_amount=str(suggested_mp) if suggested_mp else "")
     selected = db.get(Supplier, int(data["supplier_id"])) if str(data.get("supplier_id", "")).isdigit() else None
     return templates.TemplateResponse(request=request, name="business_entry.html", context={"row": row,
@@ -70,7 +70,7 @@ def entry_form(request, db, row=None, values=None, error=None):
 @router.get("/sales/mp-total")
 def mp_total(date: str, db: Session = Depends(get_db)):
     try:
-        total = unbilled_mp_total(db, record_date(date))
+        total = approved_mp_total(db, record_date(date))
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     return {"total": str(total)}

@@ -75,8 +75,9 @@ Los contratos efectivos y sus límites están en MERCADO_PAGO.md.
 
 ## Gestión y originales
 BusinessEntry conserva cierres independientes de pagos/facturas. day_closing.py
-consulta solo la DB para sugerir MP aprobado sin facturar de la fecha; la usuaria
-puede modificarlo. business.py valida efectivo/MP y calcula la suma en servidor; no se impone igualdad con otras fuentes. UUID de formulario, venta
+consulta solo la DB para sugerir los cobros MP aprobados de la fecha, incluidos
+los facturados y con exclusión de los grupos históricos ambiguos. La usuaria puede
+modificarlo. business.py valida efectivo/MP y calcula la suma en servidor; no se impone igualdad con otras fuentes. UUID de formulario, venta
 vigente única por fecha y bloqueo/versión en ediciones sin historial.
 Las anulaciones heredadas siguen excluidas; se pueden archivar proveedores. Proveedores sin stock ni cuenta corriente.
 La carga inicial JSON valida los tres archivos y confirma todos los registros en

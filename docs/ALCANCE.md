@@ -16,7 +16,7 @@ intermedia de facturación parcial. La ampliación H10 incorpora Sueldos y Fiado
 | M01 | MP idempotente por ID externo; repetir notificaciones no duplica pagos. Importes iguales no implican duplicado. |
 | M02 | Actualizar estados y conservar historial de eventos; devolución no emite nota de crédito automáticamente. |
 | M03 | Identificar formatos reales de Point, QR y transferencias con ejemplos anonimizados; validar firma cuando corresponda al producto. |
-| G01 | Ventas diarias con efectivo y MP editable sugerido localmente desde aprobados sin facturar de la fecha; suma en servidor; independientes de cobros y facturas. Edición simple por lápiz, sin motivos ni historial de cambios. |
+| G01 | Ventas diarias independientes de cobros y facturas, con efectivo y MP editable. Se sugieren los cobros MP locales aprobados de la fecha, incluidos los facturados, y se suman ambos importes en el servidor. Edición simple por lápiz, sin motivos ni historial de cambios. |
 | G02 | Solo ventas diarias y egresos En Blanco/En Negro; proveedores buscables. Sin otros ingresos ni medios/categorías adicionales. |
 | G03 | Carga inicial puntual por consola de los tres JSON corregidos: proveedores, ventas y egresos, validación, transacción, conciliación e idempotencia. Sin módulo web Importar Excel ni importación de bloques manuales del dashboard. |
 | G04 | Reportes separan ventas, cobros MP y emisión fiscal. Desglose efectivo/MP, Sueldos por empleado y Ganancia = Ventas − Total Egresos − Sueldos; filtros día/período y Excel. |

@@ -5,9 +5,10 @@ las facturas. No se crean ventas al emitir un comprobante ni al recibir un pago.
 
 ## Ventas del día
 Fecha (hoy en Buenos Aires, editable), monto en efectivo y monto de Mercado Pago.
-MP se sugiere desde los cobros locales aprobados sin facturar de esa fecha y se
-puede modificar. No realiza llamadas externas. El servidor suma ambos importes;
-el total visible es de solo lectura. Al cambiar la fecha vuelve a sugerir MP.
+MP se sugiere desde los cobros locales aprobados de esa fecha, incluidos los
+facturados. Los cobros históricos repetidos pendientes de conciliación se excluyen.
+El importe sugerido se puede modificar. El servidor suma ambos importes y el
+total visible es de solo lectura. Al cambiar la fecha vuelve a sugerir MP.
 Una edición ya abierta conserva los importes guardados, sin recalcularlos por
 posteriores facturas o cambios de estado del pago.
 En altas, efectivo queda vacío con placeholder 0,00; MP también queda vacío si
