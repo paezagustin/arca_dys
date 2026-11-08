@@ -48,6 +48,7 @@ docker-compose-dev-window.yml
 !tests/fixtures/legacy_schema.sql
 !scripts/audit-legacy.sql
 !scripts/reset-business-data.sql
+!scripts/merge-alberto-suppliers.sql
 *.dump
 *.backup
 *.xlsx

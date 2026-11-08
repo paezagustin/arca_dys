@@ -54,6 +54,18 @@ Eliminar está disponible para proveedores sin egresos ni asignaciones de import
 Los proveedores vinculados se editan o archivan para conservar sus referencias.
 Los nombres comparan mayúsculas y espacios; dos nombres parecidos no se fusionan solos.
 
+Para la unificación puntual de Casa Alberto en Cotillón Alberto, respaldar la base
+y ensayar `scripts/merge-alberto-suppliers.sql` en una copia de la revisión
+`0014_credit_timestamps`. Ejecutarlo con `psql -X -f scripts/merge-alberto-suppliers.sql`
+contra la copia ensaya los cambios y termina en `ROLLBACK`. El aviso informa los
+IDs y la cantidad de referencias reasignadas.
+
+La aplicación requiere una ventana de mantenimiento, un respaldo vigente
+restaurado en una copia y destino comprobado. El parámetro `-v apply=true` confirma
+la transacción. La operación verifica cada egreso y cada asignación de importación
+antes de retirar el proveedor de origen. Si hay datos de contacto o notas
+distintos en ambos proveedores, revisar esos valores antes de volver a ejecutar.
+
 ## Garantías internas
 UUID de formulario e índice único impiden duplicados. El bloqueo y número de versión
 evitan sobrescribir una edición de otra ventana. Los importes siguen en NUMERIC(18,2).
