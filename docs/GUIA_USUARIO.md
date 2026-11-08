@@ -21,6 +21,10 @@ En escritorio las secciones quedan visibles en la barra lateral. Administración
 está abajo a la izquierda en esa barra, con margen y encima de ARCA DYS; al ingresar,
 Salir queda allí. En celular estos controles aparecen al desplegar el menú.
 
+En la pantalla de inicio, el icono de la app dice **ARCA DYS** y muestra una
+caja registradora. La misma caja identifica la pestaña del navegador. Para
+instalar la app, seguí los [pasos para tu navegador](PWA_LAN.md#instalar-en-el-teléfono).
+
 Ingresá importes en pesos enteros. Las pantallas descartan los centavos al mostrar
 los montos, por ejemplo 123,99 se ve como 123. Los campos numéricos no tienen
 flechas para sumar o restar. En ventas podés completar efectivo, Mercado Pago
