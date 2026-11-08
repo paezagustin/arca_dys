@@ -58,7 +58,7 @@ def render_invoice_pdf(invoice, *, simulated=False):
     amount = Decimal(str(invoice.total_amount)).quantize(Decimal("0.01"))
     title = "SIMULACION - SIN VALIDEZ FISCAL" if simulated else ("REGISTRO HISTORICO - DATOS FISCALES INCOMPLETOS" if legacy else "ORIGINAL")
     story = [p(title, "CenterLabel"), Spacer(1, 15)]
-    logo = Image(str(Path(__file__).resolve().parents[1] / "assets/logo-dulce-salado.jpg"), width=55, height=55, kind="proportional")
+    logo = Image(str(Path(__file__).resolve().parents[1] / "assets/pwa/arca-dys-192.png"), width=55, height=55, kind="proportional")
     issuer = "<b>" + escape(snapshot.get("name") or "Emisor no conservado en el registro") + "</b><br/>"
     issuer += escape(snapshot.get("address") or "Domicilio no conservado") + "<br/>"
     issuer += "CUIT: " + escape(snapshot.get("cuit") or "Sin dato histórico") + "<br/>"

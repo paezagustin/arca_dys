@@ -1,6 +1,7 @@
 from io import BytesIO
 from decimal import Decimal
 import pytest
+from PIL import Image
 from pypdf import PdfReader
 from sqlalchemy import text
 from app.core.database import engine
@@ -25,8 +26,9 @@ def confirm_and_process(client, response):
 
 def test_startup_health_and_logo(client):
     assert client.get("/health").json() == {"status": "ok", "environment": "test", "integrations": "mock"}
-    assert "Modo simulado" in client.get("/dev").text
-    assert client.get("/assets/logo-dulce-salado.jpg").status_code == 200
+    page = client.get("/dev").text
+    assert "Modo simulado" in page
+    assert '<img src="/assets/pwa/arca-dys-192.png" alt="ARCA DYS">' in page
 
 
 def test_examples_are_repeatable_and_complete_invoice_downloads(client):
@@ -46,7 +48,12 @@ def test_examples_are_repeatable_and_complete_invoice_downloads(client):
         assert raw["FeDetResp"]["FECAEDetResponse"]["CAE"] == "SIMULADO-SIN-VALIDEZ"
     pdf = client.get("/ARCA/invoice/1/pdf")
     assert pdf.headers["content-type"] == "application/pdf"
-    content = PdfReader(BytesIO(pdf.content)).pages[0].extract_text()
+    page = PdfReader(BytesIO(pdf.content)).pages[0]
+    [logo] = page.images
+    with Image.open(BytesIO(client.get("/assets/pwa/arca-dys-192.png").content)) as expected:
+        assert logo.image.size == expected.size
+        assert logo.image.convert("RGB").tobytes() == expected.convert("RGB").tobytes()
+    content = page.extract_text()
     assert "SIN VALIDEZ FISCAL" in content
     assert "TOTAL: $ 25.000" in content and "25.000,00" not in content
     # Repetir la misma selección no crea otra factura.

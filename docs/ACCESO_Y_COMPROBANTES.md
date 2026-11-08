@@ -36,7 +36,8 @@ La misma infraestructura de confirmación se reutiliza para la selección por fi
 
 ## PDF y QR
 Un único generador ReportLab local reemplaza Chromium y PDF remoto. El PDF se
-construye desde el registro y su snapshot fiscal. El logo procede del asset existente.
+construye desde el registro y su snapshot fiscal. Lleva el mismo ícono de ARCA DYS
+que se ve en el encabezado de la aplicación.
 Dos renglones: Cotillón y Repostería; Decimal redondea la primera mitad al centavo y
 la segunda es el resto, conservando exactamente el total. Condición de venta Efectivo.
 El QR fiscal se genera por comprobante, con Base64 del JSON especificado por ARCA:

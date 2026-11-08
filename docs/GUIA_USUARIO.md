@@ -14,7 +14,7 @@ Pruebas permite cargar cobros ficticios sin NGROK, claves ni operaciones reales.
 El banner de simulación y los PDF indican SIN VALIDEZ FISCAL.
 
 ## Navegación y montos
-El encabezado muestra el logo centrado y Dulce y Salado debajo. En el celular,
+El encabezado muestra el ícono de ARCA DYS centrado y Dulce y Salado debajo. En el celular,
 pulsar el icono de tres líneas junto al nombre de la sección para desplegar las opciones; no tiene flecha.
 Al entrar a otra pantalla se cierra y muestra el nombre de la sección elegida.
 En escritorio las secciones quedan visibles en la barra lateral. Administración
