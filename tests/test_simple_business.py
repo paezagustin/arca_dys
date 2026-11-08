@@ -36,13 +36,13 @@ def test_guest_can_save_sale_edit_and_export_without_login():
         assert guest.post("/business/entries/new", data=data).status_code == 200
         with Session(engine) as db:
             identifier = db.scalar(select(BusinessEntry.id))
-        data.update(version="1", cash_amount="3200.23")
+        data.update(version="1", cash_amount="3200")
         assert guest.post(f"/business/entries/{identifier}", data=data).status_code == 200
         assert guest.get("/dashboard?year=2026").status_code == 200
         exported = guest.get("/dashboard/export?year=2026&month=1")
         assert exported.status_code == 200
         sheet = load_workbook(BytesIO(exported.content), data_only=True).active
-        assert sheet["B11"].value == 3200.23
+        assert sheet["B11"].value == 3200
         nav = re.search(r'<nav aria-label="Principal">(.*?)</nav>', page.text, re.S).group(1)
         for label in ("Facturación", "Gestión", "Resumen"):
             assert label in nav
@@ -55,7 +55,7 @@ def test_guest_can_save_sale_edit_and_export_without_login():
 def test_anonymous_preview_is_private_to_browser_and_confirmation_is_idempotent():
     with TestClient(app) as guest, TestClient(app) as other:
         token = csrf(guest.get("/page/invoice/manual"))
-        created = guest.post("/ARCA/invoice/manual/preview", data={"amount": "10456.78", "csrf_token": token}, follow_redirects=False)
+        created = guest.post("/ARCA/invoice/manual/preview", data={"amount": "10456", "csrf_token": token}, follow_redirects=False)
         assert created.status_code == 303
         url = created.headers["location"]
         assert other.get(url).status_code == 404
@@ -68,7 +68,7 @@ def test_anonymous_preview_is_private_to_browser_and_confirmation_is_idempotent(
         with Session(engine) as db:
             invoice = db.scalar(select(Invoice))
             assert db.scalar(select(func.count()).select_from(Invoice)) == 1
-            assert invoice.total_amount == Decimal("10456.78")
+            assert invoice.total_amount == Decimal("10456")
             assert guest.get(f"/ARCA/invoice/{invoice.id}/pdf").content.startswith(b"%PDF")
         history = guest.get("/page/billing-requests")
         assert history.status_code == 200 and "Historial de solicitudes" in history.text
@@ -108,16 +108,16 @@ def test_export_has_six_columns_and_reconciles_multiple_expenses_dates_zero_and_
     assert sheet.title == "ingresos y egresos" and sheet.max_column == 6 and sheet.max_row == 33
     assert [cell.value for cell in sheet[1]] == ["FECHA", "VENTAS DEL DIA", "COMPRAS EN BLANCO", "MONTO", "COMPRAS EN NEGRO", "MONTO2"]
     assert sheet["A2"].value.date() == date(2026, 1, 1)
-    assert sheet["B2"].value == 1234.56 and sheet["B3"].value is None and sheet["B4"].value == 0
+    assert sheet["B2"].value == 1234 and sheet["B3"].value is None and sheet["B4"].value == 0
     assert sheet["C2"].data_type == "s" and sheet["C2"].value == "=SUM(1,1)"
-    assert sheet["B2"].number_format == '"$ "#,##0.00'
+    assert sheet["B2"].number_format == '"$ "#,##0'
     assert sheet["A1"].fill.fgColor.rgb == "00ADC5E7"
     totals = {col: sum((Decimal(str(row[col-1].value)) for row in sheet.iter_rows(min_row=2) if row[col-1].value is not None), Decimal(0)) for col in (2, 4, 6)}
-    assert totals == {2: Decimal("1234.56"), 4: Decimal("300.03"), 6: Decimal("300.03")}
+    assert totals == {2: Decimal("1234"), 4: Decimal("300"), 6: Decimal("300")}
     page = client.get("/dashboard?year=2026&month=1").text
     for label in ("Ventas", "Egresos en blanco", "Egresos en negro", "Total Egresos", "Ganancia"):
         assert label in page
-    assert "$ 634,50" in page and "Otros ingresos" not in page
+    assert "$ 634" in page and "Otros ingresos" not in page
 
 
 def test_export_rejects_unknown_legacy_expense_and_excel_precision_loss(client):
@@ -128,7 +128,7 @@ def test_export_rejects_unknown_legacy_expense_and_excel_precision_loss(client):
     assert client.get("/dashboard/export?year=2026&month=1").status_code == 422
     with Session(engine) as db:
         row = db.scalar(select(BusinessEntry))
-        row.expense_type, row.amount = "white", Decimal("100000000000000.01")
+        row.expense_type, row.amount = "white", Decimal("1000000000000000.01")
         db.commit()
     response = client.get("/dashboard/export?year=2026&month=1")
     assert response.status_code == 422 and "precisión" in response.text

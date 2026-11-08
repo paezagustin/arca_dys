@@ -25,7 +25,7 @@ from tests.test_simple_business import csrf
 
 
 def test_guest_delete_sunday_keeps_original_and_allows_corrected_closing():
-    data = values(entry_date="2026-01-11", cash_amount="100.01", mp_amount="20.02")
+    data = values(entry_date="2026-01-11", cash_amount="100", mp_amount="20")
     with Session(engine) as db:
         identifier = save_entry(db, data, "test").id
     with TestClient(app) as guest:
@@ -44,9 +44,9 @@ def test_guest_delete_sunday_keeps_original_and_allows_corrected_closing():
         original = db.get(BusinessEntry, identifier)
         assert not original.active and original.version == 2
         assert original.entry_key == data["entry_key"] and original.entry_date == date(2026, 1, 11)
-        assert (original.cash_amount, original.mp_amount, original.amount) == (Decimal("100.01"), Decimal("20.02"), Decimal("120.03"))
+        assert (original.cash_amount, original.mp_amount, original.amount) == (Decimal("100"), Decimal("20"), Decimal("120"))
         assert len(list(db.scalars(select(BusinessEntry)))) == 2
-        assert period_metrics(db, date(2026, 1, 1), date(2026, 1, 31))["sale"] == Decimal("120.03")
+        assert period_metrics(db, date(2026, 1, 1), date(2026, 1, 31))["sale"] == Decimal("120")
 
 
 def test_delete_expense_preserves_import_and_fiscal_evidence_and_updates_reports(client):
@@ -119,7 +119,7 @@ def test_concurrent_edit_delete_cannot_lose_correction():
     with Session(engine) as db:
         row = db.get(BusinessEntry, identifier)
         assert row.version == 2
-        assert (row.active, row.amount) == ((True, Decimal("250")) if "edit" in results else (False, Decimal("1500.25")))
+        assert (row.active, row.amount) == ((True, Decimal("250")) if "edit" in results else (False, Decimal("1500")))
 
 
 def test_supplier_filter_totals_pagination_dates_archived_and_without_supplier(client):

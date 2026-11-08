@@ -1,10 +1,10 @@
 """Herramientas disponibles exclusivamente en desarrollo/test simulado."""
-from decimal import Decimal
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.simulation import payment_resource
+from app.services.money import require_whole_pesos
 from app.services.mp_inbox import MPInbox
 from app.models.mp_event import MPEvent
 from app.web import templates
@@ -21,15 +21,15 @@ def index(request: Request):
 async def add_payment(request: Request, db: Session = Depends(get_db)):
     form = await request.form()
     try:
-        amount = Decimal(form.get("amount", ""))
-        if not amount.is_finite() or amount <= 0 or amount > Decimal("2000000") or amount != amount.quantize(Decimal("0.01")):
+        amount = require_whole_pesos(form.get("amount", ""))
+        if not 0 < amount <= 2000000:
             raise ValueError()
         identifier = str(form.get("payment_id") or "").removeprefix("SIM-") or None
         if identifier and (len(identifier) > 36 or not all(c.isalnum() or c in "_-" for c in identifier)):
             raise ValueError()
         resource = payment_resource(amount, form.get("scenario", "approved"), payment_id=identifier)
     except (ValueError, ArithmeticError):
-        raise HTTPException(422, "Importe o escenario inválido")
+        raise HTTPException(422, "Ingresá un importe entero válido y elegí un escenario")
     inbox = MPInbox()
     event_id = inbox.receive({"resource": resource})
     inbox.process_one(event_id)

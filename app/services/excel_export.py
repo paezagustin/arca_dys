@@ -1,7 +1,6 @@
 """Exportación del período con el formato de ingresos y egresos del libro original."""
 from collections import defaultdict
 from datetime import timedelta
-from decimal import Decimal
 from io import BytesIO
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -10,13 +9,18 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 from sqlalchemy import select
 from app.models.business import BusinessEntry, Supplier
 from app.models.registers import SalaryPayment
+from app.services.money import whole_pesos
 
 HEADERS = ("FECHA", "VENTAS DEL DIA", "COMPRAS EN BLANCO", "MONTO", "COMPRAS EN NEGRO", "MONTO2")
 
 
-def check_precision(amount):
-    if abs(amount * 100) >= Decimal("1000000000000000"):
-        raise ValueError("Un importe supera la precisión de Excel; no se exportó para evitar pérdida de centavos.")
+def format_money(cell):
+    if cell.value is not None:
+        amount = whole_pesos(cell.value)
+        if abs(amount) >= 10**15:
+            raise ValueError("Un importe supera la precisión de Excel y no se puede exportar.")
+        cell.value = amount
+    cell.number_format = '"$ "#,##0'
 
 
 def detail_sheet(workbook, title, headers, rows, money_columns):
@@ -33,9 +37,8 @@ def detail_sheet(workbook, title, headers, rows, money_columns):
                 sheet.column_dimensions[cell.column_letter].width = 23
             elif cell.column == 1:
                 cell.number_format = "dd/mm/yyyy"
-            elif cell.column in money_columns and cell.value is not None:
-                check_precision(cell.value)
-                cell.number_format = '"$ "#,##0.00'
+            elif cell.column in money_columns:
+                format_money(cell)
             elif isinstance(cell.value, str):
                 cell.value = ILLEGAL_CHARACTERS_RE.sub("", cell.value)
                 cell.data_type = "s"
@@ -53,8 +56,6 @@ def export_business(db, start, end):
     for entry, supplier in entries:
         if entry.kind == "expense" and entry.expense_type not in {"white", "black"}:
             raise ValueError("Hay egresos anteriores sin tipo. Editalos en Gestión y elegí En Blanco o En Negro antes de exportar.")
-        # Excel solo conserva 15 cifras significativas. Rechazar pérdida silenciosa.
-        check_precision(entry.amount)
         if entry.kind == "sale":
             days[entry.entry_date]["sale"] = entry.amount
             sales.append((entry.entry_date, entry.cash_amount, entry.mp_amount, entry.amount))
@@ -83,7 +84,7 @@ def export_business(db, start, end):
                 if cell.column == 1:
                     cell.number_format = "dd/mm/yyyy"
                 elif cell.column in {2, 4, 6}:
-                    cell.number_format = '"$ "#,##0.00'
+                    format_money(cell)
                     cell.alignment = Alignment(horizontal="right")
                 elif cell.value is not None:
                     # Conservar nombres/descripciones literales, nunca fórmulas del usuario.

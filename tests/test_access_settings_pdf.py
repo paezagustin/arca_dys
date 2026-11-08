@@ -107,7 +107,7 @@ def test_settings_change_preserves_existing_invoice_snapshot_without_change_hist
 
 
 def test_independent_invoice_requires_review_and_repeated_confirmation_does_not_duplicate(client):
-    response = client.post("/ARCA/invoice/manual/preview", data={"amount": "12345.67"})
+    response = client.post("/ARCA/invoice/manual/preview", data={"amount": "12345"})
     assert response.status_code == 200 and "Revisá antes de facturar" in response.text
     with Session(engine) as db:
         preview = db.scalar(select(BillingPreview))
@@ -122,7 +122,7 @@ def test_independent_invoice_requires_review_and_repeated_confirmation_does_not_
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(Invoice)) == 1
         assert db.scalar(select(func.count()).select_from(Payment)) == 0
-        assert Decimal(str(db.scalar(select(Invoice.total_amount)))) == Decimal("12345.67")
+        assert Decimal(str(db.scalar(select(Invoice.total_amount)))) == Decimal("12345")
 
 
 def test_expired_confirmation_and_changed_settings_do_not_emit(client):
@@ -143,9 +143,14 @@ def test_expired_confirmation_and_changed_settings_do_not_emit(client):
         assert db.scalar(select(func.count()).select_from(Invoice)) == 0
 
 
-@pytest.mark.parametrize("amount", ["0", "999.99", "2000000.01", "NaN", "Infinity", "1000.001"])
+@pytest.mark.parametrize("amount", ["0", "999", "2000001", "NaN", "Infinity", "1234.99", "1234,99"])
 def test_independent_invoice_rejects_invalid_amount(client, amount):
     assert client.post("/ARCA/invoice/manual/preview", data={"amount": amount}).status_code == 422
+
+
+def test_settings_form_rejects_fractional_limits(client):
+    response = client.post("/settings", data=dict(defaults(), version="0", minimum="1000.99"))
+    assert response.status_code == 422 and "pesos enteros" in response.text
 
 
 def sample_invoice():

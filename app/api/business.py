@@ -10,6 +10,7 @@ from app.models.business import BusinessEntry, Supplier
 from app.services.business import KINDS, EXPENSE_TYPES, snapshot, save_entry, save_supplier, record_date, delete_entry
 from app.services.day_closing import approved_mp_total
 from app.services.listings import paginate, parse_filters, business_today
+from app.services.money import require_whole_pesos, whole_pesos
 from app.web import templates
 
 router = APIRouter(prefix="/business", tags=["Gestión"])
@@ -61,7 +62,7 @@ def entry_form(request, db, row=None, values=None, error=None):
         data.pop("amount", None)
     if not row and values is None and kind == "sale":
         suggested_mp = approved_mp_total(db, record_date(data["entry_date"]))
-        data.update(cash_amount="", mp_amount=str(suggested_mp) if suggested_mp else "")
+        data.update(cash_amount="", mp_amount=whole_pesos(suggested_mp) if suggested_mp else "")
     selected = db.get(Supplier, int(data["supplier_id"])) if str(data.get("supplier_id", "")).isdigit() else None
     return templates.TemplateResponse(request=request, name="business_entry.html", context={"row": row,
         "values": data, "selected_supplier": selected, "expense_types": EXPENSE_TYPES,
@@ -73,7 +74,7 @@ def mp_total(date: str, db: Session = Depends(get_db)):
         total = approved_mp_total(db, record_date(date))
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
-    return {"total": str(total)}
+    return {"total": str(whole_pesos(total)) if total else ""}
 
 
 @router.get("/entries/new")
@@ -92,6 +93,10 @@ def edit_entry(entry_id: int, request: Request, db: Session = Depends(get_db)):
 async def store_entry(request, db, entry_id=None):
     values = dict(await request.form())
     try:
+        fields = ("cash_amount", "mp_amount") if values.get("kind") == "sale" else ("amount",)
+        for field in fields:
+            if str(values.get(field, "")).strip():
+                values[field] = require_whole_pesos(values[field])
         row = save_entry(db, values, request.state.user.username, entry_id)
     except (ValueError, IntegrityError) as error:
         db.rollback()

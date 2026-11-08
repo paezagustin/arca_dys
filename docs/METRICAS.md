@@ -34,10 +34,13 @@ anchos para que los nombres y valores se lean completos.
 Se incluye cada fecha del período. Las fechas sin ventas conservan la celda vacía.
 Con varias compras por día se agregan filas y la venta aparece una sola vez.
 El concepto conserva proveedor y descripción. Nombres que comienzan con = se
-exportan como texto, sin ejecutar fórmulas. Los importes que exceden las 15 cifras
-significativas de Excel se rechazan con un mensaje, sin truncar centavos.
-Antes de exportar deben clasificarse los egresos heredados sin tipo: de ese modo
-los montos de MONTO/MONTO2 concilian con Total Egresos.
+exportan como texto, sin ejecutar fórmulas. Las celdas de importe contienen
+pesos enteros truncados hacia cero. Si la parte entera excede 15 cifras,
+se rechaza la exportación con un mensaje.
+Antes de exportar deben clasificarse los egresos heredados sin tipo. Resumen
+calcula sus totales con los importes originales y los trunca al mostrarlos.
+En históricos con centavos, sumar las filas enteras de Excel puede dar un
+resultado distinto del total del período mostrado en Resumen.
 
 Las hojas adicionales Ventas (fecha, efectivo, Mercado Pago, total) y Sueldos
 (fecha, empleado, monto, tipo) contienen solo registros del mismo período exportado.

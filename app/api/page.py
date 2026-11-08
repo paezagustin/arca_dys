@@ -7,7 +7,7 @@ from app.models.invoice import Invoice
 from app.models.billing import BillingRequest
 from app.models.mp_identity import MPPaymentIdentity
 from app.services.billing import UNCERTAIN_STATES
-from app.services.settings import read_settings
+from app.services.settings import read_settings, manual_invoice_limits
 from app.services.listings import parse_filters, payment_statement, paginate, payment_totals
 from app.services.payments import STATUSES
 from app.web import templates
@@ -33,7 +33,9 @@ def date_range(statement, field, filters):
 @router.get("/invoice/manual")
 def manual_invoice(request: Request, db: Session = Depends(get_db)):
     values, _ = read_settings(db)
-    return templates.TemplateResponse(request=request, name="manual_invoice.html", context={"values": values})
+    minimum, maximum = manual_invoice_limits(values)
+    return templates.TemplateResponse(request=request, name="manual_invoice.html",
+        context={"minimum": minimum, "maximum": maximum})
 
 
 @router.get("/invoice")

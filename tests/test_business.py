@@ -16,7 +16,7 @@ from tests.test_migrations import scratch_database, migrate
 
 
 def values(**changes):
-    data = dict({"entry_key": str(uuid4()), "kind": "sale", "entry_date": "2026-01-10", "amount": "1500.25",
+    data = dict({"entry_key": str(uuid4()), "kind": "sale", "entry_date": "2026-01-10", "amount": "1500",
         "expense_type": "white"}, **changes)
     if data["kind"] == "sale":
         data.setdefault("cash_amount", data["amount"])
@@ -35,7 +35,7 @@ def test_sales_are_independent_idempotent_and_other_income_is_rejected(client):
         with pytest.raises(ValueError):
             save_entry(db, values(kind="income", amount="50.20"), "admin")
     page = client.get("/business")
-    assert "$ 1.500,25" in page.text and "Otro ingreso" not in page.text
+    assert "$ 1.500" in page.text and "Otro ingreso" not in page.text
 
 
 def test_daily_sale_unique_under_concurrency():
@@ -54,12 +54,12 @@ def test_daily_sale_unique_under_concurrency():
 def test_edit_without_reason_preserves_version_protection_and_has_no_history(client):
     with Session(engine) as db:
         identifier = save_entry(db, values(), "admin").id
-    data = values(version="1", amount="2000.10")
+    data = values(version="1", amount="2000")
     assert client.post(f"/business/entries/{identifier}", data=data, follow_redirects=False).status_code == 303
     assert client.post(f"/business/entries/{identifier}", data=data).status_code == 422
     with Session(engine) as db:
         row = db.get(BusinessEntry, identifier)
-        assert row.amount == Decimal("2000.10") and row.version == 2
+        assert row.amount == Decimal("2000") and row.version == 2
     page = client.get(f"/business/entries/{identifier}")
     assert "Historial de cambios" not in page.text and 'name="reason"' not in page.text
     assert 'name="medium"' not in page.text and 'name="active"' not in page.text
@@ -91,7 +91,7 @@ def test_zero_is_distinct_from_blank(client):
     assert client.post("/business/entries/new", data=values(amount="0"), follow_redirects=False).status_code == 303
     with Session(engine) as db:
         identifier = db.scalar(select(BusinessEntry.id))
-    assert 'value="0.00" placeholder="0,00"' in client.get(f"/business/entries/{identifier}").text
+    assert 'value="0" placeholder="0"' in client.get(f"/business/entries/{identifier}").text
     assert 'name="expense_type"' in client.get("/business/entries/new?kind=expense").text
     assert client.post("/business/entries/new", data=values(kind="expense", amount="0", category="Compra")).status_code == 422
     assert client.post("/business/entries/new", data=values(entry_date="2026-02-30")).status_code == 422

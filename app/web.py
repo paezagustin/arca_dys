@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from fastapi.templating import Jinja2Templates
+from app.services.money import PESO_INPUT_LIMIT, format_whole_pesos, whole_pesos
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -14,7 +15,15 @@ def money(value):
     amount = Decimal(str(value))
     if not amount.is_finite():
         return "Revisar importe"
-    return "$ " + f"{amount:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+    return format_whole_pesos(amount)
+
+
+def money_input(value):
+    try:
+        amount = Decimal(str(value))
+        return str(whole_pesos(amount)) if amount.is_finite() and 0 <= amount < PESO_INPUT_LIMIT else ""
+    except (ArithmeticError, ValueError):
+        return ""
 
 
 def local_date(value):
@@ -33,7 +42,7 @@ def page_url(request, key, value):
     return request.url.path + "?" + urlencode(items)
 
 
-templates.env.filters.update(money=money, local_date=local_date)
+templates.env.filters.update(money=money, money_input=money_input, local_date=local_date)
 templates.env.globals["page_url"] = page_url
 
 

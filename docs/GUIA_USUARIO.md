@@ -21,18 +21,18 @@ En escritorio las secciones quedan visibles en la barra lateral. Administración
 está abajo a la izquierda en esa barra, con margen y encima de ARCA DYS; al ingresar,
 Salir queda allí. En celular estos controles aparecen al desplegar el menú.
 
-Los montos nuevos empiezan vacíos y muestran 0,00 como ayuda. Los importes guardados
-siguen visibles al editar. En ventas puede completarse efectivo, Mercado Pago o
-ambos; el que se deja vacío se toma como cero. No puede guardarse una caja con
-ambos vacíos: para registrar cero hay que escribir 0 en uno de los campos. MP
-continúa sugiriendo el importe de cobros de la fecha cuando hay un total positivo.
+Ingresá importes en pesos enteros. Las pantallas descartan los centavos al mostrar
+los montos, por ejemplo 123,99 se ve como 123. Los campos numéricos no tienen
+flechas para sumar o restar. En ventas podés completar efectivo, Mercado Pago
+o ambos. El que se deja vacío se toma como cero y debe completarse al menos uno.
 
 ## Facturar
 En Facturación elegir cobros y FACTURAR SELECCIONADOS, o FACTURAR TODO para los pagos
 disponibles del filtro completo, incluso en otras páginas. Revisar importe/cantidad
 y confirmar. Factura por importe permite ingresar un total independiente de MP.
 La confirmación vence a los 15 minutos. El comprobante sigue siendo Factura C,
-Efectivo, con reparto de cotillón y repostería 50/50.
+Efectivo, con reparto de cotillón y repostería 50/50. La factura y su QR conservan
+el importe exacto de los cobros, incluidos sus centavos cuando los tengan.
 
 La solicitud queda guardada y la pantalla actualiza el resultado. Descargar el PDF
 de la misma factura tantas veces como haga falta. Si queda Por verificar, usar
@@ -42,10 +42,10 @@ permite volver al resultado. No se cargan ventas ni egresos al facturar.
 
 ## Registrar ventas del día
 En Gestión pulsar Registrar ventas del día. La fecha empieza en hoy y se puede
-cambiar. Ingresar el monto en efectivo. Mercado Pago propone los cobros aprobados
-sin facturar de esa fecha; se puede modificar. Total vendido muestra la suma. Guardar.
-Para modificarlo, pulsar el lápiz y cambiar fecha/efectivo/MP. Al abrir una edición
-se conservan los importes guardados. Los cierres anteriores sin desglose requieren
+cambiar. Ingresar el monto en efectivo. Mercado Pago propone la parte entera del
+total aprobado de esa fecha, incluidos los cobros facturados. Podés editarla.
+Total vendido muestra la suma. Para modificar un cierre, pulsar el lápiz.
+Los cierres anteriores sin desglose requieren
 completar ambos importes reales para editarlos.
 No se pide motivo ni se muestra historial. Solo hay una venta por día; cero es
 válido y un día sin registrar no se interpreta como cero.

@@ -1,8 +1,10 @@
 from datetime import date
 from decimal import Decimal
+from math import ceil
 from sqlalchemy import select, text
 from app.core import config
 from app.models.settings import BusinessSettings
+from app.services.money import require_whole_pesos, whole_pesos
 
 
 def defaults():
@@ -17,6 +19,10 @@ def defaults():
 def read_settings(db):
     row = db.get(BusinessSettings, 1)
     return (dict(row.values), row.version) if row else (defaults(), 0)
+
+
+def manual_invoice_limits(values):
+    return ceil(Decimal(values["minimum"])), whole_pesos(values["maximum"])
 
 
 def validate_settings(values):
@@ -45,13 +51,15 @@ def validate_settings(values):
         raise ValueError("Punto de venta inválido")
     minimum, maximum = Decimal(str(values.get("minimum", ""))), Decimal(str(values.get("maximum", "")))
     if not minimum.is_finite() or not maximum.is_finite() or not 0 < minimum <= maximum < Decimal("10000000000000000") or any(n != n.quantize(Decimal("0.01")) for n in [minimum, maximum]):
-        raise ValueError("Los límites deben ser positivos, con hasta dos decimales y mínimo no mayor al máximo")
+        raise ValueError("Los límites deben ser positivos y el mínimo no debe superar el máximo")
     cleaned.update(cuit=cuit, tax_condition=condition, start_date=start.isoformat(), point=point,
                    minimum=str(minimum), maximum=str(maximum))
     return cleaned
 
 
 def save_settings(db, values, expected_version, username):
+    values = dict(values, minimum=require_whole_pesos(values.get("minimum")),
+                  maximum=require_whole_pesos(values.get("maximum")))
     cleaned = validate_settings(values)
     db.execute(text("SELECT pg_advisory_xact_lock(72422,1)"))
     previous, version = read_settings(db)

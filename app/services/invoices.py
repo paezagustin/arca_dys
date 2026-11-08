@@ -13,12 +13,19 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.barcode.qr import QrCodeWidget
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image, KeepTogether
+from app.services.money import format_whole_pesos
 
 
 def split_amount(amount):
     total = Decimal(str(amount)).quantize(Decimal("0.01"))
     first = (total / 2).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     return first, total - first
+
+
+def fiscal_money(value):
+    if value == value.to_integral_value():
+        return format_whole_pesos(value)
+    return "$ " + f"{value:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
 
 
 def qr_value(invoice, simulated=False):
@@ -49,7 +56,6 @@ def render_invoice_pdf(invoice, *, simulated=False):
     styles.add(ParagraphStyle("TotalRight", parent=styles["Heading2"], alignment=TA_RIGHT))
     p = lambda text, style="SmallPrint": Paragraph(text, styles[style])
     amount = Decimal(str(invoice.total_amount)).quantize(Decimal("0.01"))
-    money = lambda value: "$ " + f"{value:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
     title = "SIMULACION - SIN VALIDEZ FISCAL" if simulated else ("REGISTRO HISTORICO - DATOS FISCALES INCOMPLETOS" if legacy else "ORIGINAL")
     story = [p(title, "CenterLabel"), Spacer(1, 15)]
     logo = Image(str(Path(__file__).resolve().parents[1] / "assets/logo-dulce-salado.jpg"), width=55, height=55, kind="proportional")
@@ -66,12 +72,12 @@ def render_invoice_pdf(invoice, *, simulated=False):
     story.extend([header, Spacer(1, 18), p("<b>Cliente:</b> Consumidor Final<br/><b>Documento:</b> Sin identificar (tipo 99)<br/><b>Condición de venta:</b> Efectivo"), Spacer(1, 18)])
     first, second = split_amount(amount)
     table = Table([["Descripción", "Cantidad", "Precio unitario", "Subtotal"],
-        ["Cotillón", "1", money(first), money(first)], ["Repostería", "1", money(second), money(second)]], colWidths=[238, 65, 110, 110])
+        ["Cotillón", "1", fiscal_money(first), fiscal_money(first)], ["Repostería", "1", fiscal_money(second), fiscal_money(second)]], colWidths=[238, 65, 110, 110])
     table.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), colors.HexColor("#edf3ef")),
         ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"), ("FONTSIZE", (0,0), (-1,-1), 10),
         ("TOPPADDING", (0,0), (-1,-1), 12), ("BOTTOMPADDING", (0,0), (-1,-1), 12),
         ("ALIGN", (1,0), (-1,-1), "RIGHT"), ("LINEBELOW", (0,0), (-1,-1), .4, colors.HexColor("#d5ded9"))]))
-    story.extend([table, Spacer(1, 16), p("TOTAL: " + money(amount), "TotalRight"), Spacer(1, 25)])
+    story.extend([table, Spacer(1, 16), p("TOTAL: " + fiscal_money(amount), "TotalRight"), Spacer(1, 25)])
     value = qr_value(invoice, simulated=simulated)
     if value:
         code = QrCodeWidget(value, barLevel="M", barBorder=4)

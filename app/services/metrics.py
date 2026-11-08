@@ -23,7 +23,7 @@ def bounds(year, month=0):
 
 def finish(row):
     row["result"] = ((row["sale"] or ZERO) - (row["expense"] or ZERO) - (row["salary"] or ZERO)) if row["entries"] or row["salary_count"] else None
-    row["average"] = (row["sale"] / row["days"]).quantize(Decimal("0.01")) if row["days"] else None
+    row["average"] = row["sale"] / row["days"] if row["days"] else None
     return row
 
 
@@ -98,7 +98,7 @@ def change(current, previous):
     if current is None or previous is None:
         return {"difference": None, "percent": None}
     return {"difference": current - previous,
-        "percent": ((current - previous) / previous * 100).quantize(Decimal("0.1")) if previous > 0 else None}
+        "percent": (current - previous) * 100 / previous if previous > 0 else None}
 
 
 def expense_groups(start, end, *, suppliers=False):

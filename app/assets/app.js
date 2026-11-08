@@ -124,21 +124,18 @@ document.querySelectorAll('[data-daily-sale]').forEach(form => {
   const total = form.querySelector('[data-sale-total]');
   const status = form.querySelector('[data-mp-status]');
   let version = 0, controller;
-  const format = new Intl.NumberFormat('es-AR', {style: 'currency', currency: 'ARS'});
-  function cents(input) {
+  const format = new Intl.NumberFormat('es-AR', {
+    style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0
+  });
+  function pesos(input) {
     if (!input.value) return 0n;
-    if (!/^\d+(\.\d{1,2})?$/.test(input.value)) return null;
-    const [whole, fraction = ''] = input.value.split('.');
-    return BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0'));
+    if (!/^\d+$/.test(input.value)) return null;
+    return BigInt(input.value);
   }
   function update() {
     if (!cash.value && !mp.value) { total.value = ''; return; }
-    const a = cents(cash), b = cents(mp);
-    if (a !== null && b !== null) {
-      const sum = a + b;
-      total.value = format.formatToParts(sum / 100n).map(part => part.type === 'fraction' ? String(sum % 100n).padStart(2, '0') : part.value).join('');
-    }
-    else total.value = '';
+    const a = pesos(cash), b = pesos(mp);
+    total.value = a === null || b === null ? '' : format.format(a + b);
   }
   cash.addEventListener('input', update);
   mp.addEventListener('input', () => { ++version; controller?.abort(); status.textContent = ''; update(); });
@@ -152,7 +149,7 @@ document.querySelectorAll('[data-daily-sale]').forEach(form => {
       if (!response.ok) throw new Error('total');
       const data = await response.json();
       if (current !== version) return;
-      mp.value = /^0+(\.0+)?$/.test(data.total) ? '' : data.total;
+      mp.value = data.total;
       status.textContent = 'Monto de Mercado Pago actualizado para la fecha elegida.'; update();
     } catch (error) {
       if (current === version && error.name !== 'AbortError') {

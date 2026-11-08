@@ -198,6 +198,15 @@ input:not([type=checkbox]):not([type=hidden]),select,textarea {
   background:white;
   color:var(--ink);
 }
+input[type=number] {
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance:none;
+  margin:0;
+}
 textarea {
   min-height:100px;
   resize:vertical;

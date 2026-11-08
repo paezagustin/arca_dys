@@ -1,9 +1,11 @@
 from io import BytesIO
+from decimal import Decimal
 import pytest
 from pypdf import PdfReader
 from sqlalchemy import text
 from app.core.database import engine
 from app.services.simulation import payment_resource
+from app.services.mp_inbox import MPInbox
 
 
 def counts():
@@ -31,7 +33,7 @@ def test_examples_are_repeatable_and_complete_invoice_downloads(client):
     client.post("/dev/examples")
     client.post("/dev/examples")
     assert counts() == (3, 0, 0)
-    assert "50.000,00" in client.get("/page/invoice").text
+    assert "50.000" in client.get("/page/invoice").text
     response = client.post("/ARCA/invoice/selected", data={"payment_ids": ["1", "2"]})
     assert response.status_code == 200
     confirm_and_process(client, response)
@@ -46,7 +48,7 @@ def test_examples_are_repeatable_and_complete_invoice_downloads(client):
     assert pdf.headers["content-type"] == "application/pdf"
     content = PdfReader(BytesIO(pdf.content)).pages[0].extract_text()
     assert "SIN VALIDEZ FISCAL" in content
-    assert "25.000,00" in content
+    assert "TOTAL: $ 25.000" in content and "25.000,00" not in content
     # Repetir la misma selección no crea otra factura.
     client.post("/ARCA/invoice/selected", data={"payment_ids": ["1", "2"]})
     assert counts() == (3, 1, 2)
@@ -57,6 +59,20 @@ def test_single_checkbox_and_total_preserve_current_contract(client):
     confirm_and_process(client, client.post("/ARCA/invoice/selected", data={"payment_ids": "1"}))
     confirm_and_process(client, client.post("/ARCA/invoice", data={"visible_payment_ids": ["2", "3"]}))
     assert counts() == (3, 2, 3)
+
+
+def test_mp_preview_truncates_display_but_preserves_exact_payment_and_pdf(client):
+    response = client.post("/mp/webhook", json={"resource": payment_resource("1234.99")})
+    MPInbox().process_one(response.json()["event_id"])
+    preview = client.post("/ARCA/invoice/selected", data={"payment_ids": "1"})
+    assert preview.status_code == 200 and "$ 1.234" in preview.text
+    assert "1.234,99" not in preview.text and "conserva el importe exacto" in preview.text
+    confirm_and_process(client, preview)
+    with engine.connect() as connection:
+        amount = connection.execute(text("SELECT total_amount FROM invoices")).scalar_one()
+        assert amount == Decimal("1234.99")
+    pdf = client.get("/ARCA/invoice/1/pdf")
+    assert "TOTAL: $ 1.234,99" in PdfReader(BytesIO(pdf.content)).pages[0].extract_text()
 
 
 @pytest.mark.parametrize("ids", ["abc", "1.5"])
@@ -73,7 +89,6 @@ def test_empty_selection_does_not_emit(client):
 
 @pytest.mark.parametrize("scenario", ["approved", "pending", "refunded", "rejected", "api_error"])
 def test_webhook_without_remote_api(client, scenario):
-    from app.services.mp_inbox import MPInbox
     response = client.post("/mp/webhook", json={"resource": payment_resource("10000", scenario)})
     assert response.json()["status"] == "accepted"
     assert counts() == (0, 0, 0)  # ACK durable antes de consultar al proveedor.
@@ -100,7 +115,7 @@ def test_error_history_works_without_resolution_fields(client):
     assert "resolved" not in history["errors"][0]
 
 
-@pytest.mark.parametrize("amount", ["NaN", "Infinity", "-1", "0", "1.001", ""])
+@pytest.mark.parametrize("amount", ["NaN", "Infinity", "-1", "0", "1000.99", ""])
 def test_simulator_rejects_invalid_amounts(client, amount):
     assert client.post("/dev/payments", data={"amount": amount}).status_code == 422
     assert counts() == (0, 0, 0)

@@ -5,7 +5,8 @@ from sqlalchemy import select
 from app.models.billing import utcnow
 from app.models.settings import BillingPreview
 from app.models.payment import Payment
-from app.services.settings import fiscal_configuration
+from app.services.settings import fiscal_configuration, manual_invoice_limits
+from app.services.money import require_whole_pesos
 from app.services.arca.billing import validate_amount
 from app.services.billing import BillingService, BillingConflict
 from app.services.mp_identity import operational_payment
@@ -23,9 +24,11 @@ def preview_invoice(db, user_id, payment_ids=(), manual_amount=None, *, session_
         if len(payments) != len(ids) or any(p.status != "approved" or p.registered_arca is not False or p.date_approved is None or p.mont is None or p.mont <= 0 for p in payments):
             raise BillingConflict("Algún pago no está disponible. Actualizá el listado.")
         amount = sum((Decimal(str(p.mont)) for p in payments), Decimal(0))
+        minimum, maximum = Decimal(settings["minimum"]), Decimal(settings["maximum"])
     else:
-        amount = Decimal(str(manual_amount))
-    validate_amount(amount, Decimal(settings["minimum"]), Decimal(settings["maximum"]))
+        amount = require_whole_pesos(manual_amount)
+        minimum, maximum = manual_invoice_limits(settings)
+    validate_amount(amount, minimum, maximum)
     preview = BillingPreview(id=str(uuid4()), user_id=user_id, session_hash=session_hash, kind="payments" if ids else "manual",
         payment_ids=ids, total=amount, settings_version=version, expires_at=utcnow() + timedelta(minutes=15))
     db.add(preview)

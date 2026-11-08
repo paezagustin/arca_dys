@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.registers import SalaryPayment, CustomerCredit, EMPLOYEES, SALARY_MEDIA
 from app.services.business import check_version
+from app.services.money import require_whole_pesos
 from app.services.registers import save_register
 from app.services.listings import business_today, parse_filters, paginate
 from app.web import templates
@@ -81,6 +82,7 @@ async def store(request, db, model):
     except ValueError:
         raise HTTPException(422, "Registro inválido") from None
     try:
+        values["amount"] = require_whole_pesos(values.get("amount"))
         save_register(db, model, values, identifier)
     except (ValueError, IntegrityError) as exc:
         db.rollback()

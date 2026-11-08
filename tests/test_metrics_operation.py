@@ -10,7 +10,14 @@ from app.models.invoice import Invoice
 from app.models.mp_event import MPEvent
 from app.services.business import save_entry, save_supplier
 from app.services.metrics import year_metrics, period_total, change, bounds
+from app.web import money
 from tests.test_business import values
+
+
+def test_display_truncates_positive_and_negative_amounts_towards_zero():
+    assert money(Decimal("1234.99")) == "$ 1.234"
+    assert money(Decimal("-1234.99")) == "$ -1.234"
+    assert money(Decimal("-0.99")) == "$ 0"
 
 
 def test_metrics_reconcile_registered_detail_and_keep_mp_and_invoices_separate(client):
@@ -38,8 +45,8 @@ def test_metrics_reconcile_registered_detail_and_keep_mp_and_invoices_separate(c
         total = period_total(rows)
         assert total["result"] == Decimal("220.00") and total["average"] == Decimal("100.10")
     page = client.get("/dashboard?year=2026&month=1")
-    assert page.status_code == 200 and "$ 70,00" in page.text and "$ 9.999,00" in page.text
-    assert "$ 50,10" in page.text and "Diciembre 2025" in page.text
+    assert page.status_code == 200 and "$ 70" in page.text and "$ 9.999" in page.text
+    assert "$ 50" in page.text and "Diciembre 2025" in page.text
     assert '<svg ' in page.text and 'aria-labelledby="chart-title chart-description"' in page.text
     assert "Ganancia" in page.text and "Otros ingresos" not in page.text
     assert "saldo pendiente" not in page.text.lower() and "pendientes de facturar" not in page.text.lower()
@@ -53,7 +60,7 @@ def test_grouped_supplier_and_expense_type_lists_have_independent_sql_pagination
     page = client.get("/dashboard?year=2026&month=1&suppliers_page=2&categories_page=1")
     assert page.status_code == 200
     assert "Página 2 de 2" in page.text and "Página 1 de 1" in page.text
-    assert "Ficticio 26" in page.text and "$ 33,75" in page.text
+    assert "Ficticio 26" in page.text and "$ 33" in page.text
     assert "&lt;built-in" not in page.text
 
 
@@ -83,15 +90,15 @@ def test_request_size_limit_checks_declared_and_streamed_bytes(client):
         assert db.scalar(select(func.count()).select_from(MPEvent)) == 0
 
 
-def test_large_fiscal_amount_never_loses_cents_even_with_raised_admin_limit(client):
+def test_large_fiscal_amount_never_loses_precision_even_with_raised_admin_limit(client):
     from app.services.settings import read_settings, save_settings
     from app.models.billing import BillingRequest
     from app.models.settings import BillingPreview
     with Session(engine) as db:
         settings, version = read_settings(db)
-        settings["maximum"] = "9999999999999999.99"
+        settings["maximum"] = "9999999999999999"
         save_settings(db, settings, version, "admin")
-    response = client.post("/ARCA/invoice/manual/preview", data={"amount": "1000000000000000.01"})
+    response = client.post("/ARCA/invoice/manual/preview", data={"amount": "9007199254740993"})
     assert response.status_code == 422 and "precisión" in response.text
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(BillingRequest)) == 0

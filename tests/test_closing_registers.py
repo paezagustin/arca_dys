@@ -24,7 +24,7 @@ from tests.test_migrations import scratch_database, migrate
 
 
 def register(**changes):
-    return dict({"entry_key": str(uuid4()), "entry_date": str(business_today()), "amount": "105.25",
+    return dict({"entry_key": str(uuid4()), "entry_date": str(business_today()), "amount": "105",
         "employee": "Francisco", "customer": "Cliente ficticio", "observation": "Prueba"}, **changes)
 
 
@@ -39,45 +39,60 @@ def test_mp_suggestion_includes_billed_approved_payments_within_the_selected_day
             ("rejected", True, datetime.combine(today, time.min), "45"),
             ("approved", False, datetime.combine(today-timedelta(days=1), time.max), "50"),
             ("approved", False, datetime.combine(today+timedelta(days=1), time.min), "60"),
+            ("approved", False, datetime.combine(today+timedelta(days=3), time.min), "0.99"),
             ("approved", False, None, "70"),
             ("approved", False, datetime.combine(today, time.min), "-80")]):
             db.add(Payment(id_payment_mp=f"SIM-CLOSING-{n}", status=status, registered_arca=billed,
                 date_approved=day, mont=Decimal(amount)))
         db.commit()
-    assert client.get(f"/business/sales/mp-total?date={today}").json() == {"total": "60.30"}
-    assert client.get(f"/business/sales/mp-total?date={today + timedelta(days=1)}").json() == {"total": "60.00"}
-    assert client.get(f"/business/sales/mp-total?date={today + timedelta(days=2)}").json() == {"total": "0.00"}
+    assert client.get(f"/business/sales/mp-total?date={today}").json() == {"total": "60"}
+    assert client.get(f"/business/sales/mp-total?date={today + timedelta(days=1)}").json() == {"total": "60"}
+    assert client.get(f"/business/sales/mp-total?date={today + timedelta(days=2)}").json() == {"total": ""}
+    assert client.get(f"/business/sales/mp-total?date={today + timedelta(days=3)}").json() == {"total": "0"}
     page = client.get("/business/entries/new?kind=sale")
-    assert 'value="60.30" placeholder="0,00"' in page.text and 'name="cash_amount"' in page.text
+    assert 'value="60" placeholder="0"' in page.text and 'name="cash_amount"' in page.text
     assert client.get("/business/sales/mp-total?date=2026-02-30").status_code == 422
 
 
 def test_close_can_override_mp_total_server_sums_and_edit_does_not_recalculate(client):
-    data = values(cash_amount="100.01", mp_amount="200.02", amount="999999")
+    data = values(cash_amount="100", mp_amount="200", amount="999999")
     assert client.post("/business/entries/new", data=data).status_code == 200
     with Session(engine) as db:
         row = db.scalar(select(BusinessEntry))
         identifier = row.id
-        assert (row.cash_amount, row.mp_amount, row.amount) == (Decimal("100.01"), Decimal("200.02"), Decimal("300.03"))
+        assert (row.cash_amount, row.mp_amount, row.amount) == (Decimal("100"), Decimal("200"), Decimal("300"))
         db.add(Payment(id_payment_mp="SIM-LATER", status="approved", registered_arca=True,
             mont=Decimal("1000"), date_approved=datetime(2026,1,10)))
         db.commit()
     page = client.get(f"/business/entries/{identifier}")
-    assert 'value="200.02" placeholder="0,00"' in page.text
-    assert client.post(f"/business/entries/{identifier}", data=dict(data, version="1", cash_amount="100.02")).status_code == 200
+    assert 'value="200" placeholder="0"' in page.text
+    assert client.post(f"/business/entries/{identifier}", data=dict(data, version="1", cash_amount="101")).status_code == 200
     with Session(engine) as db:
-        assert db.get(BusinessEntry, identifier).amount == Decimal("300.04")
+        assert db.get(BusinessEntry, identifier).amount == Decimal("301")
 
 
 @pytest.mark.parametrize("cash,mp", [("", ""), ("-1", "0"), ("NaN", "0"), ("0", "Infinity"),
-    ("1.001", "0"), ("9999999999999999.99", "0.01")])
+    ("1.99", "0"), ("0", "1,99"), ("9999999999999999", "1")])
 def test_invalid_breakdown_is_rejected_without_saving(client, cash, mp):
     assert client.post("/business/entries/new", data=values(cash_amount=cash, mp_amount=mp, amount="total ignorado")).status_code == 422
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(BusinessEntry)) == 0
 
 
-@pytest.mark.parametrize("cash,mp", [("12.34", ""), ("", "12.34"), ("0", ""), ("", "0")])
+def test_manual_expenses_salaries_and_credits_reject_cents(client):
+    for path, data in (
+        ("/business/entries/new", values(kind="expense", amount="123.99")),
+        ("/salaries", register(amount="123.99")),
+        ("/fiados", register(amount="123.99")),
+    ):
+        response = client.post(path, data=data)
+        assert response.status_code == 422 and "pesos enteros" in response.text
+    with Session(engine) as db:
+        for model in (BusinessEntry, SalaryPayment, CustomerCredit):
+            assert db.scalar(select(func.count()).select_from(model)) == 0
+
+
+@pytest.mark.parametrize("cash,mp", [("12", ""), ("", "12"), ("0", ""), ("", "0")])
 def test_partial_close_treats_blank_side_as_zero_and_keeps_explicit_zero(client, cash, mp):
     response = client.post("/business/entries/new", data=values(cash_amount=cash, mp_amount=mp))
     assert response.status_code == 200
@@ -113,10 +128,10 @@ def test_salary_default_month_employee_date_filter_and_pagination(client):
         save_register(db, SalaryPayment, register(employee="Francisco", amount="500"))
         save_register(db, SalaryPayment, register(entry_date=str(start-timedelta(days=1)), amount="999"))
     page = client.get("/salaries?employee=Juan+Cruz&page=2")
-    assert page.status_code == 200 and "Página 2 de 2" in page.text and "$ 378,00" in page.text
-    assert "$ 999,00" not in page.text and "$ 500,00" not in page.text
+    assert page.status_code == 200 and "Página 2 de 2" in page.text and "$ 378" in page.text
+    assert "$ 999" not in page.text and "$ 500" not in page.text
     page = client.get(f"/salaries?employee=Francisco&fecha_desde={start-timedelta(days=1)}&fecha_hasta={today}")
-    assert "$ 1.499,00" in page.text
+    assert "$ 1.499" in page.text
     assert client.get("/salaries?employee=Otra").status_code == 422
     assert client.get("/salaries?fecha_desde=2026-05-01&fecha_hasta=2026-01-01").status_code == 422
 
@@ -136,11 +151,11 @@ def test_register_replays_and_stale_edits_are_safe(client):
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(SalaryPayment)) == 1
         identifier = db.scalar(select(SalaryPayment.id))
-    update = dict(data, id=str(identifier), version="1", amount="200.25")
+    update = dict(data, id=str(identifier), version="1", amount="200")
     assert client.post("/salaries", data=update).status_code == 200
     assert client.post("/salaries", data=update).status_code == 422
     with Session(engine) as db:
-        assert db.get(SalaryPayment, identifier).amount == Decimal("200.25")
+        assert db.get(SalaryPayment, identifier).amount == Decimal("200")
 
 
 def test_credits_include_old_unpaid_allow_paid_edit_and_escape_text(client):
@@ -187,15 +202,15 @@ def test_metrics_and_export_reconcile_cash_mp_legacy_salaries_and_cross_year_ran
         assert salary_only["result"] == Decimal("-10.01")
     query = "?year=2026&fecha_desde=2025-12-31&fecha_hasta=2026-01-01"
     page = client.get("/dashboard"+query)
-    assert page.status_code == 200 and "$ 839,98" in page.text and "Francisco" in page.text
+    assert page.status_code == 200 and "$ 839" in page.text and "Francisco" in page.text
     assert 'data-metric="sale_cash"' in page.text and "Sin desglose" not in page.text
     result = client.get("/dashboard/export"+query)
     assert result.status_code == 200
     book = load_workbook(BytesIO(result.content), data_only=True)
     assert book.sheetnames == ["ingresos y egresos", "Ventas", "Sueldos"]
     assert book.active.max_column == 6
-    assert [c.value for c in book["Ventas"][2]][1:] == [600.01,400.02,1000.03]
-    assert [r[2].value for r in book["Sueldos"].iter_rows(min_row=2)] == [10.01,50.01]
+    assert [c.value for c in book["Ventas"][2]][1:] == [600,400,1000]
+    assert [r[2].value for r in book["Sueldos"].iter_rows(min_row=2)] == [10,50]
     assert client.get("/dashboard?fecha_desde=2026-01-01").status_code == 422
     assert client.get("/dashboard/export?fecha_desde=2026-02-01&fecha_hasta=2026-01-01").status_code == 422
 

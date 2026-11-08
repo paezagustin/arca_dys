@@ -9,12 +9,13 @@ MP se sugiere desde los cobros locales aprobados de esa fecha, incluidos los
 facturados. Los cobros históricos repetidos pendientes de conciliación se excluyen.
 El importe sugerido se puede modificar. El servidor suma ambos importes y el
 total visible es de solo lectura. Al cambiar la fecha vuelve a sugerir MP.
-Una edición ya abierta conserva los importes guardados, sin recalcularlos por
-posteriores facturas o cambios de estado del pago.
-En altas, efectivo queda vacío con placeholder 0,00; MP también queda vacío si
-la sugerencia es cero. Un componente vacío equivale a cero cuando se completó
-el otro. Los dos vacíos se rechazan; escribir 0 explícito registra una caja de cero.
-La edición conserva los importes guardados, incluidos ceros y totales históricos.
+Los formularios aceptan pesos enteros. Si un importe histórico tiene centavos,
+se muestra truncado sin cambiar el registro al abrirlo. Al guardar una edición
+se registran los importes enteros del formulario.
+En altas, efectivo queda vacío con el indicador 0. MP queda vacío si no hubo
+cobros elegibles y muestra 0 si el total aprobado es menor a un peso.
+Un componente vacío equivale a cero cuando se completó el otro.
+Los dos vacíos se rechazan. Escribir 0 explícito registra una caja de cero.
 Una venta por fecha; cero es válido, un día sin registrar sigue sin información.
 El icono de lápiz abre Editar con fecha y ambos importes. No exige motivo.
 Eliminar permite retirar una carga equivocada, por ejemplo un domingo sin ventas.

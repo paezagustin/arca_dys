@@ -24,7 +24,7 @@ def money(value, *, allow_zero=False):
             raise ValueError()
         return amount.quantize(Decimal("0.01"))
     except (InvalidOperation, ValueError, TypeError):
-        raise ValueError("Ingresá un importe válido con hasta dos decimales, sin separador de miles") from None
+        raise ValueError("Ingresá un importe válido dentro del rango permitido") from None
 
 
 def record_date(value):
