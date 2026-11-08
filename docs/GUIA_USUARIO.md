@@ -109,8 +109,9 @@ todas las páginas del filtro. Usar el lápiz para editar. Se descuenta en Ganan
 ## Fiados
 Ingresar nombre, monto y, si hace falta, observación. Fecha empieza en hoy y Pagó
 en No. Guardar. El listado muestra todos los no pagados; permite buscar por nombre,
-fechas o pago. Pulsar Marcar pagado cuando corresponda; el lápiz permite corregir
-cualquiera de los campos. Al marcar Sí se guarda y muestra automáticamente la
+fechas o pago. Marcar pagado vuelve a la lista de impagos con el rango de fechas
+que estabas consultando. El lápiz permite corregir cualquiera de los campos.
+Al marcar Sí se guarda y muestra automáticamente la
 Fecha de pago del día. Editar otros datos no cambia esa fecha; volver a No la
 quita. Los fiados pagados antes de esta mejora conservan la fecha vacía cuando
 no se conoce. El registro no suma ventas ni modifica la caja automáticamente.

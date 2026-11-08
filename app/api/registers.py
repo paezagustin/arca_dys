@@ -1,4 +1,5 @@
 from calendar import monthrange
+from urllib.parse import urlencode
 from uuid import uuid4
 from fastapi import APIRouter, Request, Depends, Query, HTTPException
 from fastapi.responses import RedirectResponse
@@ -102,7 +103,12 @@ async def save_credit(request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/fiados/{identifier}/paid")
-async def mark_paid(identifier: int, request: Request, db: Session = Depends(get_db)):
+async def mark_paid(identifier: int, request: Request, fecha_desde: str = "", fecha_hasta: str = "",
+                    db: Session = Depends(get_db)):
+    try:
+        filters = parse_filters("todo", fecha_desde, fecha_hasta, default_today=False)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
     values = dict(await request.form())
     row = db.scalar(select(CustomerCredit).where(CustomerCredit.id == identifier).with_for_update())
     if row is None:
@@ -116,4 +122,9 @@ async def mark_paid(identifier: int, request: Request, db: Session = Depends(get
         row.paid_date = business_today()
         row.paid, row.version = True, row.version + 1
         db.commit()
-    return RedirectResponse("/fiados?paid=all&stored=1", status_code=303)
+    query = {"paid": "no", "stored": "1"}
+    if filters.start:
+        query["fecha_desde"] = filters.start.isoformat()
+    if filters.end:
+        query["fecha_hasta"] = filters.end.isoformat()
+    return RedirectResponse("/fiados?" + urlencode(query), status_code=303)

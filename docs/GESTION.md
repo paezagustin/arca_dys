@@ -94,9 +94,9 @@ No calcula nóminas ni importa la hoja de sueldos/adelantos del Excel.
 ## Fiados
 Nombre, monto positivo, observación opcional, fecha (hoy) y Pagó (No por defecto).
 Se listan primero los no pagados de cualquier fecha para no perder los anteriores.
-Se puede buscar por nombre, pago y fechas. Marcar pagado sirve para resolverlo de
-un clic y guarda automáticamente la fecha del día en Buenos Aires. La columna
-Fecha de pago muestra ese valor. Cambiar Pagó a Sí en el formulario tiene el
+Se puede buscar por nombre, pago y fechas. Marcar pagado guarda automáticamente
+la fecha del día en Buenos Aires y vuelve a Pagó = No con el mismo rango de fechas.
+La columna Fecha de pago muestra ese valor. Cambiar Pagó a Sí en el formulario tiene el
 mismo efecto. Editar otros datos conserva la fecha; repetir el marcado no la
 actualiza. El lápiz permite volver a No si hubo un error y quitar la fecha. No genera un
 ingreso ni modifica ventas, caja, MP o Ganancia automáticamente.
