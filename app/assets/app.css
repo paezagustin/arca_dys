@@ -262,6 +262,10 @@ button:disabled {
   gap:12px;
   margin-top:24px;
 }
+.business-actions > .suppliers-button {
+  flex:none;
+  margin-inline-start:auto;
+}
 .page-head,.page-heading {
   display:flex;
   align-items:center;

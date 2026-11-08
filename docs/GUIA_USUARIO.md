@@ -70,7 +70,8 @@ proveedor actualiza los resultados. Para cambiar el rango, completá fechas
 en orden; si querés filtrar con una sola fecha, usá Buscar. Los totales abarcan
 todas las coincidencias.
 Elegir un proveedor muestra sus egresos, incluidos los de proveedores archivados.
-Desde Proveedores se puede registrar/editar nombre, contacto y notas. Eliminar sirve
+Desde el botón Proveedores, a la derecha encima de los filtros, se puede registrar
+o editar nombre, contacto y notas. Eliminar sirve
 si no hay registros vinculados; en caso contrario se puede archivar para que deje
 de aparecer al cargar nuevos egresos. Las ayudas se abren pulsando ?.
 

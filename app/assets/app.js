@@ -11,13 +11,16 @@ document.querySelectorAll('form[method="get"][data-auto-filter]').forEach(form =
   const dates = [...form.querySelectorAll('input[type="date"]')];
   const [from, to] = dates;
   const calendar = [...form.querySelectorAll('[data-calendar-period]')];
-  const hint = 'Los cambios se aplican automáticamente.';
   const feedback = document.createElement('span');
-  feedback.className = 'muted';
+  feedback.className = 'muted sr-only';
   feedback.setAttribute('role', 'status');
-  feedback.textContent = hint;
   form.querySelector('.actions').append(feedback);
   let timer, typingDate = false;
+
+  function showRangeError(error) {
+    feedback.classList.toggle('sr-only', !error);
+    feedback.textContent = error;
+  }
 
   function rangeError(requirePair) {
     if (!from || !to) return '';
@@ -43,7 +46,7 @@ document.querySelectorAll('form[method="get"][data-auto-filter]').forEach(form =
         dates.forEach(field => { field.value = ''; });
       }
       const error = rangeError(calendar.length > 0 || datesChanged());
-      feedback.textContent = error || hint;
+      showRangeError(error);
       if (!error && form.checkValidity()) form.requestSubmit();
     }, dates.includes(control) ? 300 : 0);
   }
@@ -76,7 +79,7 @@ document.querySelectorAll('form[method="get"][data-auto-filter]').forEach(form =
     const error = rangeError(calendar.length > 0);
     if (error) {
       event.preventDefault();
-      feedback.textContent = error;
+      showRangeError(error);
     }
   });
 });
