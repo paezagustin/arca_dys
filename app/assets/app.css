@@ -410,7 +410,6 @@ td {
 .row-actions form { margin:0; }
 .delete-button { color:var(--bad); border-color:#e5bec9; }
 .delete-button:hover { background:#fff0f4; color:var(--bad); }
-.entry-delete { max-width:760px; padding-top:8px; margin-bottom:24px; }
 .pagination {
   display:flex;
   gap:12px;
@@ -749,9 +748,10 @@ dialog .actions {
   .actions {
     gap:10px;
   }
-  .actions>.button,.actions>button {
+  .actions>.button,.actions>button,.entry-form .actions>form {
     flex:1 1 auto;
   }
+  .entry-form .actions .delete-button { width:100%; }
   .billing-actions {
     position:static;
   }
