@@ -116,14 +116,17 @@ hace por separado siguiendo OPERACION_RASPBERRY.md; ningún push la despliega.
 ## Sueldos
 Elegir fecha, empleado y monto. Tipo empieza en Mercado Pago y se puede cambiar
 a Efectivo. Guardar. El reporte debajo muestra el mes actual; modificar empleado,
-Fecha desde y Fecha hasta y pulsar Buscar para ver otro período. El total incluye
-todas las páginas del filtro. Usar el lápiz para editar. Se descuenta en Ganancia.
+Fecha desde o Fecha hasta actualiza el reporte automáticamente. Se puede filtrar
+con una sola fecha como límite. El total incluye todas las páginas del filtro.
+Usar el lápiz para editar. Se descuenta en Ganancia.
 
 ## Fiados
 Ingresar nombre, monto y, si hace falta, observación. Fecha empieza en hoy y Pagó
-en No. Guardar. El listado muestra todos los no pagados; permite buscar por nombre,
-fechas o pago. Marcar pagado vuelve a la lista de impagos con el rango de fechas
-que estabas consultando. El lápiz permite corregir cualquiera de los campos.
+en No. Guardar. El listado muestra todos los no pagados. Cambiar Pagó, Fecha desde
+o Fecha hasta actualiza el reporte automáticamente. Se puede usar una sola fecha
+como límite. Para filtrar por nombre, escribirlo y pulsar Buscar. Marcar pagado
+vuelve a la lista de impagos con el rango de fechas que estabas consultando.
+El lápiz permite corregir cualquiera de los campos.
 Fecha muestra el día elegido y, en las altas nuevas, el día y la hora reales
 del registro en Buenos Aires. Los filtros buscan por el día elegido completo.
 Al marcar Sí se guarda la fecha y hora del pago. Editar otros datos conserva

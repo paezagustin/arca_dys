@@ -11,6 +11,7 @@ document.querySelectorAll('form[method="get"][data-auto-filter]').forEach(form =
   const dates = [...form.querySelectorAll('input[type="date"]')];
   const [from, to] = dates;
   const calendar = [...form.querySelectorAll('[data-calendar-period]')];
+  const allowOpenRange = form.dataset.autoFilter === 'open-range';
   const feedback = document.createElement('span');
   feedback.className = 'muted sr-only';
   feedback.setAttribute('role', 'status');
@@ -45,7 +46,8 @@ document.querySelectorAll('form[method="get"][data-auto-filter]').forEach(form =
       if (calendar.includes(control) && calendar.every(field => field.validity.valid)) {
         dates.forEach(field => { field.value = ''; });
       }
-      const error = rangeError(calendar.length > 0 || datesChanged());
+      const requirePair = calendar.length > 0 || (!allowOpenRange && datesChanged());
+      const error = rangeError(requirePair);
       showRangeError(error);
       if (!error && form.checkValidity()) form.requestSubmit();
     }, dates.includes(control) ? 300 : 0);
