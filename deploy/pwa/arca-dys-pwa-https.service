@@ -1,0 +1,21 @@
+[Unit]
+Description=Proxy HTTPS privado de ARCA DYS
+Requires=docker.service
+Wants=network-online.target
+After=docker.service network-online.target
+PartOf=docker.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=/etc/arca-dys-pwa
+ExecStartPre=/bin/sh /etc/arca-dys-pwa/prepare-https.sh
+ExecStart=/usr/bin/docker compose --env-file production.env -f compose.yml up --no-deps --no-build --no-recreate --pull never --exit-code-from https https
+ExecStop=/usr/bin/docker compose --env-file production.env -f compose.yml stop -t 10 https
+Restart=always
+RestartSec=5s
+TimeoutStartSec=90s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target

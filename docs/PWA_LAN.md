@@ -183,8 +183,16 @@ esa exposición antes de dar el corte por terminado.
    Confirmar en privado la emisión staging. Luego cambiar `PWA_ACME_STATE` a
    `/var/lib/arca-dys-pwa/production`, fijar `PWA_ACME_DIRECTORY=https://acme-v02.api.letsencrypt.org/directory`
    y ejecutar `up -d https` otra vez. Guardar y respaldar los directorios ACME
-   fuera de Git porque contienen claves privadas. Conservar el estado, el token
-   vigente y `restart: unless-stopped` para que Traefik renueve automáticamente.
+   fuera de Git porque contienen claves privadas. Conservar el estado y el token
+   vigente para que Traefik renueve automáticamente.
+
+   Para el arranque de producción en la Pi, instalar `prepare-https.sh` en
+   `/etc/arca-dys-pwa/` y `arca-dys-pwa-https.service` en
+   `/etc/systemd/system/`. El servicio espera la IP de `eth0`, carga la tabla
+   privada desde `/etc/arca-dys-pwa/firewall.nft` y arranca Traefik con
+   `production.env`. Activarlo con `sudo systemctl daemon-reload` y
+   `sudo systemctl enable --now arca-dys-pwa-https.service`. Compose mantiene
+   `restart: "no"` para que el proxy siempre pase por esa preparación.
    Registrar el vencimiento inicial y verificar que se extienda tras el primer
    ciclo. Una emisión staging comprueba DNS-01, pero no la confianza del cliente.
 4. En Pi-hole agregar solo un registro DNS local A
@@ -257,7 +265,9 @@ ruta del manifiesto llega a FastAPI.
 
 ## Recuperación
 
-Detener solo el proxy con `"${pwa_compose[@]}" stop https`, revertir la entrada
+Detener el servicio con `sudo systemctl disable --now arca-dys-pwa-https.service`
+antes de retirar el acceso. Si el proxy se inició directamente desde Compose,
+detenerlo con `"${pwa_compose[@]}" stop https`. Revertir la entrada
 local de Pi-hole y retirar la tabla dedicada, si se usó, con
 `sudo nft delete table inet arca_dys_pwa`. Retirar también su configuración
 persistente. Recuperar el acceso HTTP anterior solo con los listeners privados
