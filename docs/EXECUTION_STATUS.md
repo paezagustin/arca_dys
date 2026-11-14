@@ -573,3 +573,26 @@ confirmación de eliminación, tarjetas de Facturación y validación.
   identidad, estado y hora de inicio. Respondieron health por HTTP y HTTPS, Sueldos,
   Facturación, Resumen, Gestión y Proveedores. Se creó, editó y retiró una ficha
   ficticia temporal en producción. La comprobación fiscal y de MP fue de lectura.
+
+## Encabezados y filtros de reportes del 14/11/2026
+
+- El [commit 4886882](https://github.com/paezagustin/arca_dys/commit/48868829444df53b087e5eb0e109b9dd50a3dcbd)
+  incorpora los encabezados de reportes y la actualización parcial de los GET
+  existentes. En Resumen se retira el período debajo de los filtros. ARCA-8 y
+  ARCA-9 se reutilizaron. ARCA-22, ARCA-23 y ARCA-24 registran estilo, pruebas y
+  despliegue respectivamente. [Lific](http://127.0.0.1:3456/ARCA/overview).
+- Pasaron 312 pruebas Docker y el perfil `backup-test`. Se probaron nueve rutas
+  en Chromium y WebKit, con perfiles de Pixel 7 e iPhone 13 y vista de escritorio.
+  Con FastAPI y PostgreSQL simulados se compararon las filas de Fiados con su GET
+  normal y se descargó el Excel del rango seleccionado. Se verificaron Enter y
+  Buscar, foco, desplazamiento, totales, paginación independiente, Atrás y
+  Adelante, errores, consultas sucesivas y envío GET con JavaScript deshabilitado.
+  [GitHub Actions](https://github.com/paezagustin/arca_dys/actions/runs/43646915306).
+- Desplegado a las 19:13 de Buenos Aires con Alembic `0015_supplier_bank_details`.
+  En el SSD quedó el respaldo `database.at-cut.dump`, con SHA-256 y restauración
+  aislada verificados, junto con la imagen previa y la configuración en
+  `/mnt/datos/docker/arca_dys/backups/deploy_reportes_4886882_2UlC6P`.
+  Arrancaron ambas imágenes sobre la copia. Después de recrear FastAPI coincidieron
+  39 huellas de tablas y secuencias. Los otros 21 contenedores conservaron su
+  identidad, estado y hora de inicio. Producción se verificó mediante GET por HTTPS
+  en Fiados, Resumen, Facturación, Gestión, Sueldos y Proveedores.
