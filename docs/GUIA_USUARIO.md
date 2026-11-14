@@ -32,7 +32,8 @@ o ambos. El que se deja vacío se toma como cero y debe completarse al menos uno
 
 ## Facturar
 En Facturación, cambiar Facturado, las fechas o las filas por página actualiza
-los resultados y vuelve a la primera página. Buscar sigue disponible.
+los resultados y vuelve a la primera página del listado, manteniendo la posición
+en la pantalla. Buscar aplica los mismos filtros.
 En Facturación elegir cobros y FACTURAR SELECCIONADOS, o FACTURAR TODO para los pagos
 disponibles del filtro completo, incluso en otras páginas. Revisar importe/cantidad
 y confirmar. Factura por importe permite ingresar un total independiente de MP.
@@ -83,7 +84,8 @@ y registros desde sus formularios habituales.
 ## Resumen
 Resumen abre en el mes actual. Elegir Año o Mes aplica el período de calendario
 y reemplaza las fechas personalizadas. Si completás ambas fechas en orden, se
-aplica el rango y el Excel usa esas mismas fechas. Ver resumen sigue disponible.
+aplica el rango y el Excel usa esas mismas fechas. Ver resumen actualiza las cifras
+en la misma pantalla.
 Se muestran Ventas, Egresos en blanco, Egresos en negro,
 Total Egresos, Pago de sueldos y Ganancia (ventas menos egresos y sueldos).
 También muestra efectivo/MP y cuánto se pagó a cada empleado. Promedio diario,
@@ -124,8 +126,10 @@ Usar el lápiz para editar. Se descuenta en Ganancia.
 Ingresar nombre, monto y, si hace falta, observación. Fecha empieza en hoy y Pagó
 en No. Guardar. El listado muestra todos los no pagados. Cambiar Pagó, Fecha desde
 o Fecha hasta actualiza el reporte automáticamente. Se puede usar una sola fecha
-como límite. Para filtrar por nombre, escribirlo y pulsar Buscar. Marcar pagado
-vuelve a la lista de impagos con el rango de fechas que estabas consultando.
+como límite. Para filtrar por nombre, escribilo y pulsá Enter o Buscar. El listado
+y el total se actualizan en la misma pantalla, y Atrás y Adelante recorren las
+búsquedas aplicadas. Marcar pagado vuelve a la lista de impagos con el rango de
+fechas que estabas consultando.
 El lápiz permite corregir cualquiera de los campos.
 Fecha muestra el día elegido y, en las altas nuevas, el día y la hora reales
 del registro en Buenos Aires. Los filtros buscan por el día elegido completo.

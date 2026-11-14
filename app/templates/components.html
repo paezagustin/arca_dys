@@ -8,9 +8,9 @@
 
 {% macro pager(page, key='page') -%}
 <nav class="pagination" aria-label="Páginas de {{ key }}">
-{% if page.number > 1 %}<a href="{{ page_url(request,key,page.number-1) }}">Anterior</a>{% endif %}
+{% if page.number > 1 %}<a rel="prev" href="{{ page_url(request,key,page.number-1) }}">Anterior</a>{% endif %}
 <span>Página {{ page.number }} de {{ page.pages }} · {{ page.total }} registros</span>
-{% if page.number < page.pages %}<a href="{{ page_url(request,key,page.number+1) }}">Siguiente</a>{% endif %}
+{% if page.number < page.pages %}<a rel="next" href="{{ page_url(request,key,page.number+1) }}">Siguiente</a>{% endif %}
 </nav>{%- endmacro %}
 
 {% macro attempt_table(attempts, key='page') -%}

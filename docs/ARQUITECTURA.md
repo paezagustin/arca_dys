@@ -137,6 +137,15 @@ Los montos nuevos no traen cero precargado; MP positivo conserva la sugerencia l
 business.py exige al menos un componente del cierre y convierte el otro vacío a
 cero. La suma y la validación siguen en servidor. No cambia el esquema de datos.
 
+## Filtros de reportes
+
+Los enlaces y formularios GET conservan sus rutas, parámetros y renderizado Jinja.
+`reports.js` solicita el mismo HTML con `fetch`, y utiliza los bloques marcados con
+`data-report-results` para actualizar los resultados y sus totales. La paginación
+reemplaza únicamente el bloque de su listado y sincroniza las URL de los demás
+paginadores. El historial del navegador conserva las consultas aplicadas. Si falla
+una solicitud, la pantalla conserva los resultados anteriores y muestra el error.
+
 ## Entornos y acceso
 Dev/test solo aceptan mock. Producción exige ENV=production, modo production y
 ALLOW_LIVE_OPERATIONS=true. .env no se descubre automáticamente; APP_ENV_FILE debe

@@ -402,7 +402,21 @@ td {
 .metrics [data-metric^=expense] { border-top:4px solid #d3487e; }
 .dashboard-metrics [data-metric=salary] { border-top:4px solid #8a62b9; }
 .dashboard-metrics [data-metric=result] { border-top:4px solid var(--brand); }
-.report-panel>h2 { padding-bottom:14px; border-bottom:1px solid var(--line); }
+.report-heading {
+  padding:8px 12px;
+  border-inline-start:3px solid var(--brand);
+  border-radius:4px;
+  background:#e7f5ff;
+  color:#075575;
+}
+.report-feedback:not(.sr-only) {
+  position:fixed;
+  z-index:5;
+  inset-inline-end:16px;
+  inset-block-end:16px;
+  max-width:min(32rem,calc(100% - 32px));
+  margin:0;
+}
 .report-breakdown { gap:16px; }
 .report-breakdown>div {
   min-width:0;

@@ -86,22 +86,28 @@ document.querySelectorAll('form[method="get"][data-auto-filter]').forEach(form =
   });
 });
 
-document.querySelectorAll('[data-select-all]').forEach(control => {
+function updatePaymentSelection(control) {
   const form = control.closest('form');
   const choices = Array.from(form.querySelectorAll('input[name="payment_ids"]:not(:disabled)'));
   const counter = form.querySelector('[data-selected-count]');
-  function update() {
-    const count = choices.filter(input => input.checked).length;
-    if (counter) counter.textContent = `${count} seleccionados`;
-    control.checked = count > 0 && count === choices.length;
-    control.indeterminate = count > 0 && count < choices.length;
+  const count = choices.filter(input => input.checked).length;
+  if (counter) counter.textContent = `${count} seleccionados`;
+  control.checked = count > 0 && count === choices.length;
+  control.indeterminate = count > 0 && count < choices.length;
+}
+document.querySelectorAll('[data-select-all]').forEach(updatePaymentSelection);
+document.addEventListener('change', event => {
+  const input = event.target;
+  if (!input.matches('[data-select-all], input[name="payment_ids"]')) return;
+  const form = input.form;
+  const control = form?.querySelector('[data-select-all]');
+  if (!control) return;
+  if (input === control) {
+    form.querySelectorAll('input[name="payment_ids"]:not(:disabled)').forEach(choice => {
+      choice.checked = control.checked;
+    });
   }
-  control.addEventListener('change', () => {
-    choices.forEach(input => { input.checked = control.checked; });
-    update();
-  });
-  choices.forEach(input => input.addEventListener('change', update));
-  update();
+  updatePaymentSelection(control);
 });
 
 document.querySelectorAll('form[data-busy-label]').forEach(form => {
@@ -116,35 +122,37 @@ document.querySelectorAll('form[data-busy-label]').forEach(form => {
 });
 
 const helpDialog = document.querySelector('#help-dialog');
-document.querySelectorAll('[data-help], [data-help-next], [data-help-target]').forEach(button => {
-  button.addEventListener('click', () => {
-    const content = helpDialog.querySelector('[data-help-content]');
-    content.replaceChildren();
-    const template = button.nextElementSibling?.tagName === 'TEMPLATE' ? button.nextElementSibling
-      : document.getElementById(button.dataset.helpTarget);
-    if (template) content.append(template.content.cloneNode(true));
-    else content.textContent = button.dataset.help;
-    helpDialog.showModal();
-  });
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-help], [data-help-next], [data-help-target]');
+  if (!button) return;
+  const content = helpDialog.querySelector('[data-help-content]');
+  content.replaceChildren();
+  const template = button.nextElementSibling?.tagName === 'TEMPLATE' ? button.nextElementSibling
+    : document.getElementById(button.dataset.helpTarget);
+  if (template) content.append(template.content.cloneNode(true));
+  else content.textContent = button.dataset.help;
+  helpDialog.showModal();
 });
 document.querySelector('[data-close-help]')?.addEventListener('click', () => helpDialog.close());
 
 const confirmDialog = document.querySelector('#confirm-dialog');
 let pendingDelete;
-document.querySelectorAll('form[data-confirm]').forEach(form => {
-  form.querySelector('[data-confirm-trigger]')?.addEventListener('click', () => form.requestSubmit());
-  form.addEventListener('submit', event => {
-    if (form.dataset.confirmed === 'yes') return;
-    event.preventDefault();
-    pendingDelete = form;
-    confirmDialog.querySelector('[data-confirm-content]').textContent = form.dataset.confirm;
-    confirmDialog.showModal();
-  });
+document.addEventListener('click', event => {
+  event.target.closest('[data-confirm-trigger]')?.form?.requestSubmit();
+});
+document.addEventListener('submit', event => {
+  const form = event.target;
+  if (!form.matches('form[data-confirm]') || form.dataset.confirmed === 'yes') return;
+  event.preventDefault();
+  pendingDelete = form;
+  confirmDialog.querySelector('[data-confirm-content]').textContent = form.dataset.confirm;
+  confirmDialog.showModal();
 });
 document.querySelector('[data-confirm-cancel]')?.addEventListener('click', () => confirmDialog.close());
 document.querySelector('[data-confirm-accept]')?.addEventListener('click', () => {
   const form = pendingDelete;
   confirmDialog.close();
+  if (!form?.isConnected) return;
   form.dataset.confirmed = 'yes';
   form.requestSubmit();
   delete form.dataset.confirmed;
