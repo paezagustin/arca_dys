@@ -34,7 +34,7 @@ Los filtros quedan siempre visibles encima de Ventas y Total Egresos. Se combina
 Mostrar, proveedor y fechas; Buscar actualiza listado y totales de todo el filtro,
 incluidas sus otras páginas. El proveedor se aplica a egresos: si se combina con
 Mostrar ventas, no habrá coincidencias. Sin proveedor busca solo egresos sin asignar.
-Los proveedores archivados siguen disponibles para consultar sus registros anteriores.
+Los proveedores inactivos siguen disponibles para consultar sus registros anteriores.
 
 En el listado o al editar una venta/egreso, pulsar Eliminar. La confirmación muestra
 fecha e importe; Cancelar no cambia nada. Al confirmar se retira de Gestión,
@@ -48,10 +48,15 @@ antigua no lo reactiva. No hay recuperación desde la interfaz: revisar antes de
 confirmar y usar una carga nueva para reemplazar un registro equivocado.
 
 ## Proveedores
-Nombre, contacto y notas. Editar no pide motivo. Se puede archivar para quitarlo del
-selector sin afectar egresos anteriores. El botón ? abre la ayuda correspondiente.
-Eliminar está disponible para proveedores sin egresos ni asignaciones de importación.
-Los proveedores vinculados se editan o archivan para conservar sus referencias.
+La ficha admite nombre, contacto, notas, CBU y alias. El CBU y el alias son opcionales.
+El CBU se guarda como texto de 22 dígitos y el alias admite entre 6 y 20 caracteres,
+con letras sin acentos, números, puntos y guiones medios. Borrar el valor y guardar
+deja el campo vacío. El listado muestra Notas, CBU y Alias. Contacto se conserva en la ficha.
+
+Un proveedor inactivo queda fuera del selector al cargar nuevos egresos. Su ficha y
+los egresos anteriores siguen disponibles, incluso al editar esos egresos.
+Eliminar borra la ficha tras confirmar y solo procede si el proveedor carece de
+egresos y asignaciones de importación vinculados. El botón ? abre la ayuda correspondiente.
 Los nombres comparan mayúsculas y espacios; dos nombres parecidos no se fusionan solos.
 
 Para la unificación puntual de Casa Alberto en Cotillón Alberto, respaldar la base

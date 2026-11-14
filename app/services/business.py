@@ -1,4 +1,5 @@
 """Gestión manual: sin dependencias de facturación ni de Mercado Pago."""
+import re
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from uuid import UUID
@@ -35,7 +36,7 @@ def record_date(value):
 
 
 def snapshot(row):
-    fields = ("kind", "entry_date", "amount", "cash_amount", "mp_amount", "expense_type", "supplier_id", "description", "version") if isinstance(row, BusinessEntry) else ("name", "contact", "notes", "active", "version")
+    fields = ("kind", "entry_date", "amount", "cash_amount", "mp_amount", "expense_type", "supplier_id", "description", "version") if isinstance(row, BusinessEntry) else ("name", "contact", "notes", "cbu", "alias", "active", "version")
     return {key: str(getattr(row, key)) if isinstance(getattr(row, key), (date, Decimal)) else getattr(row, key) for key in fields}
 
 
@@ -127,9 +128,17 @@ def save_supplier(db, values, actor, supplier_id=None):
     if row:
         check_version(row, values.get("version"))
     name = clean_text(values.get("name"), "el nombre", 150, True)
+    # Un formulario abierto antes de la actualización puede omitir estos campos.
+    cbu = str(values.get("cbu", row.cbu if row else None) or "").strip()
+    alias = str(values.get("alias", row.alias if row else None) or "").strip()
+    if cbu and not re.fullmatch(r"[0-9]{22}", cbu):
+        raise ValueError("El CBU debe tener 22 dígitos")
+    if alias and not re.fullmatch(r"[A-Za-z0-9.\-]{6,20}", alias):
+        raise ValueError("El alias debe tener de 6 a 20 caracteres: letras sin acentos, números, puntos o guiones medios")
     data = {"name": name, "name_key": clean_text(" ".join(name.casefold().split()), "el nombre normalizado", 150, True),
         "contact": clean_text(values.get("contact"), "el contacto", 200),
-        "notes": clean_text(values.get("notes"), "las notas", 2000), "active": values.get("active", "1") == "1"}
+        "notes": clean_text(values.get("notes"), "las notas", 2000), "active": values.get("active", "1") == "1",
+        "cbu": cbu or None, "alias": alias or None}
 
     if row is None:
         row = Supplier(version=1, **data)

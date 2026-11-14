@@ -198,6 +198,17 @@ input:not([type=checkbox]):not([type=hidden]),select,textarea {
   background:white;
   color:var(--ink);
 }
+input[type=date] {
+  min-width:0;
+  max-width:100%;
+}
+@supports (-webkit-touch-callout:none) {
+  input[type=date] {
+    /* El tema nativo de iOS puede sumar el padding al ancho declarado. */
+    -webkit-appearance:none;
+    box-sizing:border-box;
+  }
+}
 input[type=number] {
   -moz-appearance:textfield;
   appearance:textfield;
@@ -387,8 +398,8 @@ td {
   grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));
 }
 .metrics.summary-metrics .metric { font-size:clamp(16px,7cqi,28px); }
-.dashboard-metrics [data-metric=sale] { border-top:4px solid #169b9b; }
-.dashboard-metrics [data-metric^=expense] { border-top:4px solid #d3487e; }
+.metrics [data-metric=sale] { border-top:4px solid #169b9b; }
+.metrics [data-metric^=expense] { border-top:4px solid #d3487e; }
 .dashboard-metrics [data-metric=salary] { border-top:4px solid #8a62b9; }
 .dashboard-metrics [data-metric=result] { border-top:4px solid var(--brand); }
 .report-panel>h2 { padding-bottom:14px; border-bottom:1px solid var(--line); }
@@ -749,8 +760,8 @@ dialog .actions {
   .dashboard-metrics .card:last-child {
     grid-column:auto;
   }
-  .dashboard-metrics { grid-template-columns:1fr; }
-  .dashboard-metrics .metric { font-size:26px; }
+  .dashboard-metrics,.management-metrics { grid-template-columns:1fr; }
+  .dashboard-metrics .metric,.management-metrics .metric { font-size:26px; }
   .report-stats p,.report-stats p:nth-last-child(2) { border-right:0; border-bottom:1px solid var(--line); }
   .report-stats p:last-child { border-bottom:0; }
   .actions {

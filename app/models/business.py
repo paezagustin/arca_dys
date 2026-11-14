@@ -11,6 +11,8 @@ class Supplier(Base):
     name_key = Column(String(150), nullable=False, unique=True)
     contact = Column(String(200), nullable=False, default="")
     notes = Column(Text, nullable=False, default="")
+    cbu = Column(String(22))
+    alias = Column(String(20))
     active = Column(Boolean, nullable=False, default=True)
     version = Column(Integer, nullable=False, default=1)
 

@@ -132,6 +132,7 @@ document.querySelector('[data-close-help]')?.addEventListener('click', () => hel
 const confirmDialog = document.querySelector('#confirm-dialog');
 let pendingDelete;
 document.querySelectorAll('form[data-confirm]').forEach(form => {
+  form.querySelector('[data-confirm-trigger]')?.addEventListener('click', () => form.requestSubmit());
   form.addEventListener('submit', event => {
     if (form.dataset.confirmed === 'yes') return;
     event.preventDefault();
@@ -146,6 +147,7 @@ document.querySelector('[data-confirm-accept]')?.addEventListener('click', () =>
   confirmDialog.close();
   form.dataset.confirmed = 'yes';
   form.requestSubmit();
+  delete form.dataset.confirmed;
 });
 
 document.querySelectorAll('[data-supplier-picker]').forEach(picker => {

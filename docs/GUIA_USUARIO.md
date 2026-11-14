@@ -69,11 +69,11 @@ Los filtros siempre están visibles, arriba de los totales. Cambiar el tipo o
 proveedor actualiza los resultados. Para cambiar el rango, completá fechas
 en orden; si querés filtrar con una sola fecha, usá Buscar. Los totales abarcan
 todas las coincidencias.
-Elegir un proveedor muestra sus egresos, incluidos los de proveedores archivados.
+Elegir un proveedor muestra sus egresos, incluidos los de proveedores inactivos.
 Desde el botón Proveedores, a la derecha encima de los filtros, se puede registrar
-o editar nombre, contacto y notas. Eliminar sirve
-si no hay registros vinculados; en caso contrario se puede archivar para que deje
-de aparecer al cargar nuevos egresos. Las ayudas se abren pulsando ?.
+o editar nombre, contacto, notas, CBU y alias. Para dejar de elegir un proveedor en
+nuevos egresos y conservar su historial, marcá Inactivo y guardá. Eliminar pide
+confirmación y solo borra fichas sin registros vinculados. Las ayudas se abren pulsando ?.
 
 Los proveedores y movimientos anteriores se incorporan una sola vez por consola,
 según [la guía técnica de carga JSON](IMPORTACION_JSON.md). No hay pantalla de

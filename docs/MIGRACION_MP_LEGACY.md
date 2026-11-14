@@ -50,12 +50,13 @@ en migrations/mp_legacy_bridge.py, solo desde 0001_legacy, 0002_cleanup o 0003_b
 4. Compara nuevamente filas originales, controles fiscales, cantidades y secuencias,
    incluyendo los textos monetarios originales contra money_migration_audit.
    Si todo coincide, guarda el recibo de la transición MP a 0013. Aplica la
-   revisión 0014 de Fiados y verifica el esquema final en la misma transacción.
+   revisiones ordinarias posteriores (Fiados y datos de proveedores) y verifica el
+   esquema final en la misma transacción.
 
 Un fallo revierte el DDL y el versionado completo del puente. No se deja una base
 visible en 0004 con duplicados. **No ejecutar alembic stamp manual**, no retirar
 restricciones ni ejecutar solamente la parte DDL de este módulo. El comando está
-verificado hasta 0014_credit_timestamps y exige revisar compatibilidad ante otro head.
+verificado hasta 0015_supplier_bank_details y exige revisar compatibilidad ante otro head.
 Una instalación ya versionada desde 0004, sin duplicados, utiliza `alembic upgrade head`
 normalmente. Una base sin duplicados desde 0001-0003 también usa el upgrade normal.
 No ejecutar código anterior contra el nuevo esquema ni hacer downgrade: una
@@ -147,7 +148,7 @@ diff -u "$MAINT_DIR/restore-mp.before.json" "$MAINT_DIR/restore-mp.after.json"
 ```
 
 Cada comando debe finalizar sin error; ante un fallo detenerse, no continuar con
-los siguientes. Head esperado **0014_credit_timestamps**. El diff debe estar vacío,
+los siguientes. Head esperado **0015_supplier_bank_details**. El diff debe estar vacío,
 incluidas huellas y secuencias. check-mp-identities debe mostrar invalid_groups=0,
 protected_triggers=2, blocked_groups=40 y legacy_snapshots=3876 para este respaldo.
 Habrá 3828 identidades: 3788 apuntan a filas no repetidas y 40 quedan bloqueadas.
@@ -158,7 +159,7 @@ idéntica y detenida; si cambió, se rechaza esa repetición. No es un proceso p
 ejecutar con cada despliegue. La limpieza de Gestión es otra operación, no parte
 del puente. Solo después de todos los controles, volver al ensayo de esa limpieza
 en la guía para su revisión original. El SQL puntual exige 0013_mp_identity y
-preserva identidades, snapshots y recibos MP. No ejecutarlo sobre 0014 ni
+preserva identidades, snapshots y recibos MP. No ejecutarlo sobre 0014 o revisiones posteriores ni
 repetirlo después de importar JSON.
 
 ## 3. Solo después del ensayo correcto: producción

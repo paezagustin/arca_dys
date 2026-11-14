@@ -1,5 +1,5 @@
-{% macro metric_card(label, value, detail=none, note=none) -%}
-<section class="card">
+{% macro metric_card(label, value, detail=none, note=none, key=none) -%}
+<section class="card"{% if key %} data-metric="{{ key }}"{% endif %}>
   <h2>{{ label }}</h2>
   <strong class="metric">{{ value }}</strong>
   {% if detail is not none %}<p><span class="money">{{ detail }}</span>{% if note %} · {{ note }}{% endif %}</p>{% endif %}

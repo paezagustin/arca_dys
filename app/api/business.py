@@ -212,11 +212,11 @@ async def delete_supplier(supplier_id: int, request: Request, db: Session = Depe
         check_version(row, values.get("version"))
         linked = db.scalar(select(BusinessEntry.id).where(BusinessEntry.supplier_id == supplier_id).limit(1))
         if linked:
-            raise ValueError("Este proveedor tiene egresos registrados. Podés editarlo o archivarlo.")
+            raise ValueError("Este proveedor tiene egresos registrados. Podés editarlo o marcarlo como inactivo.")
         db.delete(row)
         db.commit()
     except (ValueError, IntegrityError) as error:
         db.rollback()
         return supplier_form(request, db, db.get(Supplier, supplier_id), error=str(error) if isinstance(error, ValueError)
-            else "El proveedor tiene registros vinculados y no se puede eliminar.")
+            else "El proveedor tiene registros vinculados y no se puede eliminar. Podés marcarlo como inactivo.")
     return RedirectResponse("/business/suppliers?deleted=1", status_code=303)

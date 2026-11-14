@@ -10,8 +10,8 @@
 <div class="field"><label for="page_size">Filas por página</label><select id="page_size" name="page_size">{% for size in [10,25,50,100] %}<option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></div></div>
 <div class="actions"><button>Buscar</button><a class="button quiet" href="/page/invoice">Hoy</a></div></form></details>
 <div class="metrics summary-metrics">
-  {{ metric_card("Cobros del filtro", count, total|money) }}
-  {{ metric_card("Disponibles para facturar", eligible_count, eligible_total|money, "Total del filtro completo") }}
+  {{ metric_card("Cobros del filtro", total|money, count ~ (' cobro' if count == 1 else ' cobros')) }}
+  {{ metric_card("Disponibles para facturar", eligible_total|money, eligible_count ~ (' cobro' if eligible_count == 1 else ' cobros'), "Total del filtro completo") }}
 </div>
 <section class="card"><h2>Cobros de Mercado Pago</h2>
 <form method="post" action="/ARCA/invoice/selected"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><input type="hidden" name="facturado" value="{{ filters.facturado }}"><input type="hidden" name="fecha_desde" value="{{ filters.start or '' }}"><input type="hidden" name="fecha_hasta" value="{{ filters.end or '' }}">

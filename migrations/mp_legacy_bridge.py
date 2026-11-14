@@ -19,7 +19,7 @@ from app.manage import _adoption_metadata
 from migrations.baseline import legacy_metadata
 
 TARGET = "0013_mp_identity"
-SUPPORTED_HEAD = "0014_credit_timestamps"
+SUPPORTED_HEAD = "0015_supplier_bank_details"
 RECEIPT = "legacy-mp-bridge-v1"
 REMOVED = {"payments": {"id_arca"}, "error_logs": {
     "resolved", "resolved_at", "resolved_by", "resolution_notes"}}
@@ -204,7 +204,7 @@ def migrate_legacy_mp(target_engine=engine):
         connection.execute(sa.text("SET LOCAL lock_timeout = '5s'"))
         connection.execute(sa.text("LOCK TABLE payments, invoices, payment_invoice, error_logs IN ACCESS EXCLUSIVE MODE"))
         versions = connection.scalars(sa.text("SELECT version_num FROM alembic_version")).all()
-        if versions in ([TARGET], [SUPPORTED_HEAD]):
+        if versions in ([TARGET], ["0014_credit_timestamps"], [SUPPORTED_HEAD]):
             from app.models.mp_identity import MPLegacyTransition
             receipt = connection.scalar(sa.select(MPLegacyTransition.report).where(MPLegacyTransition.id == RECEIPT))
             if receipt is None or receipt != integrity_report(connection):

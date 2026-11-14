@@ -139,7 +139,7 @@ def test_supplier_filter_totals_pagination_dates_archived_and_without_supplier(c
     page = client.get("/business?" + query)
     assert page.context["entries"].total == 27 and len(page.context["entries"].items) == 25
     assert page.context["totals"] == {"expense": Decimal("270.27")}
-    assert "Ficticio A (archivado)" in page.text
+    assert "Ficticio A (inactivo)" in page.text
     next_page = client.get("/business?" + query + "&page=2")
     assert len(next_page.context["entries"].items) == 2
     assert next_page.context["totals"] == page.context["totals"]

@@ -1,4 +1,37 @@
-{% extends "base.html" %}{% block title %}Proveedor{% endblock %}{% block content %}<a href="/business/suppliers">← Volver a proveedores</a><h1>{{ 'Editar' if row else 'Registrar proveedor' }}</h1>
-{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}<form method="post" class="card"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><input type="hidden" name="version" value="{{ values.version or 1 }}"><div class="fields">
-<div class="field"><label for="name">Nombre del proveedor</label><input id="name" name="name" maxlength="150" value="{{ values.name or '' }}" required></div><div class="field"><label for="contact">Contacto (opcional)</label><input id="contact" name="contact" maxlength="200" value="{{ values.contact or '' }}"></div><div class="field"><label for="notes">Notas (opcional)</label><textarea id="notes" name="notes" rows="3" maxlength="2000">{{ values.notes or '' }}</textarea></div>
-{% if row %}<div class="field"><label for="active">Estado del proveedor</label><select id="active" name="active"><option value="1" {% if values.active in [true,'1'] %}selected{% endif %}>Activo</option><option value="0" {% if values.active in [false,'0'] %}selected{% endif %}>Archivado</option></select><button type="button" class="help-trigger" data-help="Archivar no modifica los pagos ya registrados." aria-label="Ayuda sobre archivar">?</button></div>{% endif %}</div><div class="actions"><button>Guardar proveedor</button><a href="/business/suppliers">Cancelar</a></div></form>{% if row %}<form method="post" action="/business/suppliers/{{ row.id }}/delete" data-confirm="¿Eliminar este proveedor?" class="actions"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><input type="hidden" name="version" value="{{ values.version }}"><button class="danger">Eliminar proveedor</button></form>{% endif %}{% endblock %}
+{% extends "base.html" %}
+{% block title %}Proveedor{% endblock %}
+{% block content %}
+<a href="/business/suppliers">← Volver a proveedores</a>
+<h1>{{ 'Editar' if row else 'Registrar proveedor' }}</h1>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<form method="post" class="card">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  <input type="hidden" name="version" value="{{ values.version or 1 }}">
+  <div class="fields">
+    <div class="field"><label for="name">Nombre del proveedor</label><input id="name" name="name" maxlength="150" value="{{ values.name or '' }}" required></div>
+    <div class="field"><label for="contact">Contacto (opcional)</label><input id="contact" name="contact" maxlength="200" value="{{ values.contact or '' }}"></div>
+    <div class="field"><label for="notes">Notas (opcional)</label><textarea id="notes" name="notes" rows="3" maxlength="2000">{{ values.notes or '' }}</textarea></div>
+    <div class="field"><label for="cbu">CBU</label><input id="cbu" name="cbu" inputmode="numeric" maxlength="22" value="{{ values.cbu or '' }}"></div>
+    <div class="field"><label for="alias">Alias</label><input id="alias" name="alias" maxlength="20" autocapitalize="none" spellcheck="false" value="{{ values.alias or '' }}"></div>
+    {% if row %}
+    <div class="field">
+      <label for="active">Estado del proveedor</label>
+      <select id="active" name="active">
+        <option value="1" {% if values.active in [true,'1'] %}selected{% endif %}>Activo</option>
+        <option value="0" {% if values.active in [false,'0'] %}selected{% endif %}>Inactivo</option>
+      </select>
+      <button type="button" class="help-trigger" data-help="Un proveedor inactivo conserva sus datos y egresos anteriores, pero deja de aparecer al elegir proveedor para nuevos egresos." aria-label="Ayuda sobre proveedores inactivos">?</button>
+    </div>
+    {% endif %}
+  </div>
+  <div class="actions"><button>Guardar</button><a class="button quiet" href="/business/suppliers">Cancelar</a></div>
+</form>
+{% if row %}
+<form method="post" action="/business/suppliers/{{ row.id }}/delete" class="actions"
+      data-confirm="¿Eliminar a {{ row.name }}? Se borrará su ficha de forma permanente. Si tiene egresos o asignaciones de importación vinculados, el sistema impedirá la eliminación. Si solo querés dejar de usarlo, marcalo como inactivo.">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  <input type="hidden" name="version" value="{{ row.version }}">
+  <button type="button" class="danger" data-confirm-trigger aria-haspopup="dialog">Eliminar</button>
+</form>
+{% endif %}
+{% endblock %}

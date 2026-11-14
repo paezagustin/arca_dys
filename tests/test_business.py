@@ -83,6 +83,70 @@ def test_supplier_selection_archival_and_no_silent_duplicate(client):
     assert client.post("/business/entries/new", data=values(supplier_id=str(identifier))).status_code == 422
 
 
+def test_supplier_bank_details_create_edit_clear_and_list(client):
+    base = "/business/suppliers"
+    data = {"name": "Proveedor Ficticio", "contact": "Contacto interno", "notes": "Nota de prueba",
+            "cbu": "0012345678901234567890", "alias": "Cuenta-Prueba.01"}
+    assert client.post(f"{base}/new", data=data, follow_redirects=False).status_code == 303
+    assert client.post(f"{base}/new", data={"name": "Otro proveedor"}, follow_redirects=False).status_code == 303
+    with Session(engine) as db:
+        row = db.scalar(select(Supplier).where(Supplier.name == data["name"]))
+        supplier_url = f"{base}/{row.id}"
+        assert (row.cbu, row.alias, row.contact) == (data["cbu"], data["alias"], data["contact"])
+        other = db.scalar(select(Supplier).where(Supplier.name == "Otro proveedor"))
+        assert other.cbu is None and other.alias is None
+
+    page = client.get(base, params={"q": "proveedor ficticio"})
+    assert all(f"<th>{label}</th>" in page.text for label in ("Notas", "CBU", "Alias"))
+    assert all(data[key] in page.text for key in ("notes", "cbu", "alias"))
+    assert "Contacto" not in page.text and "Otro proveedor" not in page.text
+    form = client.get(supplier_url)
+    assert all(f'value="{data[key]}"' in form.text for key in ("cbu", "alias", "contact"))
+
+    updated = dict(data, cbu="0000000000000000000001", alias="Otro.Alias", active="0", version="1")
+    assert client.post(supplier_url, data=updated, follow_redirects=False).status_code == 303
+    with Session(engine) as db:
+        row = db.scalar(select(Supplier).where(Supplier.name == data["name"]))
+        assert (row.cbu, row.alias) == (updated["cbu"], updated["alias"])
+    assert "<td>Inactivo</td>" in client.get(base).text
+    assert client.get(f"{base}/search", params={"q": data["name"]}).json() == []
+
+    assert client.post(supplier_url, data=dict(updated, cbu=" ", alias="", version="2"),
+                       follow_redirects=False).status_code == 303
+    with Session(engine) as db:
+        row = db.scalar(select(Supplier).where(Supplier.name == data["name"]))
+        assert row.cbu is None and row.alias is None and row.contact == data["contact"]
+
+
+@pytest.mark.parametrize(("field", "value"), [
+    ("cbu", "0" * 21), ("cbu", "0" * 23), ("cbu", "０" * 22),
+    ("alias", "corto"), ("alias", "a" * 21), ("alias", "alias_inválido"), ("alias", "alias invalido"),
+])
+def test_supplier_rejects_invalid_bank_details(client, field, value):
+    response = client.post("/business/suppliers/new", data={"name": "Proveedor ficticio", field: value})
+    assert response.status_code == 422
+    with Session(engine) as db:
+        assert db.scalar(select(func.count()).select_from(Supplier)) == 0
+
+
+def test_supplier_bank_migration_preserves_existing_data(scratch_database):
+    migrate(scratch_database, "0014_credit_timestamps")
+    with scratch_database.begin() as db:
+        db.execute(text("""INSERT INTO suppliers (id, name, name_key, contact, notes, active, version)
+            VALUES (17, 'Proveedor histórico ficticio', 'proveedor histórico ficticio', 'Contacto ficticio',
+                    'Nota anterior', false, 3)"""))
+        db.execute(text("""INSERT INTO business_entries
+            (entry_key, kind, entry_date, amount, expense_type, supplier_id, description, origin, active, version, created_at)
+            VALUES ('test-history', 'expense', '2026-01-10', 1500, 'white', 17, '', 'manual', false, 2, now())"""))
+        supplier_before = db.execute(text("SELECT to_jsonb(suppliers) FROM suppliers")).scalar_one()
+        expense_before = db.execute(text("SELECT to_jsonb(business_entries) FROM business_entries")).scalar_one()
+    migrate(scratch_database)
+    with scratch_database.connect() as db:
+        supplier_after = db.execute(text("SELECT to_jsonb(suppliers) FROM suppliers")).scalar_one()
+        assert supplier_after == dict(supplier_before, cbu=None, alias=None)
+        assert db.execute(text("SELECT to_jsonb(business_entries) FROM business_entries")).scalar_one() == expense_before
+
+
 @pytest.mark.parametrize("amount", ["NaN", "Infinity", "-1", "1.005", "10000000000000000", "", "1.000,00"])
 def test_invalid_money_is_not_silently_rounded(amount):
     with pytest.raises(ValueError):

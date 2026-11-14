@@ -384,6 +384,15 @@ respaldo, ensayo de migraciones, actualización de código/imagen, migración ma
 y recreación solo de fastapi. NGROK/MP/certificados y volúmenes siguen iguales.
 No se agrega auto-deploy, CRON ni rotación de claves.
 
+Para actualizar de `0014_credit_timestamps` a `0015_supplier_bank_details`, aplicar en
+la copia restaurada y luego en producción `alembic upgrade 0015_supplier_bank_details`.
+Verificar que `suppliers` conserve las fichas existentes y sus referencias, con
+`cbu` y `alias` en NULL antes de iniciar FastAPI. Conservar los archivos efectivos
+de Compose que indique el contenedor activo, incluido el override de acceso si existe.
+Las dos columnas son aditivas. Ante un problema posterior a la migración, una imagen
+de contingencia con el código anterior y la revisión 0015 permite conservar el esquema
+y los valores nuevos si se comprobó primero su arranque en la copia aislada.
+
 ## Evidencia y límites
 
 La suite ensaya migración del esquema original conservando cobros/facturas y la

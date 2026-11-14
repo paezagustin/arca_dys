@@ -35,11 +35,12 @@ def seed(target):
         payment = Payment(id_payment_mp="SIM-FACTURADO", status="approved", mont=Decimal("1234.56"), registered_arca=True)
         pending = Payment(id_payment_mp="SIM-POR-VERIFICAR", status="approved", mont=Decimal("2000"), registered_arca=False)
         invoice = Invoice(invoice_number="SIM-10-123", total_amount=Decimal("1234.56"), cae="SIM-CAE", raw_afip_response={"simulation": True})
-        supplier = Supplier(name="Proveedor ficticio", name_key="proveedor ficticio")
+        supplier_id = db.execute(text("""INSERT INTO suppliers (name, name_key, contact, notes, active, version)
+            VALUES ('Proveedor ficticio', 'proveedor ficticio', '', '', true, 1) RETURNING id""")).scalar_one()
         receipt = DataImport(id="receipt-test", dataset="initial-business-json-v1", file_hash="a"*64,
             filename="Datos ficticios", state="confirmed", report={}, actor="test")
         event = MPEvent(id="event-test", dedup_key="b"*64, topic="payment", resource="SIM-FACTURADO", payload={}, state="processed")
-        db.add_all([payment, pending, invoice, supplier, receipt, event,
+        db.add_all([payment, pending, invoice, receipt, event,
             BusinessSettings(id=1, values={"name": "Emisor ficticio", "point": 10}, version=2),
             User(username="administracion", password_hash="SIM-HASH", role="admin")])
         db.flush()
@@ -47,7 +48,7 @@ def seed(target):
             invoice_date=date(2026, 1, 1), point=10, voucher_type=11, voucher_number=124, payment_ids=[pending.id],
             payment_snapshot=[{"id": pending.id}], fiscal_snapshot={"simulation": True}, payload={"CbteDesde": 124})
         entry = BusinessEntry(entry_key="entry-test", kind="expense", entry_date=date(2026, 1, 1), amount=Decimal("12.34"),
-            expense_type="white", supplier_id=supplier.id)
+            expense_type="white", supplier_id=supplier_id)
         db.add_all([request, entry])
         db.flush()
         db.add_all([PaymentInvoice(payment_id=payment.id, invoice_id=invoice.id),
@@ -55,7 +56,7 @@ def seed(target):
             PaymentChange(payment_id=payment.id, event_id=event.id, previous_status="pending", new_status="approved", provider_updated_at=datetime(2026,1,1,tzinfo=timezone.utc)),
             LegacyImportRow(batch_id=receipt.id, sheet="Test", row_number=1, slot="D", source_key="c"*64, fingerprint="d"*64,
                 kind="expense", raw={}, proposed={}, state="imported", entry_id=entry.id),
-            LegacyImportSupplierMap(batch_id=receipt.id, label="Original ficticio", supplier_id=supplier.id, actor="test"),
+            LegacyImportSupplierMap(batch_id=receipt.id, label="Original ficticio", supplier_id=supplier_id, actor="test"),
             SalaryPayment(entry_key="salary-test", entry_date=date(2026,1,1), employee="Francisco", amount=Decimal("10"), medium="mercado pago")])
         db.execute(CustomerCredit.__table__.insert().values(
             entry_key="credit-test", customer="Cliente ficticio", amount=Decimal("5"),
