@@ -543,3 +543,33 @@ Los contratos MP actuales están basados en documentación oficial/fixtures, sin
 certificar que todos los medios de la cuenta notifiquen igual. No se certificó
 homologación ni conectividad productiva ARCA/MP. CRON y rotación de claves quedan
 para el usuario. La sesión no ejecuta esas operaciones como parte de las pruebas.
+
+## Actualización de interfaz y proveedores del 14/11/2026
+
+[Commit 07ffd06](https://github.com/paezagustin/arca_dys/commit/07ffd06f3282680477586029af35142030956ec5)
+en `main`. ARCA-5 adoptó Resumen como referencia de las tarjetas de Gestión.
+ARCA-15 a ARCA-20 cubren fechas en iOS, ficha y listado de proveedores,
+confirmación de eliminación, tarjetas de Facturación y validación.
+[Seguimiento en Lific](http://127.0.0.1:3456/ARCA/overview).
+
+- Pasaron 312 pruebas en Docker, el perfil `backup-test` y las pruebas de imagen
+  y restauración en amd64 y ARM64. Se verificaron persistencia tras reinicio y
+  recorridos en WebKit y Chromium a 320, 375, 390, 768 y 1440 px. La prueba de
+  iPhone 13 usó el perfil de Playwright a 390 px. Queda pendiente el teléfono físico.
+- La auditoría de [GitHub Actions](https://github.com/paezagustin/arca_dys/actions/runs/43610543087)
+  detectó `opentelemetry-api` 1.45.1, ya presente en la imagen anterior. La corrección
+  publicada es 1.45.2. Se comprobó que el despliegue carece de un proveedor de
+  trazas configurado y que la extracción afectada requiere trazas activas. La
+  actualización de dependencias quedó pendiente, fuera de esta entrega.
+  [CVE-2026-126360](https://github.com/open-telemetry/opentelemetry-python/security/advisories/GHSA-mf5v-w3w3-f6cg).
+- [ARCA-21](http://127.0.0.1:3456/ARCA/issues/ARCA-21) se desplegó a las 12:39
+  de Buenos Aires. Se verificó el SHA-256 del dump `database.at-cut.dump`, su
+  restauración aislada y el arranque de ambas imágenes con
+  `0015_supplier_bank_details`. Coincidieron 38 huellas de tablas y secuencias
+  antes y después de migrar. Los campos nuevos quedaron en NULL para los 107
+  proveedores previos. Respaldo, imagen previa, configuración y evidencias en
+  `/mnt/datos/docker/arca_dys/backups/deploy_proveedores_07ffd06_eXrSPR`.
+- Se recreó únicamente `fastapi_app`. Los otros 21 contenedores conservaron su
+  identidad, estado y hora de inicio. Respondieron health por HTTP y HTTPS, Sueldos,
+  Facturación, Resumen, Gestión y Proveedores. Se creó, editó y retiró una ficha
+  ficticia temporal en producción. La comprobación fiscal y de MP fue de lectura.
