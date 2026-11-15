@@ -8,9 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.registers import SalaryPayment, CustomerCredit, EMPLOYEES, SALARY_MEDIA
-from app.services.business import check_version
 from app.services.money import require_whole_pesos
-from app.services.registers import save_register, set_credit_paid
+from app.services.registers import delete_credit, mark_credit_paid, save_register
 from app.services.listings import business_today, parse_filters, paginate
 from app.web import templates
 
@@ -45,17 +44,19 @@ def render_registers(request, db, model, *, identifier=None, values=None, error=
         query = query.where(model.entry_date <= filters.end)
     if salary and employee:
         query = query.where(model.employee == employee)
-    if not salary and paid != "all":
-        query = query.where(model.paid.is_(paid == "yes"))
+    if not salary:
+        query = query.where(CustomerCredit.deleted_at.is_(None))
+        if paid != "all":
+            query = query.where(CustomerCredit.paid.is_(paid == "yes"))
     name = str(query_params.get("customer", "")).strip()
     if len(name) > 150:
         raise HTTPException(422, "El nombre admite hasta 150 caracteres")
     if not salary and name:
         query = query.where(model.customer.ilike("%" + name.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%", escape="\\"))
-    total = db.scalar(select(func.coalesce(func.sum(query.subquery().c.amount), 0)))
     row = db.get(model, identifier) if identifier else None
-    if identifier and row is None:
+    if identifier and (row is None or (not salary and row.deleted_at is not None)):
         raise HTTPException(404, "Registro no encontrado")
+    total = db.scalar(select(func.coalesce(func.sum(query.subquery().c.amount), 0)))
     fields = ("entry_key", "entry_date", "amount", "employee", "medium", "version") if salary else (
         "entry_key", "entry_date", "amount", "customer", "observation", "paid", "version")
     data = values if values is not None else ({key: getattr(row, key) for key in fields} if row else {
@@ -102,6 +103,18 @@ async def save_credit(request: Request, db: Session = Depends(get_db)):
     return await store(request, db, CustomerCredit)
 
 
+@router.post("/fiados/{identifier}/delete")
+async def remove_credit(identifier: int, request: Request, db: Session = Depends(get_db)):
+    values = await request.form()
+    try:
+        delete_credit(db, identifier, values.get("version"))
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return RedirectResponse("/fiados?deleted=1", status_code=303)
+
+
 @router.post("/fiados/{identifier}/paid")
 async def mark_paid(identifier: int, request: Request, fecha_desde: str = "", fecha_hasta: str = "",
                     db: Session = Depends(get_db)):
@@ -109,19 +122,13 @@ async def mark_paid(identifier: int, request: Request, fecha_desde: str = "", fe
         filters = parse_filters("todo", fecha_desde, fecha_hasta, default_today=False)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
-    values = dict(await request.form())
-    row = db.scalar(select(CustomerCredit).where(CustomerCredit.id == identifier).with_for_update())
-    if row is None:
-        raise HTTPException(404, "Fiado no encontrado")
-    # Repetir el mismo marcado de pago ya confirmado no revierte ni duplica nada.
-    if not row.paid:
-        try:
-            check_version(row, values.get("version"))
-        except ValueError as exc:
-            raise HTTPException(409, str(exc)) from exc
-        set_credit_paid(row, True)
-        row.version += 1
-        db.commit()
+    values = await request.form()
+    try:
+        mark_credit_paid(db, identifier, values.get("version"))
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
     query = {"paid": "no", "stored": "1"}
     if filters.start:
         query["fecha_desde"] = filters.start.isoformat()

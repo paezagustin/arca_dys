@@ -31,7 +31,7 @@ flowchart LR
 | Comprobantes | services/invoices.py | ReportLab local, QR dinámico, total exacto 50/50, sin reemisión. |
 | MP | services/mp.py, mp_inbox.py, payments.py | Inbox antes de ACK, GET canónico con timeout, identidad externa e historial. |
 | Gestión | services/business.py | Ventas manuales independientes, egresos En Blanco/En Negro y proveedores. |
-| Sueldos/Fiados | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión y CSRF; Fiados independiente. |
+| Sueldos/Fiados | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión y CSRF. Baja lógica de Fiados con bloqueo de fila. |
 | Carga inicial | scripts/import_business_json.py | JSON privados, transacción, recibo idempotente, claves explícitas y conciliación mensual. |
 | Reportes | services/metrics.py | SQL/Decimal, datos vigentes, fuentes separadas y gráficos SVG. |
 | Configuración | services/settings.py, access.py | Roles, sesiones revocables, límites/emisor versionados. |
@@ -111,6 +111,7 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0013_mp_identity | Identidad MP separada, snapshots originales, evidencia de actualizaciones y protección de grupos históricos repetidos. |
 | 0014_credit_timestamps | Hora de alta y pago de Fiados con zona horaria. Conserva las fechas históricas y deja nulas las horas desconocidas. |
 | 0015_supplier_bank_details | CBU y alias opcionales en proveedores. Las fichas existentes conservan sus datos y reciben ambos campos en NULL. |
+| 0016_credit_deletion | Marca de baja nullable en Fiados. Conserva el contenido de los registros, su UUID y sus fechas de alta y pago. |
 
 El puente versionado de migrations/mp_legacy_bridge.py permite la transición
 explícita desde 0001-0003 cuando 0004 rechaza duplicados, sin modificar revisiones
@@ -131,8 +132,9 @@ autorizaciones; no se inventan respuestas previas. Los importes usan NUMERIC(18,
 ## Formularios y navegación H12
 base.html usa details/summary nativo para el menú, con icono de tres líneas y
 span del nombre activo; actualizar el texto no elimina el SVG. app.js adapta su estado al
-breakpoint de 900px: móvil cerrado y escritorio abierto; mantiene teclado y
-funcionamiento nativo sin dependencias. Administración/Salir están antes del footer.
+breakpoint de 900px. En móvil abre cada página con el menú cerrado. Las pantallas de
+uso diario ofrecen un botón para contraer o expandir la barra lateral en escritorio.
+La preferencia se guarda en el navegador. Administración y Salir aparecen antes del footer.
 Los montos nuevos no traen cero precargado; MP positivo conserva la sugerencia local.
 business.py exige al menos un componente del cierre y convierte el otro vacío a
 cero. La suma y la validación siguen en servidor. No cambia el esquema de datos.
@@ -166,7 +168,10 @@ se conserva SQLAlchemy 2.0 y se eliminan pymysql/SDK MP que ya no se utilizan.
 
 Los sueldos se agregan por fecha/empleado en metrics.py y reducen Ganancia una sola
 vez; no se insertan también en business_entries. customer_credits es independiente:
-marcar pagado no produce movimientos. Excel añade hojas de desglose y sueldos sin
+marcar pagado conserva el registro de Fiados. El listado, su paginación y sus totales
+usan filas con `deleted_at IS NULL`. Guardar, marcar el pago y eliminar verifican
+el estado de la fila dentro de un bloqueo. La baja conserva el UUID para rechazar
+una repetición del formulario de alta. Excel añade hojas de desglose y sueldos sin
 alterar las seis columnas originales. No hay nuevas dependencias/procesos/servicios.
 
 ## Despliegue manual y limpieza inicial

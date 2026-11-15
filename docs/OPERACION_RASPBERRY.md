@@ -393,6 +393,13 @@ Las dos columnas son aditivas. Ante un problema posterior a la migración, una i
 de contingencia con el código anterior y la revisión 0015 permite conservar el esquema
 y los valores nuevos si se comprobó primero su arranque en la copia aislada.
 
+Para actualizar de `0015_supplier_bank_details` a `0016_credit_deletion`, ensayar
+`alembic upgrade 0016_credit_deletion` sobre la copia restaurada y comprobar que
+`customer_credits.deleted_at` queda en NULL para todas las filas existentes. Aplicar
+la misma revisión en producción con FastAPI detenido y recrear solo ese servicio.
+La reversión a 0015 toma un bloqueo y se interrumpe si existe algún fiado eliminado.
+Ensayar la reversión en la copia antes de usarla para recuperar el servicio.
+
 ## Evidencia y límites
 
 La suite ensaya migración del esquema original conservando cobros/facturas y la

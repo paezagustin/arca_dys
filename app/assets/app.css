@@ -8,6 +8,7 @@
   --ground:#f5f7fa;
   --bad:#a32c49;
   --ok:#23734f;
+  --sidebar-width:224px;
   font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
   color:var(--ink);
   background:var(--ground);
@@ -47,7 +48,7 @@ small,.muted {
 .site-header {
   position:fixed;
   inset:0 auto 0 0;
-  width:224px;
+  width:var(--sidebar-width);
   display:flex;
   flex-direction:column;
   gap:24px;
@@ -56,6 +57,12 @@ small,.muted {
   border-right:1px solid var(--line);
   overflow-y:auto;
   z-index:5;
+}
+.sidebar-content:not([hidden]) {
+  display:flex;
+  flex:1;
+  flex-direction:column;
+  gap:24px;
 }
 .brand {
   display:flex;
@@ -123,7 +130,7 @@ small,.muted {
   padding:6px 12px;
 }
 .workspace {
-  margin-left:224px;
+  margin-left:var(--sidebar-width);
   min-height:100vh;
   display:flex;
   flex-direction:column;
@@ -383,10 +390,6 @@ td {
   color:var(--muted);
   margin-bottom:10px;
 }
-.dashboard-metrics .card:last-child {
-  background:#e7f5ff;
-  border-color:#a3d7f0;
-}
 .dashboard-metrics {
   grid-template-columns:repeat(3,minmax(0,1fr));
 }
@@ -398,10 +401,6 @@ td {
   grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));
 }
 .metrics.summary-metrics .metric { font-size:clamp(16px,7cqi,28px); }
-.metrics [data-metric=sale] { border-top:4px solid #169b9b; }
-.metrics [data-metric^=expense] { border-top:4px solid #d3487e; }
-.dashboard-metrics [data-metric=salary] { border-top:4px solid #8a62b9; }
-.dashboard-metrics [data-metric=result] { border-top:4px solid var(--brand); }
 .report-heading {
   padding:8px 12px;
   border-inline-start:3px solid var(--brand);
@@ -421,24 +420,18 @@ td {
 .report-breakdown>div {
   min-width:0;
   padding:18px 20px;
-  border:1px solid #cde3f0;
-  border-left:4px solid var(--brand);
+  border:1px solid var(--line);
   border-radius:10px;
-  background:#f2f8fc;
+  background:var(--inset);
 }
 .report-breakdown h3 { margin:0 0 12px; }
-.report-breakdown [data-metric=sale_cash] { background:#eff9f6; border-color:#bfdfd4; border-left-color:#25856b; }
-.report-breakdown [data-metric=sale_unknown] { background:#f5f7fa; border-color:var(--line); border-left-color:var(--muted); }
-.salaries-report .report-breakdown>div { background:#f8f4fc; border-color:#ded1ee; border-left-color:#8a62b9; }
 .report-stats { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; margin:18px 0; border:1px solid var(--line); border-radius:10px; background:#f8fafc; }
 .report-stats p { margin:0; padding:14px 18px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
 .report-stats p:nth-child(even) { border-right:0; }
 .report-stats p:nth-last-child(-n+2) { border-bottom:0; }
 .report-panel>a { display:inline-block; margin-top:16px; }
-.dashboard-reports tbody tr:nth-child(even) { background:#f5f8fb; }
-.dashboard-reports tbody tr:hover { background:#eaf4fa; }
 .dashboard-reports th+th,.dashboard-reports td+td { border-left:1px solid var(--line); }
-.dashboard-reports .report-total { background:#eaf5fb; font-weight:700; }
+.dashboard-reports .report-total { background:#e8eef5; font-weight:700; }
 .row-actions { flex-wrap:nowrap; gap:8px; }
 .row-actions form { margin:0; }
 .delete-button { color:var(--bad); border-color:#e5bec9; }
@@ -626,7 +619,7 @@ dialog .actions {
 .skip-link:focus {
   position:fixed;
   top:10px;
-  left:240px;
+  left:calc(var(--sidebar-width) + 16px);
   background:white;
   padding:12px;
   z-index:20;
@@ -677,6 +670,9 @@ dialog .actions {
     gap:12px;
     border-right:0;
     border-bottom:1px solid var(--line);
+  }
+  .sidebar-content:not([hidden]) {
+    gap:12px;
   }
   .brand {
     flex-direction:column;
@@ -771,9 +767,6 @@ dialog .actions {
   .metrics .metric {
     font-size:20px;
   }
-  .dashboard-metrics .card:last-child {
-    grid-column:auto;
-  }
   .dashboard-metrics,.management-metrics { grid-template-columns:1fr; }
   .dashboard-metrics .metric,.management-metrics .metric { font-size:26px; }
   .report-stats p,.report-stats p:nth-last-child(2) { border-right:0; border-bottom:1px solid var(--line); }
@@ -836,3 +829,187 @@ table td .actions { justify-content: center; margin: 0; }
 input[readonly] { background: var(--ground) !important; font-weight: 600; }
 .legend-salaries::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: #8a62b9; }
 .bar-salaries { fill: #8a62b9; rx: 3; }
+
+/* Pantallas de uso diario */
+.operational {
+  --ink:#182638;
+  --muted:#4f6074;
+  --brand:#205a7b;
+  --ground:#e4ebf3;
+  --line:#ccd6e2;
+  --region-line:#a5b6c9;
+  --control-line:#7b8da2;
+  --inset:#f2f6fb;
+  --sidebar-width:240px;
+  --sidebar-bg:#1b283a;
+  --sidebar-text:#e5ecf4;
+  color:var(--ink);
+  background:var(--ground);
+}
+.operational main {
+  padding-bottom:24px;
+}
+.operational .site-header {
+  gap:8px;
+  padding:16px 16px 20px;
+  background:var(--sidebar-bg);
+  border-color:#33455c;
+}
+.operational .site-header :is(a,.muted,footer) {
+  color:var(--sidebar-text);
+}
+.operational .brand {
+  font-size:17px;
+}
+.operational .brand img {
+  width:88px;
+  height:88px;
+  border-radius:14px;
+}
+.operational .site-header nav a:hover,
+.operational .site-header nav a[aria-current] {
+  background:#30445c;
+  color:white;
+}
+.operational .site-header nav a[aria-current] {
+  box-shadow:inset 3px 0 #a6d0ff;
+}
+.operational .sidebar-footer {
+  border-color:#47596f;
+}
+.operational .site-menu>summary,
+.operational :is(.sidebar-toggle,.session-area button) {
+  background:#26374c;
+  border-color:#6b7d93;
+  color:var(--sidebar-text);
+}
+.operational :is(.sidebar-toggle,.session-area button):hover {
+  background:#30445c;
+  color:white;
+}
+.operational .sidebar-toggle {
+  display:none;
+  align-self:flex-end;
+  width:44px;
+  min-height:44px;
+}
+.sidebar-toggle[aria-expanded="true"] .sidebar-open-icon,
+.sidebar-toggle[aria-expanded="false"] .sidebar-close-icon {
+  display:none;
+}
+.operational .card {
+  border-color:var(--region-line);
+  border-radius:12px;
+  box-shadow:0 1px 3px #18263818;
+}
+.operational .grid>.card {
+  margin-block:0;
+}
+.operational .report-heading {
+  padding:0 0 12px;
+  border:0;
+  border-bottom:1px solid var(--line);
+  border-radius:0;
+  background:transparent;
+  color:var(--ink);
+  font-size:19px;
+}
+.operational :is(.filters,.card[data-report-filter]) {
+  background:var(--inset);
+}
+.operational .fields.filters:not(.card) {
+  padding:16px;
+  border:1px solid var(--region-line);
+  border-radius:8px;
+}
+.operational .fields>.actions {
+  align-self:end;
+  margin-top:0;
+}
+.operational input:not([type=checkbox]):not([type=hidden]),
+.operational :is(select,textarea,.quiet,.secondary,.icon-button) {
+  border-color:var(--control-line);
+}
+.operational :is(input,select,textarea):focus,
+.operational :is(a,button,summary):focus-visible {
+  outline:2px solid #21668c;
+  outline-offset:2px;
+}
+.operational .site-header :focus-visible {
+  outline-color:#a6d0ff;
+}
+.operational .table-wrap {
+  border:1px solid var(--line);
+  border-radius:8px;
+}
+.operational th {
+  color:var(--ink);
+  background:#edf2f8;
+  font-size:13px;
+}
+.operational tbody tr:nth-child(even) {
+  background:#f7f9fc;
+}
+.operational tbody tr:hover {
+  background:#edf2f8;
+}
+.operational tbody tr:last-child td {
+  border-bottom:0;
+}
+.operational .dashboard-metrics [data-metric=result] {
+  border-top-color:var(--brand);
+  background:#edf4fb;
+}
+.operational .metrics [data-metric] {
+  border-top-width:3px;
+}
+.operational .delete-button {
+  border-color:#be8091;
+}
+.operational .danger:hover {
+  background:#85213b;
+}
+.operational #confirm-description {
+  white-space:pre-line;
+  overflow-wrap:anywhere;
+}
+.delete-credit-form {
+  margin-inline-start:auto;
+}
+.register-total {
+  display:flex;
+  align-items:baseline;
+  flex-wrap:wrap;
+  gap:4px 12px;
+  margin:16px 0 12px;
+  color:var(--muted);
+}
+.register-total .metric {
+  max-width:100%;
+  color:var(--ink);
+}
+@media (width > 900px) {
+  .operational .sidebar-toggle:not([hidden]) {
+    display:inline-flex;
+  }
+  .operational.sidebar-collapsed {
+    --sidebar-width:72px;
+  }
+  .sidebar-collapsed .site-header {
+    padding-inline:14px;
+  }
+}
+@media (max-width:900px) {
+  .operational .brand img {
+    width:64px;
+    height:64px;
+  }
+  .operational .site-header {
+    padding-bottom:16px;
+  }
+}
+@media (max-width:560px) {
+  .delete-credit-form {
+    flex-basis:100%;
+  }
+}

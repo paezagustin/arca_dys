@@ -17,8 +17,9 @@ El banner de simulación y los PDF indican SIN VALIDEZ FISCAL.
 El encabezado muestra el ícono de ARCA DYS centrado y Dulce y Salado debajo. En el celular,
 pulsar el icono de tres líneas junto al nombre de la sección para desplegar las opciones; no tiene flecha.
 Al entrar a otra pantalla se cierra y muestra el nombre de la sección elegida.
-En escritorio las secciones quedan visibles en la barra lateral. Administración
-está abajo a la izquierda en esa barra, con margen y encima de ARCA DYS; al ingresar,
+En escritorio, el botón con el panel y la flecha permite contraer y volver a abrir
+la barra lateral. El navegador recuerda la elección. Administración
+está abajo a la izquierda en esa barra, encima de ARCA DYS. Al ingresar,
 Salir queda allí. En celular estos controles aparecen al desplegar el menú.
 
 En la pantalla de inicio, el icono de la app dice **ARCA DYS** y muestra una
@@ -90,9 +91,8 @@ Se muestran Ventas, Egresos en blanco, Egresos en negro,
 Total Egresos, Pago de sueldos y Ganancia (ventas menos egresos y sueldos).
 También muestra efectivo/MP y cuánto se pagó a cada empleado. Promedio diario,
 gráfico y detalle mensual ayudan a comparar. Los cobros y facturas están separados.
-Las tarjetas mantienen el signo de peso junto al importe. Colores y separadores
-distinguen efectivo, MP, históricos sin desglose y sueldos; las tablas alternan
-filas y destacan las columnas de totales para facilitar la lectura.
+Las tarjetas mantienen el signo de peso junto al importe. Los separadores distinguen
+los desgloses y las tablas alternan filas y destacan las columnas de totales.
 Exportar Excel descarga la hoja de ingresos y egresos del período, con sus seis
 columnas originales, además de las hojas Ventas y Sueldos del mismo período. Varias compras de un día ocupan filas adicionales sin repetir
 la venta. Si un egreso antiguo no tiene tipo, editarlo antes de exportar.
@@ -131,6 +131,10 @@ y el total se actualizan en la misma pantalla, y Atrás y Adelante recorren las
 búsquedas aplicadas. Marcar pagado vuelve a la lista de impagos con el rango de
 fechas que estabas consultando.
 El lápiz permite corregir cualquiera de los campos.
+Para quitar un registro cargado por error, abrí su edición con el lápiz, pulsá
+Eliminar fiado y confirmá. El fiado se retira del listado y sus totales.
+Si la persona ya pagó, usá Marcar pagado o elegí Sí en Pagó y guardá. Así el
+registro queda disponible al consultar los fiados pagados y para futuras estadísticas.
 Fecha muestra el día elegido y, en las altas nuevas, el día y la hora reales
 del registro en Buenos Aires. Los filtros buscan por el día elegido completo.
 Al marcar Sí se guarda la fecha y hora del pago. Editar otros datos conserva

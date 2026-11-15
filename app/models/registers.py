@@ -38,4 +38,5 @@ class CustomerCredit(Base):
     paid = Column(Boolean, nullable=False, server_default=false())
     paid_date = Column(Date)
     paid_at = Column(DateTime(timezone=True))
+    deleted_at = Column(DateTime(timezone=True))
     version = Column(Integer, nullable=False, default=1)

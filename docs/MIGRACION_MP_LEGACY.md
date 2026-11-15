@@ -56,7 +56,7 @@ en migrations/mp_legacy_bridge.py, solo desde 0001_legacy, 0002_cleanup o 0003_b
 Un fallo revierte el DDL y el versionado completo del puente. No se deja una base
 visible en 0004 con duplicados. **No ejecutar alembic stamp manual**, no retirar
 restricciones ni ejecutar solamente la parte DDL de este módulo. El comando está
-verificado hasta 0015_supplier_bank_details y exige revisar compatibilidad ante otro head.
+verificado hasta 0016_credit_deletion y exige revisar compatibilidad ante otro head.
 Una instalación ya versionada desde 0004, sin duplicados, utiliza `alembic upgrade head`
 normalmente. Una base sin duplicados desde 0001-0003 también usa el upgrade normal.
 No ejecutar código anterior contra el nuevo esquema ni hacer downgrade: una
@@ -148,7 +148,7 @@ diff -u "$MAINT_DIR/restore-mp.before.json" "$MAINT_DIR/restore-mp.after.json"
 ```
 
 Cada comando debe finalizar sin error; ante un fallo detenerse, no continuar con
-los siguientes. Head esperado **0015_supplier_bank_details**. El diff debe estar vacío,
+los siguientes. Head esperado **0016_credit_deletion**. El diff debe estar vacío,
 incluidas huellas y secuencias. check-mp-identities debe mostrar invalid_groups=0,
 protected_triggers=2, blocked_groups=40 y legacy_snapshots=3876 para este respaldo.
 Habrá 3828 identidades: 3788 apuntan a filas no repetidas y 40 quedan bloqueadas.

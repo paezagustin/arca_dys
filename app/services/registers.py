@@ -17,7 +17,7 @@ def set_credit_paid(row, paid, *, at=None):
 
 def save_register(db, model, values, identifier=None):
     row = db.scalar(select(model).where(model.id == identifier).with_for_update()) if identifier else None
-    if identifier and row is None:
+    if identifier and (row is None or (model is CustomerCredit and row.deleted_at is not None)):
         raise ValueError("Registro no encontrado")
     if row:
         check_version(row, values.get("version"))
@@ -40,6 +40,8 @@ def save_register(db, model, values, identifier=None):
             raise ValueError("Reabrí el formulario para guardar") from None
         previous = db.scalar(select(model).where(model.entry_key == key))
         if previous:
+            if model is CustomerCredit and previous.deleted_at is not None:
+                raise ValueError("Este fiado fue eliminado. Abrí un formulario nuevo para registrar otro")
             if all(getattr(previous, key) == value for key, value in data.items()):
                 return previous
             raise ValueError("Este formulario ya fue guardado. Abrí uno nuevo")
@@ -54,3 +56,30 @@ def save_register(db, model, values, identifier=None):
     row.version += 1
     db.commit()
     return row
+
+
+def _lock_credit(db, identifier):
+    row = db.scalar(select(CustomerCredit).where(CustomerCredit.id == identifier).with_for_update())
+    if row is None:
+        raise LookupError("Fiado no encontrado")
+    return row
+
+
+def mark_credit_paid(db, identifier, version):
+    row = _lock_credit(db, identifier)
+    if row.deleted_at is not None:
+        raise LookupError("Fiado no encontrado")
+    if not row.paid:
+        check_version(row, version)
+        set_credit_paid(row, True)
+        row.version += 1
+        db.commit()
+
+
+def delete_credit(db, identifier, version):
+    row = _lock_credit(db, identifier)
+    if row.deleted_at is None:
+        check_version(row, version)
+        row.deleted_at = utcnow()
+        row.version += 1
+        db.commit()
