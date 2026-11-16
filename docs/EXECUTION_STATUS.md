@@ -1,6 +1,6 @@
 # Estado de ejecución
 
-Actualizado: 2026-11-07, America/Buenos_Aires.
+Actualizado el 15/11/2026 (America/Buenos_Aires).
 
 ## H21 · PWA desplegada en la LAN por HTTP
 
@@ -596,3 +596,59 @@ confirmación de eliminación, tarjetas de Facturación y validación.
   39 huellas de tablas y secuencias. Los otros 21 contenedores conservaron su
   identidad, estado y hora de inicio. Producción se verificó mediante GET por HTTPS
   en Fiados, Resumen, Facturación, Gestión, Sueldos y Proveedores.
+
+## Fiados e interfaz del 15/11/2026
+
+- El [commit 9bd9929](https://github.com/paezagustin/arca_dys/commit/9bd99293a4bae436aa750ff09e6084dd361a2bb7)
+  agrega la baja lógica de Fiados con confirmación. El aviso indica que marcar
+  un fiado como pagado lo conserva en el historial. La baja excluye el registro y
+  su importe de los listados y totales. Las pantallas de uso diario incorporan
+  mayor contraste, encabezados neutros y una barra lateral colapsable en escritorio.
+  [BookStack · Empezar aquí](http://raspberrypi5:6875/books/arca-dys/page/empezar-aqui) ·
+  [Lific · ARCA-25](http://127.0.0.1:3456/#/ARCA/issues/ARCA-25).
+- Pasaron 315 pruebas en Docker, la restauración con datos ficticios y el ensayo de
+  la imagen de ejecución en simulación. En Chromium y WebKit con iPhone 13 emulado
+  se comprobó el flujo de baja. En escritorio también se verificaron el menú
+  colapsable, los filtros, los totales y la exportación a Excel. La suite, la
+  restauración y la imagen pasaron en AMD64 y ARM64. La auditoría de ese commit
+  detectó `CVE-2026-126360` en `opentelemetry-api` 1.45.1.
+  [GitHub Actions](https://github.com/paezagustin/arca_dys/actions/runs/43772890590).
+- A las 20:27 de Buenos Aires se recreó FastAPI con la imagen ARM64
+  `arca-dys-local:fiados-9bd9929`. Alembic avanzó de `0015_supplier_bank_details`
+  a `0016_credit_deletion`. Se ensayaron la migración y su reversión en una copia
+  aislada. Coincidieron 38 huellas de los datos originales y las secuencias.
+  La verificación de solo lectura por HTTPS cubrió Facturación, Gestión, Resumen,
+  Sueldos y Fiados, incluido el aviso de eliminación.
+- El respaldo del corte se tomó con Alembic en `0015_supplier_bank_details`.
+  Se comprobó su SHA-256 y se restauró en PostgreSQL aislado en la Raspberry.
+
+  ```text
+  /mnt/datos/docker/arca_dys/backups/deploy_fiados_9bd9929_KN0AoX/database.at-cut.dump
+  ```
+
+## Corrección de OpenTelemetry del 15/11/2026
+
+- El [commit 511ef85](https://github.com/paezagustin/arca_dys/commit/511ef85cc441ccabd3a8c40ed6bfc222b18cb8e1)
+  fija `opentelemetry-api` 1.45.2 en `requirements.in` y `requirements.txt`.
+  [Aviso CVE-2026-126360](https://github.com/open-telemetry/opentelemetry-python/security/advisories/GHSA-mf5v-w3w3-f6cg) ·
+  [Lific · ARCA-26](http://127.0.0.1:3456/#/ARCA/issues/ARCA-26).
+- Pasaron 315 pruebas en Docker, la restauración con datos ficticios, `pip check`
+  y el ensayo de la imagen de ejecución. `pip-audit` terminó sin hallazgos en
+  local y la auditoría de GitHub Actions pasó en AMD64 y ARM64 antes del despliegue.
+  [GitHub Actions](https://github.com/paezagustin/arca_dys/actions/runs/43777538077).
+- A las 21:05 de Buenos Aires se recreó FastAPI con la imagen ARM64
+  `arca-dys-local:otel-511ef85`, construida con las versiones auditadas, incluidas
+  `certifi` 2026.10.19 y `Pillow` 13.0.0. Se comprobó la versión instalada de
+  OpenTelemetry, `pip check`, Alembic `0016_credit_deletion` y la respuesta por
+  HTTPS de health, Facturación, Resumen y Fiados.
+- El respaldo del corte contiene Alembic `0016_credit_deletion`. Pasó SHA-256 y
+  se restauró en PostgreSQL aislado en la Raspberry. Coincidieron 39 huellas de
+  tablas y secuencias entre producción y la copia.
+
+  ```text
+  /mnt/datos/docker/arca_dys/backups/deploy_otel_511ef85_qHsrL6/database.at-cut.dump
+  ```
+
+Cada directorio de respaldo contiene `database.at-cut.sha256`, la imagen anterior
+`fastapi.before.tar` y la configuración efectiva del despliegue.
+[BookStack · Operación y acceso](http://raspberrypi5:6875/books/arca-dys/page/operacion-y-acceso).
