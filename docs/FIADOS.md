@@ -2,7 +2,7 @@
 
 Implementación de ARCA-27, ARCA-29 y ajustes ARCA-30 del 21/11/2026, después del análisis DYS-20.
 Se usa la opción A: personas, cuenta enfocada, compras y pagos independientes,
-saldo global y períodos anteriores. El usuario autorizó el despliegue a Raspberry el 21/11/2026, con conservación de los datos existentes. La evidencia final queda en EXECUTION_STATUS.md y Lific ARCA-PLAN-2.
+saldo global y períodos anteriores. Desplegado en Raspberry el 21/11/2026 a las 02:15 (Buenos Aires), commit de ejecución 52b3e17 y esquema 0020. Se conservaron todos los originales; cinco registros con nombres repetidos siguen visibles para revisión humana. Ver EXECUTION_STATUS.md y Lific ARCA-PLAN-2.
 
 ## Probar en esta PC
 

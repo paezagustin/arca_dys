@@ -26,7 +26,7 @@ usar **Factura por importe**, revisar el importe y confirmar. No crea otro ingre
 En **Gestión** registrar efectivo y Mercado Pago del día (MP sugerido editable),
 y egresos En Blanco/En Negro. **Sueldos** registra pagos de Francisco/Juan Cruz;
 **Fiados** lleva una cuenta por persona, con compras, pagos parciales y saldo.
-La opción A tiene entorno de desarrollo y transición productiva autorizada el 21/11; ver el
+La opción A está desplegada desde el 21/11/2026 y tiene desarrollo separado; ver el
 [entorno aislado de Fiados](docs/FIADOS.md) para probarla con ejemplos ficticios
 sin usar el volumen de desarrollo anterior. En **Resumen** consultar por
 día/período/mes/año, ventas por medio, sueldos por empleado y Ganancia después de

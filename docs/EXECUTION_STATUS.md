@@ -5,6 +5,41 @@ Actualizado el 21/11/2026 (America/Buenos_Aires).
 Este registro conserva la evidencia de las entregas. Para pendientes, avance y
 próxima acción, consultar el [proyecto ARCA de Lific](http://127.0.0.1:3456/ARCA/overview).
 
+## Despliegue completado · Fiados A · 21/11/2026 02:15 Buenos Aires
+
+- Código en ejecución: [52b3e17](https://github.com/paezagustin/arca_dys/commit/52b3e173407e741f1c461044f6cb9b8eb89419de).
+  [CI 44869607942](https://github.com/paezagustin/arca_dys/actions/runs/44869607942)
+  aprobado en AMD64 y ARM64 (suite, respaldo, runtime y auditoría).
+- Imagen ARM64 `arca-dys-local:fiados-52b3e17`, revisión exacta comprobada:
+  `sha256:d133dbf034db828ea51766b837989b3f8c03121c8153df68d990d5a31feca7bc`.
+  42 archivos del commit cotejados por hash, pip check aprobado. Smoke sintético
+  nativo: HTTP/caja/sueldos/fiados/worker/PDF simulado, sin accesos externos.
+- Corte terminado **05:15:29 UTC**. Respaldo `database.at-cut.dump` y SHA en
+  `/mnt/datos/docker/arca_dys/backups/deploy_credit_accounts_20261121.tkbwmM`.
+  Restaurado en una copia aislada antes de migrar; **25 tablas/13 secuencias** iguales.
+- Alembic **0016→0020**. Plan aplicado y repetido sin duplicación: **21 originales**,
+  **8 bajas conservadas**, **8 vinculados**, **5 por revisión**, **cero pagos inventados**.
+  Deuda incorporada **133.594** + anterior por revisar **70.437** = **204.031**.
+  Todas las huellas originales coinciden tras la transición y antes de servir HTTP.
+- Solo se recreó `fastapi_app`; **20 contenedores anteriores preservados**. Compare
+  de Compose: únicamente imagen FastAPI; entorno/puertos/montajes/accesos sin cambios.
+  Se conservó el checkout operativo como fuente de Compose; la versión real se
+  identifica por imagen/label y manifiesto, no por el HEAD antiguo de ese checkout.
+- GET internos: health, Fiados, anteriores, Gestión, Sueldos, Resumen, Facturación,
+  login, manifiesto y assets, todos 200. Las ocho cuentas y sus tres vistas
+  (actual/historial/WhatsApp) respondieron 200. **Sin POST comerciales**.
+- HTTPS verificado desde Windows/LAN con certificado válido: health, Fiados,
+  Gestión, Sueldos, Resumen, Facturación y manifiesto, todos 200. El intento desde
+  la propia Raspberry a su IP LAN expiró; no se cambió la restricción de red.
+- Tras esos GET, **24 tablas de negocio/control y 13 secuencias** siguen idénticas;
+  solo `web_sessions` registró la actividad legítima de navegación. Servicios
+  billing/MP y dependencias conservan sus hashes. Continúan **29 solicitudes
+  autorizadas**, sin nuevas emisiones, reinicios de app ni operaciones MP.
+- Pendientes humanos: **ARCA-35**, identidad de cinco registros anteriores visibles
+  en `/fiados/anteriores`; **ARCA-28**, aceptación y teléfono físico. No se resolvieron
+  homónimos por inferencia. Recuperación documentada en OPERACION_RASPBERRY.md;
+  respaldos/configuración/plan privados permanecen en SSD. No hubo reset H15.
+
 ## Cierre de interfaz y ensayo productivo · 21/11/2026 · ARCA-31/32
 
 El usuario autorizó expresamente publicación y despliegue preservando Fiados.

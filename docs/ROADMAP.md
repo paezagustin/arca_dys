@@ -7,8 +7,8 @@ se consultan en el [proyecto ARCA de Lific](http://127.0.0.1:3456/ARCA/overview)
 
 - [x] ARCA-31: nombres, acciones, cabeceras, Sueldos y WhatsApp; 396 pruebas y navegador.
 - [x] ARCA-32: respaldo/restore real, ensayo 0016→0020, huellas originales intactas.
-- [ ] ARCA-33: publicar y desplegar solo FastAPI preservando configuración/datos.
-- [ ] ARCA-34: verificar producción, recuperación y evidencia del commit efectivo.
+- [x] ARCA-33: publicar y desplegar solo FastAPI preservando configuración/datos.
+- [x] ARCA-34: verificar producción, recuperación y evidencia del commit efectivo.
 - [ ] ARCA-35 (humano): revisar cinco filas con nombres repetidos, sin fusionar por inferencia.
 
 El usuario autorizó el despliegue el 21/11. El seguimiento vigente está en Lific;
