@@ -357,3 +357,9 @@ su paso previo y los controles de versión/confirmación. En pantallas pequeñas
 tres acciones usan el mismo diseño compartido con Gestión, Sueldos y Proveedores.
 El usuario autorizó trasladar también los ajustes visuales previos a Raspberry;
 la evidencia del despliegue está en EXECUTION_STATUS.md y ARCA-PLAN-3.
+
+
+Todos estos ajustes de legibilidad/directorio y CRUD fueron autorizados y
+publicados en Raspberry con5f21686, esquema0021. Los párrafos anteriores registran
+su revisión previa de desarrollo. Total fiado usa30px, sin fondo, junto a los
+filtros; se conservan contador junto a Todas y tarjetas3/2/1 según ancho.

@@ -5,6 +5,37 @@ Actualizado el 21/11/2026 (America/Buenos_Aires).
 Este registro conserva la evidencia de las entregas. Para pendientes, avance y
 próxima acción, consultar el [proyecto ARCA de Lific](http://127.0.0.1:3456/ARCA/overview).
 
+## CRUD y Sueldos · desplegado en Raspberry el21/11/2026
+
+- Código en ejecución [5f21686](https://github.com/paezagustin/arca_dys/commit/5f21686c5e83c86b7e695ee369ec940824a56858).
+  [CI44923949874](https://github.com/paezagustin/arca_dys/actions/runs/44923949874)
+  aprobado en AMD64 y ARM64:402 pruebas, backup, runtime y auditoría.
+- Corte de esquema terminado **16:24:47 UTC /13:24:47 Buenos Aires**. Alembic0021.
+  Se conservaron **9 sueldos**, con deleted_atNULL para todos; **21 Fiados
+  originales,11 personas,10 movimientos y13 vínculos** actuales sin cambios.
+- Respaldo del corte restaurado en copia y **29 tablas/16 secuencias** cotejadas
+  antes de migrar. Después, todas las columnas anteriores son idénticas; la única
+  columna nueva es salary_payments.deleted_at, todaNULL. Después de los GET solo
+  web_sessions refleja navegación. No se hicieron POST comerciales productivos.
+- Respaldo, SHA, imagen anterior, entorno y Compose efectivos privados en SSD:
+  `/mnt/datos/docker/arca_dys/backups/deploy_crud_20261121.FIVX4s`.
+- Imagen final ARM64 **arca-dys-local:crud-5f21686-assets**, misma revisión de código:
+  `sha256:007f41721e5ebb8e7f57861ad0fc8d4ce430c1c2b6652593df6ebe9541ea3f64`.
+  Los17 archivos publicados coinciden porSHA; se conservan dependencias/proveedores.
+  El sufijo assets corrige únicamente las fechas de los dos CSS al timestamp del
+  commit, para renovar sus URLs de caché. La imagen inicial había conservado mtime0.
+  Se comprobó en el HTML/HTTP la nueva versión1795277971000000000 para ambos CSS.
+- Solo FastAPI recreado; **20 contenedores originales preservados**. Comparación
+  efectiva de Compose: únicamente imagen FastAPI; sin cambios de red, entorno,
+  puertos, montajes, certificados o NGROK. No hubo resetH15 ni nueva vinculación.
+- Health, Fiados, Gestión, Sueldos, Resumen, Facturación, login y manifiesto200;
+  GET de edición de sueldo/registro y edición/confirmación de Fiados200, con
+  Guardar/Eliminar uniforme y sin Eliminar en reportes. Cuenta y WhatsApp local200.
+  HTTPS con certificado válido desde Windows/LAN200 en las siete rutas de control.
+- Imagen sin reinicios. Se retiraron solo los dos PostgreSQL efímeros de ensayo;
+  los respaldos permanecen. Prueba de teléfono físico/aceptación final enARCA-28.
+  Evidencia operativa y recuperación:ARCA-40/41 y ARCA-PLAN-3.
+
 ## CRUD y Sueldos · preparación verificada del21/11/2026
 
 El usuario autorizó publicar y desplegar todos los cambios pendientes de desarrollo.
@@ -15,7 +46,7 @@ Nueva revisión0021, sin modificar migraciones publicadas; originales preservado
 restaurado. QA de navegador propio: sueldo321 y egreso123 creados y dados de baja,
 sin modificar registros de la usuaria; botones iguales y sin desbordes390/320.
 
-Raspberry inventariada: imagen52b3e17, esquema0020,9 sueldos por960070,21 Fiados
+Raspberry inventariada: imagen52b3e17, esquema0020,9 sueldos, con importes conciliados en la evidencia privada,21 Fiados
 originales,11 personas,10 movimientos y13 vínculos actuales. No se repite el plan
 anterior ni se sobrescribe el trabajo humano. Respaldo privado en SSD:
 `/mnt/datos/docker/arca_dys/backups/deploy_crud_20261121.FIVX4s`.

@@ -483,3 +483,12 @@ revisar ese guard y conservar todos los movimientos posteriores. No ejecutar
 DROP/TRUNCATE, restauraciones destructivas ni iniciar una imagen de esquema0020
 contra una base0021. Conservar respaldo y desplegar una imagen compatible si hay
 operaciones nuevas que impiden volver atrás. Ver la evidencia final en Lific.
+
+
+La entrega final de esta actualización usa `arca-dys-local:crud-5f21686-assets`.
+La imagen conserva el contenido exacto del commit5f21686 y ajusta únicamente el
+mtime de app/assets/app.css y credits.css al timestamp del commit; comprobar que
+sus URLs asset_url cambien para que los clientes reciban los estilos nuevos.
+Al preparar archivos tar para una imagen, no dejar mtime0 en assets cambiados.
+La imagen por sí sola no prueba la interfaz: verificar HTML/URLs/HTTP y código.
+Respaldo efectivo: deploy_crud_20261121.FIVX4s en el directorio SSD de backups.
