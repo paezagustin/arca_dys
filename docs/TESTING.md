@@ -268,3 +268,16 @@ Backup-test restaura 0020 y conserva correcciones/vínculos. Navegador real vali
 cabeceras, referencia en línea, acciones CRUD y columnas en escritorio/móvil.
 El ensayo real en Raspberry se limita a migración/conciliación, con todos los datos
 privados allí; el smoke usa un PostgreSQL vacío distinto y únicamente mock.
+
+
+## Baja lógica de Sueldos y CRUD · ARCA-39
+
+402 pruebas completas aprobadas en166,47s, sin omitidas. Se agregan conservación
+de todas las columnas, repetición de baja, rechazo de edición/reenvío, permisos
+anónimos con CSRF, versiones, filtros/paginación compartidos, conciliación de
+Resumen/Excel, concurrencia edición-baja y migración/downgrade protegido.
+Backup-test0021 conserva un pago eliminado y total vigente500, junto a las
+protecciones existentes de Fiados. No se usan proveedores reales.
+Navegador real: cancelación y baja de un sueldo ficticio321, egreso ficticio123,
+listado de Gestión sin Eliminar y botones compartidos blancos/azules/rojos.
+Las pruebas de navegador solo alteran sus registros ficticios propios.

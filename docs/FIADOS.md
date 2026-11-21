@@ -311,3 +311,49 @@ sin el rótulo Saldo pendiente. Cancelar usa el mismo estilo a la izquierda; gua
 y eliminar quedan juntos a la derecha. Gestión alinea título y acciones en desktop;
 Sueldos coloca Editar primero. El mensaje empieza con 🧁 y 📋, conserva fechas,
 observaciones y montos exactos, y requiere el envío manual en WhatsApp.
+
+
+## Legibilidad en revisión · ARCA-36 · solo desarrollo
+
+La revisión del 21/11 aumenta el texto principal y los botones de 14 a 16 px,
+con encabezados de tabla más marcados y textos secundarios más oscuros dentro de
+la misma paleta. Los botones principales tienen al menos 48 px de alto.
+La ubicación final de Total fiado es la fila de filtros, alineado a la derecha,
+sin fondo ni borde. Etiqueta e importe usan 30 px, por ajuste posterior del usuario. En móvil pasa
+a la línea siguiente si no entra y conserva la alineación derecha, sin scroll.
+No cambia el cálculo ni incorpora otros saldos.
+
+Disponible en http://localhost:8001/fiados para revisión de la usuaria. Esta
+revisión no se desplegó en Raspberry. Navegador real: Fiados, Gestión, Sueldos,
+Resumen y Facturación; móvil de 390 y 320 px, sin desborde del documento ni del
+modal de edición. Guardar y Eliminar permanecen juntos al ampliar el texto.
+396 pruebas completas aprobadas en 155,28 s, sin omitidas; una advertencia conocida
+Starlette/httpx. Captura: artifacts/fiados-dev/readability-directory-desktop.jpg.
+
+
+Refinamientos ARCA-37/38, también solo desarrollo: saldo integrado a los filtros,
+sin barras de desplazamiento en el importe. La cantidad de
+personas va junto a Todas y ambos permanecen juntos al pasar a móvil. El directorio
+aprovecha el ancho de la página: hasta tres tarjetas por fila cuando el espacio
+permite leerlas cómodamente, dos en tamaños intermedios y una en móvil. Los saldos
+y botones de las tarjetas se alinean aunque las referencias ocupen varias líneas.
+Los filtros y sus cálculos no cambian.
+
+
+ARCA-38 se verificó en navegador de escritorio y anchos móviles de 390 y 320 px:
+saldo sin fondo/borde, fuente de 16 px, alineación derecha y documento sin desborde.
+Viewport restaurado al terminar. Capturas actuales en
+artifacts/fiados-dev/filter-inline-total-desktop.jpg y filter-inline-total-mobile.jpg.
+La prueba física con la usuaria sigue pendiente en ARCA-28; no se desplegó esta
+revisión ni se publicó un commit.
+
+
+## CRUD uniforme · ARCA-39
+
+El listado dice Total fiado. Las altas y ediciones usan Guardar; la eliminación
+usa Eliminar con relleno rojo, incluida la confirmación. Cancelar queda a la
+izquierda y Guardar/Eliminar juntos a la derecha. La revisión de pagos conserva
+su paso previo y los controles de versión/confirmación. En pantallas pequeñas las
+tres acciones usan el mismo diseño compartido con Gestión, Sueldos y Proveedores.
+El usuario autorizó trasladar también los ajustes visuales previos a Raspberry;
+la evidencia del despliegue está en EXECUTION_STATUS.md y ARCA-PLAN-3.

@@ -12,5 +12,5 @@
 <p>Comprobante: <strong>Factura C</strong> · Condición de venta: <strong>Efectivo</strong> · Cotillón y repostería: <strong>50 % / 50 %</strong>.</p>
 <h2>Límites de la aplicación</h2><div class="fields">
 <div class="field"><label for="minimum">Importe mínimo</label><input id="minimum" name="minimum" type="number" inputmode="numeric" min="1" step="1" value="{{ values.minimum|money_input }}" required></div>
-<div class="field"><label for="maximum">Importe máximo</label><input id="maximum" name="maximum" type="number" inputmode="numeric" min="1" step="1" value="{{ values.maximum|money_input }}" required></div></div><div class="actions crud-actions"><a class="button quiet crud-cancel" href="/settings">Cancelar</a><button>Guardar configuración</button></div></form>
+<div class="field"><label for="maximum">Importe máximo</label><input id="maximum" name="maximum" type="number" inputmode="numeric" min="1" step="1" value="{{ values.maximum|money_input }}" required></div></div><div class="actions crud-actions"><a class="button quiet crud-cancel" href="/settings">Cancelar</a><button>Guardar</button></div></form>
 <p><a href="/settings/mp">Configurar y revisar Mercado Pago</a></p>{% endblock %}

@@ -16,6 +16,7 @@ class SalaryPayment(Base):
     employee = Column(Enum(*EMPLOYEES, name="salary_employee"), nullable=False)
     amount = Column(Numeric(18, 2), nullable=False)
     medium = Column(Enum(*SALARY_MEDIA, name="salary_medium"), nullable=False, server_default="mercado pago")
+    deleted_at = Column(DateTime(timezone=True))
     version = Column(Integer, nullable=False, default=1)
 
 

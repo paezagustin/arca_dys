@@ -31,7 +31,7 @@ flowchart LR
 | Comprobantes | services/invoices.py | ReportLab local, QR dinámico, total exacto 50/50, sin reemisión. |
 | MP | services/mp.py, mp_inbox.py, payments.py | Inbox antes de ACK, GET canónico con timeout, identidad externa e historial. |
 | Gestión | services/business.py | Ventas manuales independientes, egresos En Blanco/En Negro y proveedores. |
-| Sueldos | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión y CSRF. |
+| Sueldos | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión, CSRF y baja lógica de Sueldos con bloqueo; listados/Resumen/Excel comparten vigencia. |
 | Fiados | models/credits.py, services/credits.py, api/credits.py | Personas/celular, movimientos enteros, correcciones trazables/baja lógica, saldo global, UUID/versión/bloqueos y CSRF. Vínculos explícitos a customer_credits sin modificar sus originales. Mensaje WhatsApp local, sin API. |
 | Carga inicial | scripts/import_business_json.py | JSON privados, transacción, recibo idempotente, claves explícitas y conciliación mensual. |
 | Reportes | services/metrics.py | SQL/Decimal, datos vigentes, fuentes separadas y gráficos SVG. |
@@ -115,6 +115,7 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0016_credit_deletion | Marca de baja nullable en Fiados. Conserva el contenido de los registros, su UUID y sus fechas de alta y pago. |
 | 0017_credit_accounts | Personas, movimientos inmutables y vínculos a históricos; no agrupa ni traslada datos automáticamente. NUMERIC entero sin redondeo por escala. Solo ensayada en desarrollo/pruebas. |
 | 0018_credit_updates | Celular opcional, versión y baja lógica de movimiento. UPDATE controlado con evidencia antes/después por trigger en credit_movement_changes inmutable; conserva identidad/secuencia/tipo y fuente legada. |
+| 0021_salary_deletion | Agrega deleted_at nullable a Sueldos. Conserva todos los valores y rechaza downgrade si reactivaría pagos eliminados. |
 | 0020_credit_person_names | Capitaliza cada palabra y recompone búsqueda, sin fusionar identidades ni modificar customer_credits. |
 | 0019_credit_local_phone | Celular argentino de 10 dígitos. Convierte únicamente 549+10 dígitos y rechaza formatos ambiguos sin cambios; CHECK de formato y versión incrementada al convertir. |
 

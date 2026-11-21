@@ -113,8 +113,8 @@ def main():
     with engine.begin() as connection:
         # Los commit de servicios liberan savepoints; el conjunto conserva una sola transacción exterior.
         with Session(bind=connection,join_transaction_mode='create_savepoint',expire_on_commit=False) as db:
-            if db.scalar(text('SELECT version_num FROM alembic_version'))!='0020_credit_person_names':
-                raise RuntimeError('Requiere el esquema 0020 verificado')
+            if db.scalar(text('SELECT version_num FROM alembic_version')) not in {'0020_credit_person_names','0021_salary_deletion'}:
+                raise RuntimeError('Requiere el esquema 0020 o 0021 verificado')
             if args.prepare:
                 rows=source_rows(db);plan=prepare(rows)
                 descriptor=os.open(args.plan,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)

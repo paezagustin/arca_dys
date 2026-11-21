@@ -177,3 +177,16 @@ Un importe histórico dudoso requiere conciliación antes de trasladarlo.
 
 Fiados sigue siendo independiente: registrar compras, pagos o anulaciones no
 suma ventas ni modifica caja, Ganancia, Mercado Pago o facturación.
+
+
+## Correcciones de Sueldos y botones comunes · 21/11/2026
+
+Para quitar un pago de sueldo equivocado, entrar por el lápiz, pulsar Eliminar y
+confirmar. Cancelar vuelve sin cambios. La baja conserva fecha, empleado, importe,
+tipo y registro original; deja de contar en Sueldos, Resumen y Excel. No representa
+un reintegro de dinero ni una operación en Mercado Pago. Una nueva carga usa un
+formulario nuevo; reenviar el anterior no reactiva lo eliminado.
+
+Guardar tiene ese mismo nombre en altas/ediciones. Cancelar está a la izquierda;
+Guardar y Eliminar a la derecha, con Eliminar siempre rojo. En Gestión se elimina
+solo al editar, no desde la fila del reporte. En Fiados el resumen dice Total fiado.

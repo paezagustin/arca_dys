@@ -104,7 +104,7 @@ def export_business(db, start, end):
     sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
     sheet.page_setup.fitToWidth = 1
     detail_sheet(workbook, "Ventas", ("FECHA", "EFECTIVO", "MERCADO PAGO", "TOTAL"), sales, {2, 3, 4})
-    salaries = db.scalars(select(SalaryPayment).where(SalaryPayment.entry_date.between(start, end)).order_by(SalaryPayment.entry_date, SalaryPayment.id))
+    salaries = db.scalars(select(SalaryPayment).where(SalaryPayment.deleted_at.is_(None), SalaryPayment.entry_date.between(start, end)).order_by(SalaryPayment.entry_date, SalaryPayment.id))
     detail_sheet(workbook, "Sueldos", ("FECHA", "EMPLEADO", "MONTO", "TIPO"),
         ((item.entry_date, item.employee, item.amount, item.medium) for item in salaries), {3})
     output = BytesIO()

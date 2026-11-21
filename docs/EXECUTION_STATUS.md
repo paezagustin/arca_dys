@@ -5,6 +5,22 @@ Actualizado el 21/11/2026 (America/Buenos_Aires).
 Este registro conserva la evidencia de las entregas. Para pendientes, avance y
 próxima acción, consultar el [proyecto ARCA de Lific](http://127.0.0.1:3456/ARCA/overview).
 
+## CRUD y Sueldos · preparación verificada del21/11/2026
+
+El usuario autorizó publicar y desplegar todos los cambios pendientes de desarrollo.
+ARCA-39 implementa Total fiado30px, lectura16px y tarjetas3/2/1, Guardar uniforme,
+Eliminar rojo solo al editar Gestión/Sueldos y confirmación de baja lógica de sueldo.
+Nueva revisión0021, sin modificar migraciones publicadas; originales preservados.
+402 pruebas completas aprobadas166,47s y backup-test0021 con sueldo eliminado
+restaurado. QA de navegador propio: sueldo321 y egreso123 creados y dados de baja,
+sin modificar registros de la usuaria; botones iguales y sin desbordes390/320.
+
+Raspberry inventariada: imagen52b3e17, esquema0020,9 sueldos por960070,21 Fiados
+originales,11 personas,10 movimientos y13 vínculos actuales. No se repite el plan
+anterior ni se sobrescribe el trabajo humano. Respaldo privado en SSD:
+`/mnt/datos/docker/arca_dys/backups/deploy_crud_20261121.FIVX4s`.
+Ensayo/despliegue continúan en ARCA-40/41, plan ARCA-PLAN-3.
+
 ## Despliegue completado · Fiados A · 21/11/2026 02:15 Buenos Aires
 
 - Código en ejecución: [52b3e17](https://github.com/paezagustin/arca_dys/commit/52b3e173407e741f1c461044f6cb9b8eb89419de).

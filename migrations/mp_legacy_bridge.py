@@ -19,7 +19,7 @@ from app.manage import _adoption_metadata
 from migrations.baseline import legacy_metadata
 
 TARGET = "0013_mp_identity"
-SUPPORTED_HEAD = "0020_credit_person_names"
+SUPPORTED_HEAD = "0021_salary_deletion"
 RECEIPT = "legacy-mp-bridge-v1"
 REMOVED = {"payments": {"id_arca"}, "error_logs": {
     "resolved", "resolved_at", "resolved_by", "resolution_notes"}}

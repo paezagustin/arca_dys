@@ -31,6 +31,9 @@ INSERT INTO credit_legacy_links(legacy_credit_id,entry_key,payload_hash,customer
 UPDATE credit_movements SET observation='Torta ficticia corregida',version=version+1,
   change_key=md5('$sentinel-edit')::uuid::text,change_hash=repeat('e',64),changed_by='backup-test'
   WHERE kind='purchase';
+INSERT INTO salary_payments(entry_key,entry_date,employee,amount,medium,version,deleted_at)
+  VALUES (md5('$sentinel-salary-deleted')::uuid::text,'2026-11-01','Francisco',1200,'efectivo',2,now()),
+         (md5('$sentinel-salary-active')::uuid::text,'2026-11-02','Juan Cruz',500,'mercado pago',1,NULL);
 SQL
 output="$(sh /scripts/backup-db.sh)"
 printf '%s\n' "$output"
@@ -61,5 +64,9 @@ if psql -d "$restore_db" -v ON_ERROR_STOP=1 -c 'DELETE FROM credit_movement_chan
   printf 'Error: el historial de correcciones restaurado perdió su protección\n' >&2
   exit 1
 fi
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM salary_payments')" = "2" ]
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT sum(amount)::numeric(18,0) FROM salary_payments WHERE deleted_at IS NULL')" = "500" ]
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM salary_payments WHERE deleted_at IS NOT NULL AND amount=1200 AND version=2')" = "1" ]
+printf 'Sueldos restaurados: pago eliminado conservado, saldo vigente 500\n'
 printf 'Restauración comprobada: importe 12345.67 y revisión %s\n' "$revision"
 printf 'Fiados restaurados: saldo 7500, 2 movimientos, archivo anterior sin fecha inventada e inmutabilidad activa\n'

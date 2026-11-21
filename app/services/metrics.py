@@ -59,7 +59,7 @@ def collect_metrics(db, start, end, *, monthly):
             row["sale_cash"], row["sale_mp"], row["sale_unknown"] = cash, mp, unknown
     salary_month = group(SalaryPayment.entry_date)
     for number, employee, count, amount in db.execute(select(salary_month, SalaryPayment.employee, func.count(), func.sum(SalaryPayment.amount)).where(
-        SalaryPayment.entry_date.between(start, end)).group_by(salary_month, SalaryPayment.employee)):
+        SalaryPayment.deleted_at.is_(None), SalaryPayment.entry_date.between(start, end)).group_by(salary_month, SalaryPayment.employee)):
         row = rows[int(number)-1]
         row["salary"] = (row["salary"] or ZERO) + amount
         row["salary_count"] += count

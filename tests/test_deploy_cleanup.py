@@ -56,8 +56,10 @@ def seed(target):
             PaymentChange(payment_id=payment.id, event_id=event.id, previous_status="pending", new_status="approved", provider_updated_at=datetime(2026,1,1,tzinfo=timezone.utc)),
             LegacyImportRow(batch_id=receipt.id, sheet="Test", row_number=1, slot="D", source_key="c"*64, fingerprint="d"*64,
                 kind="expense", raw={}, proposed={}, state="imported", entry_id=entry.id),
-            LegacyImportSupplierMap(batch_id=receipt.id, label="Original ficticio", supplier_id=supplier_id, actor="test"),
-            SalaryPayment(entry_key="salary-test", entry_date=date(2026,1,1), employee="Francisco", amount=Decimal("10"), medium="mercado pago")])
+            LegacyImportSupplierMap(batch_id=receipt.id, label="Original ficticio", supplier_id=supplier_id, actor="test")])
+        # Contrato histórico 0013: no insertar columnas agregadas después.
+        db.execute(SalaryPayment.__table__.insert().values(entry_key="salary-test", entry_date=date(2026,1,1),
+            employee="Francisco", amount=Decimal("10"), medium="mercado pago"))
         db.execute(CustomerCredit.__table__.insert().values(
             entry_key="credit-test", customer="Cliente ficticio", amount=Decimal("5"),
             entry_date=date(2026, 1, 1), paid=False))

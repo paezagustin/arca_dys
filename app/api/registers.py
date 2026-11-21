@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.registers import SalaryPayment, CustomerCredit, EMPLOYEES, SALARY_MEDIA
 from app.services.money import require_whole_pesos
-from app.services.registers import delete_credit, mark_credit_paid, save_register
+from app.services.registers import delete_salary, save_register
 from app.services.listings import business_today, parse_filters, paginate
 from app.web import templates
 
@@ -38,6 +38,8 @@ def render_registers(request, db, model, *, identifier=None, values=None, error=
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     query = select(model)
+    if salary:
+        query = query.where(SalaryPayment.deleted_at.is_(None))
     if filters.start:
         query = query.where(model.entry_date >= filters.start)
     if filters.end:
@@ -54,7 +56,7 @@ def render_registers(request, db, model, *, identifier=None, values=None, error=
     if not salary and name:
         query = query.where(model.customer.ilike("%" + name.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%", escape="\\"))
     row = db.get(model, identifier) if identifier else None
-    if identifier and (row is None or (not salary and row.deleted_at is not None)):
+    if identifier and (row is None or row.deleted_at is not None):
         raise HTTPException(404, "Registro no encontrado")
     total = db.scalar(select(func.coalesce(func.sum(query.subquery().c.amount), 0)))
     fields = ("entry_key", "entry_date", "amount", "employee", "medium", "version") if salary else (
@@ -91,3 +93,18 @@ async def store(request, db, model):
 @router.post("/salaries")
 async def save_salary(request: Request, db: Session = Depends(get_db)):
     return await store(request, db, SalaryPayment)
+
+
+@router.post("/salaries/{identifier}/delete")
+async def remove_salary(identifier: int, request: Request, db: Session = Depends(get_db)):
+    values = await request.form()
+    try:
+        delete_salary(db, identifier, values.get("version"))
+    except LookupError as error:
+        raise HTTPException(404, str(error)) from error
+    except ValueError as error:
+        db.rollback()
+        return render_registers(request, db, SalaryPayment, identifier=identifier, error=str(error))
+    kept = {"employee", "fecha_desde", "fecha_hasta", "page"}
+    query = [(key, value) for key, value in request.query_params.multi_items() if key in kept]
+    return RedirectResponse("/salaries?" + urlencode(query + [("deleted", "1")]), status_code=303)

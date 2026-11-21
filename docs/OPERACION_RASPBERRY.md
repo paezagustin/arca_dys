@@ -458,3 +458,28 @@ esquema nuevo. Conservar ambos diarios y respaldos; restaurar en una base/cluste
 separado, conciliar operaciones posteriores y coordinar el cambio de destino.
 No DROP/TRUNCATE sobre la base actual ni restauración destructiva automática.
 La ruta y el resultado efectivos se registran en EXECUTION_STATUS.md y Lific.
+
+
+## Sueldos 0021 y lectura/CRUD · 21/11/2026
+
+Autorización expresa posterior: publicar todos los ajustes de desarrollo y
+actualizar Raspberry. 0021_salary_deletion agrega solo deleted_at nullable a
+salary_payments. Los nueve pagos inventariados inicialmente permanecen con todos
+sus valores y nueva marca NULL; no se elimina ni marca ningún pago al migrar.
+Los Fiados que el usuario vinculó después del despliegue anterior se conservan;
+no se repite el plan de transición ni la limpieza H15.
+
+Respaldar configuración, imagen y dump en SSD. Restaurar primero en un PostgreSQL
+con red interna sin .env.prod/certificados. Comparar las columnas existentes y
+secuencias de todas las tablas antes/después; aceptar solo la nueva columna NULL.
+El smoke con datos ficticios usa otro PostgreSQL separado de la copia real.
+Antes del corte, revalidar solicitudes fiscales, detener solo FastAPI y tomar el
+respaldo del momento. Migrar a0021 y recrear solo FastAPI con imagen verificada;
+comparar configuración efectiva para asegurar que solo cambia la imagen.
+
+El downgrade a0020 está probado y se rechaza si existe cualquier sueldo dado de
+baja: no usarlo para reactivar registros. Una recuperación que lo necesite exige
+revisar ese guard y conservar todos los movimientos posteriores. No ejecutar
+DROP/TRUNCATE, restauraciones destructivas ni iniciar una imagen de esquema0020
+contra una base0021. Conservar respaldo y desplegar una imagen compatible si hay
+operaciones nuevas que impiden volver atrás. Ver la evidencia final en Lific.
