@@ -4,6 +4,14 @@ Procedimiento para ejecutar posteriormente en la Raspberry, en una terminal Bash
 No se ejecuta desde Windows, CI ni por un push. Reutiliza el SSD montado en /mnt,
 el directorio /mnt/datos/docker/arca_dys y PostgreSQL existente.
 
+**Fiados 0017, en revisión de desarrollo (20/11/2026):** esta entrega no autoriza
+desplegar ni operar en la Raspberry. Antes de una actualización se requiere
+autorización posterior, respaldo restaurado y ensayo privado de vinculación de
+los registros anteriores según [FIADOS.md](FIADOS.md). No ejecutar la limpieza
+H15 de esta guía como parte de esa actualización: su SQL exige 0013, rechaza un
+head posterior y no contempla las nuevas cuentas/movimientos. No usar CASCADE,
+stamp ni retirar protecciones para eludir ese rechazo.
+
 Para preparar exclusivamente la instalación PWA, usar la
 [guía PWA y HTTPS en LAN](PWA_LAN.md). Ese cambio de imagen y acceso no
 requiere migración ni limpieza de Gestión.
@@ -413,3 +421,40 @@ preservación de 3876/3625/181/3624; no constituye una prueba del respaldo real.
 Ver [TECNOLOGIAS_Y_CONFIGURACION.md](TECNOLOGIAS_Y_CONFIGURACION.md),
 [DATOS_Y_OPERACION.md](DATOS_Y_OPERACION.md), [MERCADO_PAGO.md](MERCADO_PAGO.md) y
 [EXECUTION_STATUS.md](EXECUTION_STATUS.md) para contratos/evidencia.
+
+
+## Transición Fiados autorizada · 21/11/2026
+
+Esta autorización posterior permite la actualización por el agente, sin repetir
+la limpieza H15. La instalación efectiva usa `/home/pi/arca_dys`, Compose prod y
+`/home/pi/.config/arca-dys-access/docker-compose.access.yml`, servicio `fastapi`.
+Conservar entorno, accesos, certificados, PostgreSQL y servicios ajenos.
+
+1. Inventariar la imagen efectiva y comprobar los hashes base del código que se
+   sustituye. Guardar dump custom, checksum, imagen y configuración privada en SSD.
+2. Restaurar en PostgreSQL efímero con red interna, sin puertos ni certificados o
+   entorno productivos. Migrar a 0020, preparar/aplicar dos veces el plan privado.
+   Verificar iguales todas las tablas y secuencias anteriores. Nunca pytest sobre
+   esa copia real: la suite destructiva solo usa sintéticos en su propia DB.
+3. Preparar imagen ARM64 derivada del runtime existente, sin cambiar dependencias;
+   etiquetar con commit y guardar manifiesto de archivos. Validar pip check y smoke
+   simulado sobre otra DB efímera propia. Comparar configuración efectiva: solo imagen.
+4. Revalidar que no haya solicitudes fiscales activas. Detener solo FastAPI;
+   tomar respaldo del corte y huellas. La fuente debe coincidir con el plan ensayado.
+5. Ejecutar como mantenimiento productivo, sin iniciar web/worker:
+   `alembic upgrade head`; luego `python -m scripts.transition_credit_legacy --apply
+   --plan /run/fiados-plan.json --expected-database arca_dys --allow-production`.
+   Montar únicamente el plan privado necesario. Verificar huellas antes de servir HTTP.
+6. Recrear solo `fastapi`, sin build/pull/dependencias; verificar imagen, revisión,
+   health, páginas y acceso HTTPS existentes. No hacer POST comerciales de prueba.
+
+La transición conserva todos los originales. Solo asigna automáticamente nombres
+únicos; los repetidos siguen en Fiados anteriores con su deuda separada hasta que
+una persona los revise en ARCA-35. No se inventan compras/pagos históricos.
+
+Recuperación: antes de migrar basta restablecer el override y la imagen guardados.
+Después de 0017 no ejecutar downgrade ni iniciar una imagen antigua contra el
+esquema nuevo. Conservar ambos diarios y respaldos; restaurar en una base/cluster
+separado, conciliar operaciones posteriores y coordinar el cambio de destino.
+No DROP/TRUNCATE sobre la base actual ni restauración destructiva automática.
+La ruta y el resultado efectivos se registran en EXECUTION_STATUS.md y Lific.

@@ -31,7 +31,8 @@ flowchart LR
 | Comprobantes | services/invoices.py | ReportLab local, QR dinámico, total exacto 50/50, sin reemisión. |
 | MP | services/mp.py, mp_inbox.py, payments.py | Inbox antes de ACK, GET canónico con timeout, identidad externa e historial. |
 | Gestión | services/business.py | Ventas manuales independientes, egresos En Blanco/En Negro y proveedores. |
-| Sueldos/Fiados | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión y CSRF. Baja lógica de Fiados con bloqueo de fila. |
+| Sueldos | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión y CSRF. |
+| Fiados | models/credits.py, services/credits.py, api/credits.py | Personas/celular, movimientos enteros, correcciones trazables/baja lógica, saldo global, UUID/versión/bloqueos y CSRF. Vínculos explícitos a customer_credits sin modificar sus originales. Mensaje WhatsApp local, sin API. |
 | Carga inicial | scripts/import_business_json.py | JSON privados, transacción, recibo idempotente, claves explícitas y conciliación mensual. |
 | Reportes | services/metrics.py | SQL/Decimal, datos vigentes, fuentes separadas y gráficos SVG. |
 | Configuración | services/settings.py, access.py | Roles, sesiones revocables, límites/emisor versionados. |
@@ -112,6 +113,10 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0014_credit_timestamps | Hora de alta y pago de Fiados con zona horaria. Conserva las fechas históricas y deja nulas las horas desconocidas. |
 | 0015_supplier_bank_details | CBU y alias opcionales en proveedores. Las fichas existentes conservan sus datos y reciben ambos campos en NULL. |
 | 0016_credit_deletion | Marca de baja nullable en Fiados. Conserva el contenido de los registros, su UUID y sus fechas de alta y pago. |
+| 0017_credit_accounts | Personas, movimientos inmutables y vínculos a históricos; no agrupa ni traslada datos automáticamente. NUMERIC entero sin redondeo por escala. Solo ensayada en desarrollo/pruebas. |
+| 0018_credit_updates | Celular opcional, versión y baja lógica de movimiento. UPDATE controlado con evidencia antes/después por trigger en credit_movement_changes inmutable; conserva identidad/secuencia/tipo y fuente legada. |
+| 0020_credit_person_names | Capitaliza cada palabra y recompone búsqueda, sin fusionar identidades ni modificar customer_credits. |
+| 0019_credit_local_phone | Celular argentino de 10 dígitos. Convierte únicamente 549+10 dígitos y rechaza formatos ambiguos sin cambios; CHECK de formato y versión incrementada al convertir. |
 
 El puente versionado de migrations/mp_legacy_bridge.py permite la transición
 explícita desde 0001-0003 cuando 0004 rechaza duplicados, sin modificar revisiones
@@ -167,17 +172,31 @@ Dependencias directas en requirements.in y resolución fijada en requirements.tx
 se conserva SQLAlchemy 2.0 y se eliminan pymysql/SDK MP que ya no se utilizan.
 
 Los sueldos se agregan por fecha/empleado en metrics.py y reducen Ganancia una sola
-vez; no se insertan también en business_entries. customer_credits es independiente:
-marcar pagado conserva el registro de Fiados. El listado, su paginación y sus totales
-usan filas con `deleted_at IS NULL`. Guardar, marcar el pago y eliminar verifican
-el estado de la fila dentro de un bloqueo. La baja conserva el UUID para rechazar
-una repetición del formulario de alta. Excel añade hojas de desglose y sueldos sin
-alterar las seis columnas originales. No hay nuevas dependencias/procesos/servicios.
+vez; no se insertan también en business_entries. Excel añade hojas de desglose y
+sueldos sin alterar las seis columnas originales.
+
+Fiados usa credit_customers como identidad y credit_movements como diario: compras,
+pagos, saldos anteriores incorporados y anulaciones. El saldo y los períodos se
+calculan por secuencia de registro con agregaciones y ventanas SQL; una fecha
+anterior no reordena el historial confirmado. Cada escritura monetaria bloquea
+la persona, revalida versión y conserva UUID/huella para reenvíos. Los triggers
+rechazan DELETE físico y UPDATE sin versión/comando; las correcciones de compras
+y pagos conservan snapshots completos antes/después en una tabla inmutable. La
+baja conserva la fila y queda excluida de agregaciones/mensajes. Se valida que
+ningún saldo por secuencia sea negativo al corregir importes. Los vínculos y
+fuentes vinculadas permanecen inmutables. customer_credits permanece como
+fuente histórica; una revisión humana crea credit_legacy_links y, si corresponde,
+un saldo inicial, sin reconstruir pagos desconocidos. Los originales vinculados
+quedan protegidos; los eliminados no se reactivan. No hay efecto en caja, ventas,
+MP, facturación ni métricas. Ver [Fiados](FIADOS.md).
+No hay nuevas dependencias ni servicios de aplicación; el Compose adicional solo
+aísla la instancia local de revisión y su volumen.
 
 ## Despliegue manual y limpieza inicial
 La preparación H15 conserva íntegro el control fiscal/MP y configuración. El SQL
 puntual de mantenimiento trunca solo siete tablas de Gestión con RESTRICT; requiere
-head y transacción. No es una revisión Alembic ni se ejecuta al arrancar. El usuario
+la revisión 0013 y transacción. No admite 0017 ni se repite al actualizar Fiados.
+No es una revisión Alembic ni se ejecuta al arrancar. El usuario
 lo aplica después de backup/ensayo/migración y antes de importar los JSON.
 NGROK puede mantenerse como agente externo; el override opcional fija su misma URL
 cuando el Compose lo administre. No cambian gateways ni contratos de facturación.

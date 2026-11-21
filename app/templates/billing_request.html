@@ -1,5 +1,6 @@
+{% from "components.html" import breadcrumb with context %}
 {% extends "base.html" %}{% block title %}Resultado de facturación{% endblock %}{% block head_extra %}{% if operation.state in ['queued','sending','check_queued','retry_queued'] %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}{% block content %}
-<a href="/page/invoice">← Volver a facturación</a><section class="card narrow">
+{{ breadcrumb([('Facturación','/page/invoice'),('Solicitudes','/page/billing-requests'),('Resultado',none)]) }}<section class="card narrow">
 {% if operation.state in ['queued','sending','check_queued','retry_queued'] %}<h1>Factura en proceso</h1><div class="notice" role="status">La solicitud está guardada. Esta pantalla se actualizará con el resultado.</div><p class="metric">{{ operation.total|money }}</p><button type="button" class="help-trigger" data-help-next aria-label="Ayuda">?</button><template>Podés volver al listado y consultar el resultado más tarde. No hace falta repetir la operación.</template>
 {% elif operation.state == 'authorized' %}<h1>Factura generada correctamente</h1>
 <div class="notice" role="status">La factura quedó guardada. Podés descargar el comprobante.</div>

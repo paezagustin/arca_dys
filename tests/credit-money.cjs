@@ -1,0 +1,15 @@
+'use strict';
+const fs=require('node:fs');
+const vm=require('node:vm');
+const assert=require('node:assert/strict');
+const path=require('node:path');
+const context=vm.createContext({});
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../app/assets/credit-money.js'),'utf8'),context);
+const money=context.CreditMoney;
+for(const [raw,expected] of [['10000','10.000'],['100000','100.000'],['1234567890123456','1.234.567.890.123.456'],['00010','10'],['','']])assert.equal(money.format(raw),expected);
+for(const [raw,expected] of [['10.000','10000'],['10000','10000'],['1.234.567','1234567'],['9999999999999999','9999999999999999']])assert.equal(money.parse(raw),expected);
+for(const raw of ['1,50','1.50','10.000,00','-1','1e3','NaN','10000000000000000'])assert.equal(money.parse(raw),null);
+assert.equal(money.caret('10.000',2),2);
+assert.equal(money.caret('10.000',3),4);
+assert.equal(money.caret('1.234.567',7),9);
+console.log('Formato entero exacto, rechazos de importes ambiguos y posiciones de cursor verificados.');

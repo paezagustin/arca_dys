@@ -9,6 +9,7 @@ from app.models.settings import User, WebSession, LoginThrottle, BusinessSetting
 from app.models.business import Supplier, BusinessEntry, MoneyMigrationAudit
 from app.models.data_import import DataImport, LegacyImportRow, LegacyImportSupplierMap
 from app.models.registers import SalaryPayment, CustomerCredit
+from app.models.credits import CreditCustomer, CreditMovement, CreditLegacyLink, CreditMovementChange
 __all__ = [
     "Payment",
     "Invoice",

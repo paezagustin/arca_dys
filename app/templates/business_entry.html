@@ -1,5 +1,6 @@
+{% from "components.html" import breadcrumb with context %}
 {% extends "base.html" %}{% from "components.html" import delete_entry_form with context %}{% block title %}{{ 'Editar' if row else ('Registrar ventas del día' if values.kind == 'sale' else 'Registrar egreso') }}{% endblock %}{% block content %}
-<a class="back-link" href="/business">← Gestión</a><h1>{{ 'Editar' if row else ('Registrar ventas del día' if values.kind == 'sale' else 'Registrar egreso') }}</h1>
+{{ breadcrumb([('Gestión','/business'),('Editar movimiento' if row else 'Registrar movimiento',none)]) }}<h1>{{ 'Editar' if row else ('Registrar ventas del día' if values.kind == 'sale' else 'Registrar egreso') }}</h1>
 {% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
 <div class="card entry-form">
 <form id="entry-form" method="post"{% if values.kind == 'sale' %} data-daily-sale{% endif %} data-busy-label="Guardando…"><input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}"><input type="hidden" name="entry_key" value="{{ values.entry_key }}"><input type="hidden" name="version" value="{{ values.version or 1 }}"><input type="hidden" name="kind" value="{{ values.kind }}">
@@ -14,9 +15,9 @@
 <div class="field supplier-picker" data-supplier-picker><label for="supplier-search">Proveedor</label><input type="hidden" name="supplier_id" value="{{ values.supplier_id or '' }}"><input id="supplier-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="supplier-options" autocomplete="off" maxlength="150" placeholder="Buscar proveedor…" value="{{ selected_supplier.name if selected_supplier else '' }}"><ul id="supplier-options" role="listbox" hidden></ul><span class="sr-only" data-supplier-status role="status"></span></div>
 <div class="field full-width"><label for="description">Descripción</label><textarea id="description" name="description" maxlength="2000" rows="3">{{ values.description or '' }}</textarea></div>{% endif %}</div>
 </form>
-<div class="actions">
+<div class="actions crud-actions">
+  <a class="button quiet crud-cancel" href="/business">Cancelar</a>
   <button type="submit" form="entry-form">Guardar</button>
-  <a class="button quiet" href="/business">Cancelar</a>
   {% if row and row.active %}{{ delete_entry_form(row) }}{% endif %}
 </div>
 </div>

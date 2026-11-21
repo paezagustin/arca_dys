@@ -1,0 +1,17 @@
+{% extends "credits/base.html" %}{% from "components.html" import pager with context %}
+{% block credit_content %}
+<div class="page-head"><h1>Fiados</h1><div class="actions credit-directory-actions"><a class="button" href="/fiados/nuevo" data-credit-dialog>+ Nuevo fiado</a><a href="/fiados/personas/nueva" class="button quiet" data-credit-dialog>Crear persona</a></div></div>
+{% if legacy.count %}<div class="notice credit-legacy-notice"><strong>{{ legacy.count }} registros anteriores para revisar.</strong> {% if legacy.debt is not none %}Saldo pendiente anterior: <span class="money">{{ legacy.debt|money }}</span>.{% else %}Hay importes anteriores que requieren conciliación.{% endif %} Todavía no están incluidos en las cuentas. <a href="/fiados/anteriores">Revisar y vincular</a></div>{% endif %}
+<section class="card credit-directory">
+
+<form method="get" class="credit-search-form" role="search">
+  <label for="credit-account-search">Buscar persona</label><div class="credit-search-row"><input id="credit-account-search" name="q" type="search" maxlength="150" value="{{ q }}" placeholder="Nombre o referencia" autocomplete="off"><button name="state" value="{{ state }}">Buscar</button></div>
+  <div class="credit-filters" role="group" aria-label="Filtrar cuentas">{% for key,label in [('debt','Con deuda'),('clear','Sin deuda'),('all','Todas')] %}<button name="state" value="{{ key }}" class="quiet{% if state == key %} is-selected{% endif %}" aria-pressed="{{ 'true' if state == key else 'false' }}">{{ label }}</button>{% endfor %}</div>
+</form>
+<div class="credit-list-summary"><span>{{ accounts.total }} {{ 'persona' if accounts.total == 1 else 'personas' }}</span><span>Saldo del listado: <strong class="money">{{ total|money }}</strong></span></div>
+<div class="credit-accounts">{% for person,balance in accounts.items %}
+<article class="credit-account-card"><div class="credit-card-heading"><div><h3>{{ person.name }}{% if person.alias %} <span class="credit-heading-reference">({{ person.alias }})</span>{% endif %}</h3></div><span class="credit-status{% if balance > 0 %} credit-debt{% endif %}">{{ 'Con deuda' if balance > 0 else 'Sin deuda' }}</span></div><strong class="credit-card-balance money">{{ balance|money }}</strong><div class="credit-card-actions"><a class="button secondary" href="/fiados/{{ person.id }}" aria-label="Ver cuenta de {{ person.name }}">Ver cuenta</a><a class="button quiet" href="/fiados/nuevo?customer_id={{ person.id }}" aria-label="Nuevo fiado para {{ person.name }}" data-credit-dialog>+ Fiado</a></div></article>
+{% else %}<div class="empty"><p>No hay personas con estos filtros.</p><a href="/fiados?state=all">Ver todas las personas</a></div>{% endfor %}</div>
+{{ pager(accounts) }}
+</section>
+{% endblock %}

@@ -1,5 +1,53 @@
 # Roadmap y condiciones de salida
 
+Referencia de hitos y criterios registrados. El estado vigente y la próxima acción
+se consultan en el [proyecto ARCA de Lific](http://127.0.0.1:3456/ARCA/overview).
+
+## Cierre de interfaz y transición productiva · ARCA-PLAN-2 · 21/11/2026
+
+- [x] ARCA-31: nombres, acciones, cabeceras, Sueldos y WhatsApp; 396 pruebas y navegador.
+- [x] ARCA-32: respaldo/restore real, ensayo 0016→0020, huellas originales intactas.
+- [ ] ARCA-33: publicar y desplegar solo FastAPI preservando configuración/datos.
+- [ ] ARCA-34: verificar producción, recuperación y evidencia del commit efectivo.
+- [ ] ARCA-35 (humano): revisar cinco filas con nombres repetidos, sin fusionar por inferencia.
+
+El usuario autorizó el despliegue el 21/11. El seguimiento vigente está en Lific;
+los apartados anteriores de desarrollo que exigían nueva autorización quedan
+satisfechos por esta instrucción. No se repite la limpieza H15.
+
+## Reportes y avisos · ARCA-30 · 21/11/2026
+
+- [x] Celular nacional estricto y conversión conservadora 0019; prefijo solo en WhatsApp.
+- [x] Reportes tabulares, lápiz primero, último registro arriba y eliminar dentro de editar.
+- [x] WhatsApp con icono en reporte y actualización automática del mensaje.
+- [x] Avisos globales flotantes, cierre manual y 2 segundos, incluso sobre modales.
+- [x] 390 pruebas completas, restauración 0019 e imagen simulada aprobadas.
+- [x] Navegador de escritorio/móvil con datos ficticios propios y conservación de foco/scroll.
+- [ ] Aceptación y uso en teléfono real (ARCA-28); producción requiere pedido posterior.
+
+## Ajustes de Fiados · ARCA-29
+
+- [x] Editar productos/fecha/importe sin recargar la compra; baja lógica confirmada.
+- [x] Evidencia antes/después, versiones y saldos validados en nueva 0018.
+- [x] Ficha con celular, lápiz junto al nombre y detalle preparado para WhatsApp.
+- [x] Saldo reorganizado, acciones sobre la tarjeta y breadcrumbs compartidos.
+- [x] 380 pruebas, respaldo/restauración 0018, imagen mock y navegador escritorio/móvil.
+- [ ] Probar apertura en WhatsApp y aceptación de la usuaria (ARCA-28).
+
+## Fiados A · desarrollo del 20/11/2026
+
+- [x] Personas con identidad estable y diario entero inmutable, migración aditiva 0017.
+- [x] Compras, pagos parciales, saldar, períodos y anulaciones con concurrencia/idempotencia.
+- [x] Revisión humana de registros anteriores sin modificar fuentes ni inventar pagos.
+- [x] Interfaz A con estilos actuales, miles automáticos y combobox superpuesto sin tildes.
+- [x] 364 pruebas, restauración, imagen de ejecución simulada y navegador escritorio/móvil.
+- [x] Desarrollo local con volumen nuevo y datos ficticios; guía en [FIADOS.md](FIADOS.md).
+- [ ] Aceptación de la usuaria y prueba con teclado en teléfono físico.
+- [ ] Autorización posterior, respaldo real restaurado y ensayo privado antes de producción.
+
+Implementación local sin commit/push ni despliegue en Raspberry. No repetir la
+limpieza H15 para actualizar Fiados. Seguimiento: ARCA-27 y ARCA-PLAN-1.
+
 ## H21 · PWA en la LAN
 
 - [x] Manifiesto, iconos y arranque en Facturación. Operación en línea.

@@ -72,11 +72,6 @@ def salaries(request: Request, edit: int | None = Query(None, ge=1), db: Session
     return render_registers(request, db, SalaryPayment, identifier=edit)
 
 
-@router.get("/fiados")
-def credits(request: Request, edit: int | None = Query(None, ge=1), db: Session = Depends(get_db)):
-    return render_registers(request, db, CustomerCredit, identifier=edit)
-
-
 async def store(request, db, model):
     values = dict(await request.form())
     try:
@@ -96,42 +91,3 @@ async def store(request, db, model):
 @router.post("/salaries")
 async def save_salary(request: Request, db: Session = Depends(get_db)):
     return await store(request, db, SalaryPayment)
-
-
-@router.post("/fiados")
-async def save_credit(request: Request, db: Session = Depends(get_db)):
-    return await store(request, db, CustomerCredit)
-
-
-@router.post("/fiados/{identifier}/delete")
-async def remove_credit(identifier: int, request: Request, db: Session = Depends(get_db)):
-    values = await request.form()
-    try:
-        delete_credit(db, identifier, values.get("version"))
-    except LookupError as exc:
-        raise HTTPException(404, str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(409, str(exc)) from exc
-    return RedirectResponse("/fiados?deleted=1", status_code=303)
-
-
-@router.post("/fiados/{identifier}/paid")
-async def mark_paid(identifier: int, request: Request, fecha_desde: str = "", fecha_hasta: str = "",
-                    db: Session = Depends(get_db)):
-    try:
-        filters = parse_filters("todo", fecha_desde, fecha_hasta, default_today=False)
-    except ValueError as exc:
-        raise HTTPException(422, str(exc)) from exc
-    values = await request.form()
-    try:
-        mark_credit_paid(db, identifier, values.get("version"))
-    except LookupError as exc:
-        raise HTTPException(404, str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(409, str(exc)) from exc
-    query = {"paid": "no", "stored": "1"}
-    if filters.start:
-        query["fecha_desde"] = filters.start.isoformat()
-    if filters.end:
-        query["fecha_hasta"] = filters.end.isoformat()
-    return RedirectResponse("/fiados?" + urlencode(query), status_code=303)

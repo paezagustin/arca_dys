@@ -1,7 +1,7 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{% block title %}Dulce y Salado{% endblock %} · ARCA DYS</title>
 {% include "pwa_head.html" %}
-<link rel="stylesheet" href="{{ asset_url('app.css') }}"><script src="{{ asset_url('app.js') }}" defer></script><script src="{{ asset_url('reports.js') }}" defer></script>{% block head_extra %}{% endblock %}</head>
+<link rel="stylesheet" href="{{ asset_url('app.css') }}"><script src="{{ asset_url('notifications.js') }}" defer></script><script src="{{ asset_url('app.js') }}" defer></script><script src="{{ asset_url('reports.js') }}" defer></script>{% block head_extra %}{% endblock %}</head>
 {% set path = request.url.path %}
 {% set billing = path.startswith('/ARCA') or path.startswith('/page/invoice') or path == '/page/billing-requests' %}
 {% set operational = billing or path.startswith(('/business', '/dashboard', '/salaries', '/fiados')) %}
@@ -47,5 +47,5 @@
 <div class="workspace">{% if request.app.state.integrations_mode == 'mock' %}<aside class="simulation" role="status">Modo simulado · Sin validez fiscal · No se envían facturas a ARCA</aside>{% endif %}
 <main id="main">{% block content %}{% endblock %}</main></div>
 <dialog id="help-dialog" aria-labelledby="help-title"><div class="page-head"><h2 id="help-title">Ayuda</h2><button type="button" class="icon-button" data-close-help aria-label="Cerrar ayuda">×</button></div><div data-help-content></div></dialog>
-<dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-description"><h2 id="confirm-title">Confirmar eliminación</h2><p id="confirm-description" data-confirm-content></p><div class="actions"><button type="button" class="danger" data-confirm-accept>Eliminar</button><button type="button" class="quiet" data-confirm-cancel autofocus>Cancelar</button></div></dialog>
+<dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-description"><h2 id="confirm-title">Confirmar eliminación</h2><p id="confirm-description" data-confirm-content></p><div class="actions crud-actions"><button type="button" class="button quiet crud-cancel" data-confirm-cancel autofocus>Cancelar</button><button type="button" class="danger" data-confirm-accept>Eliminar</button></div></dialog>
 </body></html>

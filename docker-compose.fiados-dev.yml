@@ -1,0 +1,9 @@
+# Solo desarrollo: proyecto y volumen nuevos, sin montar la raíz privada del repo.
+# Requiere Docker Compose >= 2.24.4 por !override.
+name: arca-dys-fiados-dev
+services:
+  fastapi:
+    volumes: !override
+      - ./app:/app/app:ro
+      - ./migrations:/app/migrations:ro
+      - ./scripts/seed_credit_demo.py:/app/scripts/seed_credit_demo.py:ro

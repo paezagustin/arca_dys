@@ -25,7 +25,10 @@ El importe del cargador es el de un pago ficticio. Para una factura independient
 usar **Factura por importe**, revisar el importe y confirmar. No crea otro ingreso.
 En **Gestión** registrar efectivo y Mercado Pago del día (MP sugerido editable),
 y egresos En Blanco/En Negro. **Sueldos** registra pagos de Francisco/Juan Cruz;
-**Fiados** permite anotar clientes y marcar pagos. En **Resumen** consultar por
+**Fiados** lleva una cuenta por persona, con compras, pagos parciales y saldo.
+La opción A tiene entorno de desarrollo y transición productiva autorizada el 21/11; ver el
+[entorno aislado de Fiados](docs/FIADOS.md) para probarla con ejemplos ficticios
+sin usar el volumen de desarrollo anterior. En **Resumen** consultar por
 día/período/mes/año, ventas por medio, sueldos por empleado y Ganancia después de
 egresos y sueldos. Exportar Excel conserva las seis columnas originales y añade
 hojas Ventas y Sueldos. No hay módulo web de importación.
@@ -66,7 +69,8 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 
 - [Reglas para Codex](AGENTS.md): autonomía, push directo y prohibición de pruebas productivas.
 - [Alcance definitivo](docs/ALCANCE.md): decisiones, exclusiones y requisitos.
-- [Roadmap](docs/ROADMAP.md) y [estado reanudable](docs/EXECUTION_STATUS.md).
+- [Seguimiento vigente en Lific](http://127.0.0.1:3456/ARCA/overview): pendientes, avance y próxima acción.
+- [Historial de hitos](docs/ROADMAP.md) y [registro de evidencia](docs/EXECUTION_STATUS.md).
 - [Arquitectura y revisión de campos](docs/ARQUITECTURA.md).
 - [Pruebas](docs/TESTING.md) y [guía de uso local](docs/GUIA_USUARIO.md).
 - [Versionado, backup y operación](docs/DATOS_Y_OPERACION.md).
@@ -76,6 +80,8 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
   aislado, conservación íntegra y puente explícito hasta 0013_mp_identity.
 - [Gestión y proveedores](docs/GESTION.md), [importación por consola](docs/IMPORTACION_JSON.md)
   y [métricas](docs/METRICAS.md).
+- [Fiados por persona](docs/FIADOS.md): opción A, búsqueda sin tildes,
+  importes enteros, edición/baja trazables, celular/WhatsApp y revisión humana de los registros anteriores.
 - [Validación ARM y operación](docs/OPERACION_RASPBERRY.md).
 - [PWA y HTTPS en la LAN](docs/PWA_LAN.md).
 - [Tecnologías y configuración](docs/TECNOLOGIAS_Y_CONFIGURACION.md): función,
@@ -86,9 +92,12 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
 `docker-compose.prod.yml` está separado del entorno local. Requiere .env.prod,
 certificados y configuración explícita. Antes de cualquier actualización, identificar
 la instalación efectiva, hacer backup en el SSD, ensayar adopción/migración en copia
-y seguir la [guía de despliegue manual](docs/OPERACION_RASPBERRY.md). El usuario
-confirmó conservar cobros/facturas/control fiscal y limpiar únicamente Gestión,
-Sueldos y Fiados con el comando puntual documentado, después de migrar. No borrar
+y seguir la [guía de despliegue manual](docs/OPERACION_RASPBERRY.md). La limpieza
+H15 fue una operación inicial puntual, limitada a la revisión 0013; no repetirla
+al actualizar ni usarla para esta refactorización de Fiados. La revisión 0017
+conserva los registros anteriores y requiere ensayo de vinculación en copia y
+autorización explícita de despliegue del 21/11/2026. Los nombres repetidos quedan
+para revisión humana, visibles y con deuda separada, sin fusionarlos. No borrar
 la DB ni el directorio PostgreSQL. Mantener el dominio NGROK y las credenciales
 MP/ARCA; el override opcional docker-compose.ngrok.yml fija la URL actual.
 El SQL adjunto por el usuario solo contiene estructura.

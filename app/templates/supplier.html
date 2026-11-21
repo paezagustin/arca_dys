@@ -1,10 +1,11 @@
+{% from "components.html" import breadcrumb with context %}
 {% extends "base.html" %}
 {% block title %}Proveedor{% endblock %}
 {% block content %}
-<a href="/business/suppliers">← Volver a proveedores</a>
+{{ breadcrumb([('Gestión','/business'),('Proveedores','/business/suppliers'),('Ficha de proveedor',none)]) }}
 <h1>{{ 'Editar' if row else 'Registrar proveedor' }}</h1>
 {% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
-<form method="post" class="card">
+<form id="supplier-form" method="post" class="card">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
   <input type="hidden" name="version" value="{{ values.version or 1 }}">
   <div class="fields">
@@ -24,8 +25,8 @@
     </div>
     {% endif %}
   </div>
-  <div class="actions"><button>Guardar</button><a class="button quiet" href="/business/suppliers">Cancelar</a></div>
 </form>
+<div class="actions crud-actions"><a class="button quiet crud-cancel" href="/business/suppliers">Cancelar</a><button type="submit" form="supplier-form">Guardar</button>
 {% if row %}
 <form method="post" action="/business/suppliers/{{ row.id }}/delete" class="actions"
       data-confirm="¿Eliminar a {{ row.name }}? Se borrará su ficha de forma permanente. Si tiene egresos o asignaciones de importación vinculados, el sistema impedirá la eliminación. Si solo querés dejar de usarlo, marcalo como inactivo.">
@@ -33,5 +34,5 @@
   <input type="hidden" name="version" value="{{ row.version }}">
   <button type="button" class="danger" data-confirm-trigger aria-haspopup="dialog">Eliminar</button>
 </form>
-{% endif %}
+{% endif %}</div>
 {% endblock %}

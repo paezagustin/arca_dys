@@ -32,6 +32,7 @@ deben modificarla al mismo tiempo.
 | JSON | Validación estricta de tres archivos, proveedores/claves explícitas, cero/fechas/precisión, dry-run sin escritura, transacción, conciliación, reintento concurrente y rechazo de otro conjunto o período ocupado. |
 | Métricas/Excel | Conciliación con detalle/JSON, sin desglose inventado, anulados, período vacío/cero, año bisiesto, timestamps; exportación reabierta, seis columnas y hojas Ventas/Sueldos. |
 | Operación | Backup custom, SHA256, restauración en DB propia y revisión de esquema; imagen de ejecución con servidor/worker reales en modo simulado. |
+| Fiados A | Identidad explícita, tildes/subcadenas, enteros exactos, pagos parciales/saldar, períodos, anulaciones, UUID/versiones y concurrencia real; preservación y vinculación humana de originales legados. |
 
 La suite solo permite ENV=test, INTEGRATIONS_MODE=mock y base arca_dys_test en
 postgres antes de TRUNCATE. Trunca exclusivamente tablas del ORM de ese destino.
@@ -190,3 +191,80 @@ desborde horizontal de documento en escritorio ni errores de consola en esa vist
 La red Docker interna se mantuvo; la revisión GET pasó por un visor local de solo
 lectura. No se enviaron formularios fiscales ni se probó una emisión productiva.
 No se repitió ARM64: no cambiaron dependencias ni se certifica esta Raspberry.
+
+## Fiados A · revisión de desarrollo del 20/11/2026
+
+Suite completa: **364 passed en 139,71 s**, sin omitidas y con una advertencia
+conocida de Starlette/httpx. `test_credit_accounts.py` comprueba compras, pagos
+parciales/saldar, nuevos períodos, anulaciones, nombres similares, renombres sin
+perder identidad, búsqueda sin tildes/subcadenas y filtros/paginación/totales SQL.
+Incluye dos conexiones concurrentes, UUID con payload distinto, versiones
+obsoletas, rollback antes de commit, respuesta perdida después de commit,
+fracciones/rango por SQL sin redondeo y migración sin modificar originales.
+Los tests de fechas/bajas anteriores conservan el contrato de la fuente legada,
+sin mantener endpoints de pagó sí/no en la nueva interfaz.
+
+Backup-test aprobado en 0017: respaldo custom/checksum/restauración, saldo 7.500,
+dos movimientos, vínculo pagado sin fecha inventada y triggers que impiden editar
+el diario y la fuente vinculada. Cada ensayo usa sus propias bases efímeras.
+`node tests/credit-money.cjs` comprueba agrupación exacta, rechazo de comas y
+valores ambiguos y posiciones de cursor. Ambos JS pasan `node --check`.
+
+Imagen local con target production: `scripts.smoke_runtime` aprobado en modo mock,
+red interna y DB efímera propia; incluye el nuevo POST de persona+fiado, sesión,
+CSRF, Gestión/Sueldos/Resumen, cola y PDF simulados. Sin proveedores externos.
+
+Navegador real a 1366×900 y 390×844: altas/pagos/saldar/nuevo período/anulación,
+historial, selección con teclado, búsqueda `perez`, advertencia de homónimos,
+filtros y vinculación de dos originales ficticios. La lista se superpone con
+desplazamiento medido del importe de 0 px; no hay desborde de documento en las
+vistas revisadas. Escritura/pegado `10.000`, cambio a `100.000`, rechazo de coma
+y borrado junto al punto comprobados. Capturas locales: `artifacts/fiados-dev/`.
+Instancia/guía: [FIADOS.md](FIADOS.md). Pendiente el teléfono físico, aceptación de
+la usuaria y ensayo con respaldo real. Sin ARM64, CI ni despliegue en Raspberry.
+
+## Edición, celular y WhatsApp · ARCA-29
+
+380 pruebas completas aprobadas en 149,91 s, una advertencia conocida, sin omitidas.
+`test_credit_updates.py` comprueba detalle precargado en cuenta saldada, evidencia
+original, cambios de importes, bajas sin pérdida, saldos/listados/mensajes coherentes,
+UUID y versiones, CSRF, protección SQL, dos ediciones concurrentes, formatos de
+celular y URL/mensaje WhatsApp completos. La prueba de edición de celular incluye
+homónimos para no pedir confirmar otra identidad si no se cambió el nombre.
+
+Backup-test 0018 aprobado con una corrección antes/después y comprobación de que
+su evidencia no se puede eliminar tras restaurar. Imagen de ejecución y smoke HTTP
+mock aprobados. Navegador sobre datos ficticios propios: edición de productos,
+ficha/celular, revisión WhatsApp (sin abrir chat), cancelar/confirmar baja, nuevo
+listado y breadcrumbs de Fiados/Proveedores/Factura por importe. 1366×900 y
+390×844, sin desborde en las vistas revisadas. Capturas locales en artifacts/fiados-dev.
+Pendiente WhatsApp y teclado en teléfono físico; no se hizo envío real ni despliegue.
+
+## Celular nacional, reportes y avisos · ARCA-30
+
+
+Validación final ARCA-30: **390 passed, 152,66 s**, una advertencia conocida y sin
+omitidas. Las pruebas de integración cubren teléfono nacional/URL 549 una sola
+vez, conversión de datos previos, bloqueo sin pérdida ante formatos ambiguos,
+restricción SQL, orden de carga retroactiva, períodos saldados y contenido de
+WhatsApp. Las comprobaciones anteriores de conteos/históricos se adaptaron al
+nuevo reporte sin retirar sus garantías de saldo y conservación.
+
+Backup-test 0019 aprobado con checksum/restauración, celular nacional conservado,
+saldo 7.500, dos movimientos y evidencia inmutable de correcciones. Imagen target
+production y smoke HTTP mock/red interna/DB efímera propia aprobados. Sintaxis de
+credits.js, notifications.js y reports.js y formato/cursor de dinero con Node
+aprobados. git diff --check y enlaces locales de documentación revisados.
+Sin cambios de dependencias ni ARM64. Pendiente ARCA-28: teléfono físico y apertura
+real de WhatsApp; no se abrió chat ni se envió mensaje durante estas verificaciones.
+
+
+## Cierre de Fiados · 21/11/2026
+
+396 pruebas completas aprobadas en 156,17 s, sin omitidas. Se agregan normalización
+de nombre, migración 0020, transición atómica/repetible con homónimos diferidos y
+verificación de huellas que detecta un cambio en observaciones originales.
+Backup-test restaura 0020 y conserva correcciones/vínculos. Navegador real validó
+cabeceras, referencia en línea, acciones CRUD y columnas en escritorio/móvil.
+El ensayo real en Raspberry se limita a migración/conciliación, con todos los datos
+privados allí; el smoke usa un PostgreSQL vacío distinto y únicamente mock.

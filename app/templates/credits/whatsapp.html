@@ -1,0 +1,13 @@
+{% extends "credits/base.html" %}{% from "components.html" import breadcrumb, whatsapp_icon with context %}
+{% block credit_content %}
+{{ breadcrumb([('Fiados','/fiados'),(person.name,'/fiados/' ~ person.id),('WhatsApp',none)]) }}
+<h1>Detalle para WhatsApp</h1>
+<section class="card" data-whatsapp-detail><h2>{{ person.name }}</h2>
+<form method="get" class="credit-message-scope" data-whatsapp-scope><select id="credit-message-scope" name="entire" aria-label="Período del detalle"><option value="false"{% if not entire %} selected{% endif %}>Período actual</option><option value="true"{% if entire %} selected{% endif %}>Historial completo</option></select></form>
+<div data-whatsapp-content>
+{% if person.phone %}<div class="credit-message-actions">{% for url in whatsapp_links %}<a class="button credit-whatsapp" href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ whatsapp_icon() }}<span>{{ 'Abrir WhatsApp' if whatsapp_links|length == 1 else 'Abrir mensaje ' ~ loop.index ~ ' de ' ~ whatsapp_links|length }}</span></a>{% endfor %}</div><p>Destino: <strong>+{{ destination }}</strong></p>
+{% if whatsapp_links|length > 1 %}<p>El detalle está dividido en {{ whatsapp_links|length }} mensajes. Abrilos en orden.</p>{% endif %}
+{% else %}<div class="notice error" data-inline-notice>Esta persona todavía no tiene celular. <a href="/fiados/personas/{{ person.id }}/editar">Agregar celular</a> para preparar el chat.</div>{% endif %}
+<pre class="credit-message">{{ message }}</pre>
+</div></section>
+{% endblock %}

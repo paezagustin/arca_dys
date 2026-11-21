@@ -111,14 +111,26 @@ Los pagos reducen Ganancia una sola vez; no crean también un egreso en Gestión
 No calcula nóminas ni importa la hoja de sueldos/adelantos del Excel.
 
 ## Fiados
-Nombre, monto positivo, observación opcional, fecha (hoy) y Pagó (No por defecto).
-Se listan primero los no pagados de cualquier fecha para no perder los anteriores.
-Se puede buscar por nombre, pago y fechas. Marcar pagado guarda automáticamente
-la fecha del día en Buenos Aires y vuelve a Pagó = No con el mismo rango de fechas.
-La columna Fecha de pago muestra ese valor. Cambiar Pagó a Sí en el formulario tiene el
-mismo efecto. Editar otros datos conserva la fecha; repetir el marcado no la
-actualiza. El lápiz permite volver a No si hubo un error y quitar la fecha. No genera un
-ingreso ni modifica ventas, caja, MP o Ganancia automáticamente.
+Opción A en revisión de desarrollo: cuentas por persona, compras, pagos parciales,
+saldar e historial de períodos. ID estable, nombre corregible y referencia opcional;
+búsqueda sin tildes en cualquier palabra y lista superpuesta. Los importes se
+agrupan automáticamente con puntos y no admiten decimales ni comas.
+
+Los pagos requieren revisión y confirmación; se revalida versión y saldo dentro
+de un bloqueo. UUID/huella impiden duplicar un reenvío confirmado. Los errores se
+corrigen por lápiz con campos precargados o eliminación confirmada mediante baja
+lógica. La revisión 0018 conserva antes/después y valida todos los saldos del
+período. No se permite eliminar una compra si deja pagos sin deuda suficiente.
+La ficha permite celular; WhatsApp prepara fecha/importe/detalle/saldo para
+revisión y apertura del chat, sin envío automático ni integración externa.
+No genera un ingreso ni modifica ventas, caja, MP o Ganancia automáticamente.
+
+La nueva migración 0017 no cambia customer_credits. La vinculación humana conserva
+cada original y solo incorpora saldo si estaba pendiente. Los pagados quedan en
+archivo sin inventar movimientos ni fechas. Se rechazan pendientes con fracciones
+sin conciliación. Las migraciones 0011/0012 siguientes describen la fuente legada;
+el formulario anterior de pagó sí/no ya no se usa en esta versión.
+Comandos locales, garantías y preparación productiva pendiente: [FIADOS.md](FIADOS.md).
 
 ## Migración 0011_sales_payroll_credits
 Agrega cash_amount/mp_amount NUMERIC nullable y exige pares completos cuya suma

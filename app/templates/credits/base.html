@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Fiados{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ asset_url('credits.css') }}"><script src="{{ asset_url('credit-money.js') }}" defer></script><script src="{{ asset_url('credits.js') }}" defer></script>{% endblock %}
+{% block content %}
+<div class="credit-workspace">{% block credit_content %}{% endblock %}</div>
+<dialog id="credit-form-dialog" class="credit-dialog" aria-labelledby="credit-dialog-title">
+  <div class="credit-dialog-head"><h2 id="credit-dialog-title">Fiados</h2><button type="button" class="icon-button quiet" data-credit-close aria-label="Cerrar formulario">×</button></div>
+  <div data-credit-dialog-body></div>
+</dialog>
+{% endblock %}

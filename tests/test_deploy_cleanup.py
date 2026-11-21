@@ -4,7 +4,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import select, text, func
+from sqlalchemy import select, text, func, inspect
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
@@ -65,9 +65,10 @@ def seed(target):
 
 
 def protected_snapshot(target):
+    available = set(inspect(target).get_table_names())
     with target.connect() as db:
         rows = {name: list(db.execute(select(table).order_by(*table.primary_key.columns)).mappings())
-            for name, table in Base.metadata.tables.items() if name not in CLEANED}
+            for name, table in Base.metadata.tables.items() if name not in CLEANED and name in available}
         rows["alembic_version"] = db.execute(text("SELECT version_num FROM alembic_version")).all()
         rows["fiscal_sequences"] = [db.scalar(text(f"SELECT last_value FROM {name}_id_seq")) for name in ("payments", "invoices", "payment_invoice")]
         return rows

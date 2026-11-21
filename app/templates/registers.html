@@ -17,9 +17,9 @@
 {% if salary %}<div class="field"><label for="medium">Tipo</label><select id="medium" name="medium">{% for value in media %}<option value="{{ value }}" {% if values.medium == value %}selected{% endif %}>{{ 'Mercado Pago' if value == 'mercado pago' else 'Efectivo' }}</option>{% endfor %}</select></div>
 {% else %}<div class="field"><label for="paid">Pagó</label><select id="paid" name="paid"><option value="0" {% if values.paid in [false,'0'] %}selected{% endif %}>No</option><option value="1" {% if values.paid in [true,'1'] %}selected{% endif %}>Sí</option></select></div><div class="field full-width"><label for="observation">Observación</label><textarea id="observation" name="observation" maxlength="2000" rows="2">{{ values.observation or '' }}</textarea></div>{% endif %}</div>
 </form>
-<div class="actions">
+<div class="actions crud-actions">
+  <a class="button quiet crud-cancel" href="{{ url }}">Cancelar</a>
   <button type="submit" form="register-form">{{ 'Guardar cambios' if row else 'Guardar' }}</button>
-  {% if row %}<a class="button quiet" href="{{ url }}">Cancelar</a>{% endif %}
   {% if row and not salary %}
   <form method="post" action="/fiados/{{ row.id }}/delete" class="delete-credit-form" data-confirm="¿Eliminar el fiado de {{ row.customer }} por {{ row.amount|money|replace(' ', '\u00a0', 1) }}?
 
@@ -36,11 +36,8 @@ Si el cliente ya pagó, marcá el fiado como pagado para conservar el registro p
 {% if row %}<input type="hidden" name="edit" value="{{ row.id }}">{% endif %}
 {% if salary %}<div class="field"><label for="filter_employee">Empleado</label><select id="filter_employee" name="employee"><option value="">Todos</option>{% for name in employees %}<option {% if employee == name %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>{% else %}<div class="field"><label for="filter_customer">Nombre</label><input id="filter_customer" type="search" name="customer" value="{{ customer }}" maxlength="150"></div><div class="field"><label for="filter_paid">Pagó</label><select id="filter_paid" name="paid">{% for key,label in [('no','No'),('yes','Sí'),('all','Todos')] %}<option value="{{ key }}" {% if paid == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>{% endif %}
 <div class="field"><label for="from">Fecha desde</label><input id="from" type="date" name="fecha_desde" value="{{ filters.start or '' }}"></div><div class="field"><label for="to">Fecha hasta</label><input id="to" type="date" name="fecha_hasta" value="{{ filters.end or '' }}"></div><div class="actions"><button>Buscar</button><a class="button quiet" href="{{ url }}{% if row %}?edit={{ row.id }}{% endif %}" data-report-link>Limpiar</a></div></form>
-<div data-report-results="page"><div class="register-total"><span>Total del listado</span><strong class="metric">{{ total|money }}</strong></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>{{ 'Empleado' if salary else 'Nombre' }}</th><th>Monto</th><th>{{ 'Tipo' if salary else 'Pagó' }}</th>{% if not salary %}<th>Fecha de pago</th><th>Observación</th>{% endif %}<th>Acción</th></tr></thead><tbody>
+<div data-report-results="page"><div class="register-total"><span>Total del listado</span><strong class="metric">{{ total|money }}</strong></div><div class="table-wrap"><table><thead><tr><th>Editar</th><th>Fecha</th><th>{{ 'Empleado' if salary else 'Nombre' }}</th><th>Monto</th><th>{{ 'Tipo' if salary else 'Pagó' }}</th>{% if not salary %}<th>Fecha de pago</th><th>Observación</th>{% endif %}</tr></thead><tbody>
 {% for item in records.items %}<tr>
-<td>{{ item.entry_date|local_date }}{% if not salary and item.created_at %}<br><small>Registro {{ item.created_at|local_date }}</small>{% endif %}</td>
-<td>{{ item.employee if salary else item.customer }}</td><td class="money">{{ item.amount|money }}</td><td>{{ ('Mercado Pago' if item.medium == 'mercado pago' else 'Efectivo') if salary else ('Sí' if item.paid else 'No') }}</td>
-{% if not salary %}<td>{{ (item.paid_at or item.paid_date)|local_date if item.paid_date else '—' }}</td><td class="wrap">{{ item.observation or '—' }}</td>{% endif %}
 <td><div class="actions">{{ edit_icon(url ~ '?edit=' ~ item.id, 'Editar registro ' ~ item.id) }}
 {% if not salary and not item.paid %}
 <form method="post" action="/fiados/{{ item.id }}/paid?fecha_desde={{ filters.start or '' }}&amp;fecha_hasta={{ filters.end or '' }}">
@@ -48,5 +45,9 @@ Si el cliente ya pagó, marcá el fiado como pagado para conservar el registro p
   <input type="hidden" name="version" value="{{ item.version }}">
   <button class="quiet">Marcar pagado</button>
 </form>
-{% endif %}</div></td></tr>{% else %}<tr><td colspan="{{ 5 if salary else 7 }}" class="empty">No hay registros para estos filtros.</td></tr>{% endfor %}</tbody></table></div>{{ pager(records) }}</div></section>
+{% endif %}</div></td>
+<td>{{ item.entry_date|local_date }}{% if not salary and item.created_at %}<br><small>Registro {{ item.created_at|local_date }}</small>{% endif %}</td>
+<td>{{ item.employee if salary else item.customer }}</td><td class="money">{{ item.amount|money }}</td><td>{{ ('Mercado Pago' if item.medium == 'mercado pago' else 'Efectivo') if salary else ('Sí' if item.paid else 'No') }}</td>
+{% if not salary %}<td>{{ (item.paid_at or item.paid_date)|local_date if item.paid_date else '—' }}</td><td class="wrap">{{ item.observation or '—' }}</td>{% endif %}
+</tr>{% else %}<tr><td colspan="{{ 5 if salary else 7 }}" class="empty">No hay registros para estos filtros.</td></tr>{% endfor %}</tbody></table></div>{{ pager(records) }}</div></section>
 {% endblock %}

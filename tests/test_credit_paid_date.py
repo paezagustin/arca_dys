@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.core.database import engine
 from app.models.registers import CustomerCredit
-from app.services.registers import save_register
+from app.services.registers import save_register, mark_credit_paid
 from tests.test_closing_registers import register
 from tests.test_migrations import scratch_database, migrate
 
@@ -19,99 +19,56 @@ def freeze_clock(monkeypatch, day, hour, minute):
     return instant
 
 
-def test_quick_payment_sets_date_once_and_replay_preserves_it(client, monkeypatch):
+def test_legacy_transition_keeps_buenos_aires_dates_and_idempotent_mark(monkeypatch):
+    """Contrato del registro anterior, conservado para ensayos de históricos."""
     created = freeze_clock(monkeypatch, 16, 12, 15)
     with Session(engine) as db:
         identifier = save_register(db, CustomerCredit, register(entry_date="2026-10-10")).id
     paid = freeze_clock(monkeypatch, 17, 2, 30)
-    action = f"/fiados/{identifier}/paid"
-    invalid = client.post(action, params={"fecha_desde": "2026-10-17", "fecha_hasta": "2026-10-16"},
-                          data={"version": "1"})
-    assert invalid.status_code == 422
     with Session(engine) as db:
-        assert not db.get(CustomerCredit, identifier).paid
-    response = client.post(action, data={"version": "1"})
-    assert response.status_code == 200 and dict(response.url.params) == {"paid": "no", "stored": "1"}
-    with Session(engine) as db:
-        row = db.get(CustomerCredit, identifier)
-        assert row.paid is True and row.paid_date == date(2026, 10, 16) and row.version == 2
-        assert row.created_at == created and row.paid_at == paid
+        mark_credit_paid(db, identifier, "1")
     freeze_clock(monkeypatch, 17, 4, 0)
-    assert client.post(f"/fiados/{identifier}/paid", data={"version": "1"}).status_code == 200
     with Session(engine) as db:
+        mark_credit_paid(db, identifier, "1")
         row = db.get(CustomerCredit, identifier)
-        assert row.paid_date == date(2026, 10, 16) and row.paid_at == paid and row.version == 2
-    page = client.get("/fiados?paid=yes&fecha_desde=2026-10-10&fecha_hasta=2026-10-10")
-    assert "10/10/2026<br><small>Registro 16/10/2026 09:15" in page.text
-    assert "16/10/2026 23:30" in page.text
+        assert row.paid_date == date(2026, 10, 16) and row.paid_at == paid
+        assert row.created_at == created and row.version == 2
 
 
-@pytest.mark.parametrize("paid", ["no", "all"])
-def test_quick_payment_returns_to_unpaid_with_the_same_dates(client, monkeypatch, paid):
-    with Session(engine) as db:
-        identifier = save_register(db, CustomerCredit, register(
-            entry_date="2026-10-10", customer="Fiado para pagar")).id
-        save_register(db, CustomerCredit, register(entry_date="2026-10-11", customer="Pendiente en rango"))
-        save_register(db, CustomerCredit, register(entry_date="2026-10-20", customer="Pendiente fuera del rango"))
-    freeze_clock(monkeypatch, 16, 12, 0)
-    dates = {"fecha_desde": "2026-10-09", "fecha_hasta": "2026-10-12"}
-    page = client.get("/fiados", params={"paid": paid, **dates})
-    action = re.search(rf'action="(/fiados/{identifier}/paid[^"]*)"', page.text).group(1)
-    response = client.post(unescape(action), data={"version": "1"})
-    assert response.status_code == 200
-    assert dict(response.url.params) == {"paid": "no", "stored": "1", **dates}
-    assert '<option value="no" selected>No</option>' in response.text
-    assert "Pendiente en rango" in response.text
-    assert "Fiado para pagar" not in response.text and "Pendiente fuera del rango" not in response.text
-    paid_page = client.get("/fiados", params={"paid": "yes", **dates})
-    assert "Fiado para pagar" in paid_page.text and "16/10/2026" in paid_page.text
-
-
-def test_form_paid_date_survives_edits_and_replay_and_clears_when_reopened(client, monkeypatch):
+def test_legacy_form_dates_survive_edit_and_clear_only_on_explicit_reopening(monkeypatch):
     created = freeze_clock(monkeypatch, 16, 18, 45)
     data = register(paid="1", paid_date="1900-01-01", created_at="1900-01-01", paid_at="1900-01-01")
-    assert client.post("/fiados", data=data).status_code == 200
-    paid_again = freeze_clock(monkeypatch, 17, 12, 10)
-    assert client.post("/fiados", data=data).status_code == 200
     with Session(engine) as db:
-        row = db.scalar(select(CustomerCredit))
-        identifier = row.id
+        identifier = save_register(db, CustomerCredit, data).id
+        assert save_register(db, CustomerCredit, data).id == identifier
+        row = save_register(db, CustomerCredit, dict(data, version="1", observation="Corregida"), identifier)
+        assert row.paid_at == row.created_at == created
         assert row.paid_date == date(2026, 10, 16)
-        assert row.created_at == row.paid_at == created
-    edited = dict(data, id=str(identifier), version="1", observation="Corregida")
-    assert client.post("/fiados", data=edited).status_code == 200
+        row = save_register(db, CustomerCredit, dict(data, version="2", paid="0"), identifier)
+        assert row.paid_date is None and row.paid_at is None
+    paid_again = freeze_clock(monkeypatch, 17, 12, 10)
     with Session(engine) as db:
-        row = db.get(CustomerCredit, identifier)
-        assert row.paid_date == date(2026, 10, 16) and row.paid_at == created
-    assert client.post("/fiados", data=dict(edited, paid="0", version="2")).status_code == 200
-    with Session(engine) as db:
-        row = db.get(CustomerCredit, identifier)
-        assert row.paid is False and row.paid_date is None and row.paid_at is None
-    assert client.post("/fiados", data=dict(edited, paid="1", version="3")).status_code == 200
-    with Session(engine) as db:
-        row = db.get(CustomerCredit, identifier)
+        row = save_register(db, CustomerCredit, dict(data, version="3", paid="1"), identifier)
         assert row.paid_date == date(2026, 10, 17) and row.paid_at == paid_again
         assert row.created_at == created
 
 
 @pytest.mark.parametrize("old_date", [None, date(2020, 1, 2)])
-def test_legacy_paid_record_keeps_known_dates_without_inventing_times(client, old_date):
+def test_legacy_paid_record_never_invents_unknown_times(old_date):
     with Session(engine) as db:
-        row = CustomerCredit(entry_key="SIM-LEGACY-PAID", entry_date=date(2020, 1, 1),
-            amount=Decimal("10.25"), customer="Cliente ficticio anterior", observation="", paid=True,
-            paid_date=old_date, version=1)
-        db.add(row)
-        db.commit()
-        identifier = row.id
-    assert client.post(f"/fiados/{identifier}/paid", data={"version": "1"}).status_code == 200
-    assert client.post("/fiados", data=register(id=str(identifier), version="1", paid="1")).status_code == 200
-    with Session(engine) as db:
-        row = db.get(CustomerCredit, identifier)
+        row = CustomerCredit(entry_key="SIM-LEGACY-PAID", entry_date=date(2020,1,1), amount=Decimal("10.25"),
+            customer="Cliente ficticio anterior", observation="", paid=True, paid_date=old_date, version=1)
+        db.add(row); db.commit()
+        mark_credit_paid(db, row.id, "1")
         assert row.paid_date == old_date and row.paid_at is None and row.created_at is None
-    page = client.get("/fiados?paid=yes")
-    assert "<small>Registro " not in page.text
-    if old_date:
-        assert "<td>02/01/2020</td>" in page.text
+
+
+
+
+
+
+
+
 
 
 def test_migration_preserves_credits_and_requires_unpaid_dates_to_be_empty(scratch_database):

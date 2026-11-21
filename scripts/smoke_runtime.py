@@ -71,11 +71,11 @@ def run():
                 "entry_key": hidden(page, "entry_key"), "kind": "sale", "entry_date": day,
                 "cash_amount": "1000", "mp_amount": "500"}) as response:
             assert response.status == 200
-        for path, fields in (("/salaries", {"employee": "Francisco", "medium": "mercado pago", "amount": "100"}),
-                ("/fiados", {"customer": "Cliente ficticio runtime", "observation": "Prueba", "paid": "0", "amount": "20"})):
+        for path, target, fields in (("/salaries", "/salaries", {"employee": "Francisco", "medium": "mercado pago", "amount": "100"}),
+                ("/fiados/nuevo", "/fiados", {"name": "Cliente ficticio runtime", "new_customer": "1", "kind": "purchase", "observation": "Prueba", "amount": "20"})):
             with get(path) as response:
                 page = response.read().decode()
-            with post(path, dict(fields, csrf_token=hidden(page, "csrf_token"), entry_key=hidden(page, "entry_key"), entry_date=day)) as response:
+            with post(target, dict(fields, csrf_token=hidden(page, "csrf_token"), entry_key=hidden(page, "entry_key"), entry_date=day)) as response:
                 assert response.status == 200
         with get("/dashboard?fecha_desde=" + day + "&fecha_hasta=" + day) as response:
             page = response.read().decode()
@@ -117,7 +117,8 @@ def run():
             assert db.execute(text("SELECT count(*) FROM payments")).scalar_one() == 0
             assert db.execute(text("SELECT cash_amount,mp_amount,amount FROM business_entries")).one() == (Decimal("1000"), Decimal("500"), Decimal("1500"))
             assert db.execute(text("SELECT count(*) FROM salary_payments")).scalar_one() == 1
-            assert db.execute(text("SELECT paid FROM customer_credits")).scalar_one() is False
+            assert db.execute(text("SELECT kind,delta FROM credit_movements")).one() == ("purchase",Decimal("20"))
+            assert db.execute(text("SELECT count(*) FROM customer_credits")).scalar_one() == 0
         process.terminate()
         process.wait(timeout=60)
         rss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss

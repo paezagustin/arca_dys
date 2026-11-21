@@ -112,8 +112,11 @@ def test_new_public_sections_have_only_requested_fields_and_csrf():
         assert "Sueldos" in nav and "Fiados" in nav and "Configuración" not in nav
         for url in ("/salaries", "/fiados"):
             assert guest.post(url, data=register()).status_code == 403
-            form = guest.get(url)
-            assert guest.post(url, data=register(csrf_token=csrf(form))).status_code == 200
+            form = guest.get("/fiados/nuevo" if url == "/fiados" else url)
+            payload = register(csrf_token=csrf(form))
+            if url == "/fiados":
+                payload.update(new_customer="1", name="Cliente ficticio", kind="purchase")
+            assert guest.post(url, data=payload).status_code == 200
             for field in ("reason", "active", "category", "classification"):
                 assert f'name="{field}"' not in form.text
         assert guest.post("/fiados/1/paid", data={"version": "1"}).status_code == 403
@@ -158,27 +161,23 @@ def test_register_replays_and_stale_edits_are_safe(client):
         assert db.get(SalaryPayment, identifier).amount == Decimal("200")
 
 
-def test_credits_include_old_unpaid_allow_paid_edit_and_escape_text(client):
-    data = register(entry_date="2020-01-01", customer="<script>Cliente</script>", observation="<img onerror=x>")
-    assert client.post("/fiados", data=data).status_code == 200
-    assert client.post("/fiados", data=data).status_code == 200
-    page = client.get("/fiados")
-    assert "&lt;script&gt;Cliente" in page.text and "&lt;img onerror=x&gt;" in page.text
+def test_credit_accounts_keep_old_dates_escape_text_and_never_change_business(client):
+    from tests.test_credit_accounts import person, draft
+    identifier = person("<script>Cliente</script>")
+    data = draft(identifier, entry_date="2020-01-01", amount="105", observation="<img onerror=x>")
+    assert client.post("/fiados",data=data).status_code == 200
+    assert client.post("/fiados",data=data).status_code == 200
+    page = client.get(f"/fiados/{identifier}")
+    assert "&lt;script&gt;cliente" in page.text.lower() and "&lt;img onerror=x&gt;" in page.text
+    assert client.post(f"/fiados/{identifier}/paid",data={"version":"1"}).status_code == 409
+    paid = draft(identifier,kind="payment",amount="105",confirmed="1")
+    assert client.post("/fiados",data=paid).status_code == 200
+    assert "Saldado" in client.get(f"/fiados/{identifier}?history=1").text
     with Session(engine) as db:
-        assert db.scalar(select(func.count()).select_from(CustomerCredit)) == 1
-        row = db.scalar(select(CustomerCredit))
-        identifier = row.id
-        assert row.paid is False
+        assert db.scalar(select(func.count()).select_from(CustomerCredit)) == 0
         assert db.scalar(select(func.count()).select_from(BusinessEntry)) == 0
-    assert client.post(f"/fiados/{identifier}/paid", data={"version": "99"}).status_code == 409
-    for _ in range(2):
-        assert client.post(f"/fiados/{identifier}/paid", data={"version": "1"}).status_code == 200
-    assert "&lt;script&gt;Cliente" not in client.get("/fiados").text
-    assert "&lt;script&gt;Cliente" in client.get("/fiados?paid=yes&customer=Cliente").text
-    assert client.post("/fiados", data=dict(data, id=str(identifier), version="2", paid="0")).status_code == 200
-    assert "&lt;script&gt;Cliente" in client.get("/fiados").text
-    assert client.post("/fiados", data=register(customer="")).status_code == 422
-    assert client.post("/fiados", data=register(paid="maybe")).status_code == 422
+
+
 
 
 def test_metrics_and_export_reconcile_cash_mp_legacy_salaries_and_cross_year_range(client):

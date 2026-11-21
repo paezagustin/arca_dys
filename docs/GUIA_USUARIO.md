@@ -123,21 +123,57 @@ con una sola fecha como límite. El total incluye todas las páginas del filtro.
 Usar el lápiz para editar. Se descuenta en Ganancia.
 
 ## Fiados
-Ingresar nombre, monto y, si hace falta, observación. Fecha empieza en hoy y Pagó
-en No. Guardar. El listado muestra todos los no pagados. Cambiar Pagó, Fecha desde
-o Fecha hasta actualiza el reporte automáticamente. Se puede usar una sola fecha
-como límite. Para filtrar por nombre, escribilo y pulsá Enter o Buscar. El listado
-y el total se actualizan en la misma pantalla, y Atrás y Adelante recorren las
-búsquedas aplicadas. Marcar pagado vuelve a la lista de impagos con el rango de
-fechas que estabas consultando.
-El lápiz permite corregir cualquiera de los campos.
-Para quitar un registro cargado por error, abrí su edición con el lápiz, pulsá
-Eliminar fiado y confirmá. El fiado se retira del listado y sus totales.
-Si la persona ya pagó, usá Marcar pagado o elegí Sí en Pagó y guardá. Así el
-registro queda disponible al consultar los fiados pagados y para futuras estadísticas.
-Fecha muestra el día elegido y, en las altas nuevas, el día y la hora reales
-del registro en Buenos Aires. Los filtros buscan por el día elegido completo.
-Al marcar Sí se guarda la fecha y hora del pago. Editar otros datos conserva
-esa marca. Volver a No la quita y un nuevo pago registra el momento nuevo.
-Los fiados históricos muestran la fecha disponible y la hora cuando se conoce.
-El registro no suma ventas ni modifica la caja automáticamente.
+La opción A está en revisión de desarrollo, sin actualizar la Raspberry.
+Preparación de la instancia con ejemplos ficticios: [FIADOS.md](FIADOS.md).
+
+El listado abre en **Con deuda**. **Sin deuda** y **Todas** cambian el filtro al
+pulsarlos. Escribí nombre, apellido o referencia y pulsá Enter o Buscar; `perez`
+encuentra a Marcela Pérez. El total corresponde a todo el filtro, incluidas las
+páginas siguientes.
+
+En **Nuevo fiado**, escribí parte del nombre y elegí una persona de la lista que
+aparece sobre el formulario. También podés usar flechas y Enter; Escape cierra
+la lista. Para alguien nuevo, pulsá **Crear una persona nueva**, completá nombre
+y una referencia opcional. Los nombres parecidos muestran una advertencia antes
+de crear otra cuenta. Cada persona conserva su identidad aunque se corrija el nombre.
+
+Ingresá el importe entero, la fecha y una observación opcional. Al escribir
+`10000` verás `10.000`; también podés pegar un importe con puntos de miles.
+No se aceptan comas ni decimales. Fecha empieza en hoy y no admite un día futuro.
+Guardar registra la compra y abre la cuenta.
+
+**Registrar pago** permite abonar una parte. Revisá el nombre, importe, fecha y
+saldo resultante antes de confirmar. **Saldar** prepara un pago por todo el saldo.
+El sistema rechaza un pago mayor a la deuda y pide revisar si otra ventana cambió
+la cuenta. Un pago se aplica al saldo global, sin marcar compras por separado.
+
+Al llegar a cero, el período pasa al **Historial**. Una nueva compra inicia otro
+período y conserva los anteriores. Para corregir un movimiento, pulsá su lápiz:
+importe, fecha y detalle aparecen completos. Corregí los productos y guardá.
+**Eliminar** muestra una confirmación antes de retirarlo del saldo. Se conservan
+internamente los originales y sus correcciones. Una corrección de importe o baja
+que deje pagos mayores a la deuda se rechaza; revisá primero esos pagos.
+
+El lápiz junto al nombre edita los datos de la persona y su celular. Ingresá solo
+el código de área y número: 10 dígitos, sin 0 inicial, 15, espacios ni signos.
+El prefijo argentino se agrega al preparar WhatsApp. El botón con su icono está
+en la cabecera del reporte. **Enviar detalle por WhatsApp** muestra
+fechas, importes, productos/observaciones y saldo. Elegí Período actual o Historial
+completo: el mensaje cambia automáticamente. Pulsá **Abrir WhatsApp**, encima del
+mensaje. El texto queda
+preparado; lo enviás desde WhatsApp. Si es muy largo habrá varias partes numeradas.
+Si no hay celular, aparece el enlace para agregarlo.
+
+Los movimientos se leen por columnas y aparece primero el último registrado.
+El lápiz está en la primera columna; Eliminar se encuentra dentro de su edición.
+Las notificaciones flotan arriba al centro y desaparecen a los dos segundos;
+la cruz permite cerrarlas antes.
+
+Si aparece el aviso de registros anteriores, entrá en **Revisar y vincular** y
+elegí expresamente a quién pertenece cada uno. Un pendiente incorpora el saldo;
+un pagado se conserva en **Archivo anterior**, sin inventar un pago ni una fecha
+desconocida. No se fusionan nombres automáticamente ni se recuperan eliminados.
+Un importe histórico dudoso requiere conciliación antes de trasladarlo.
+
+Fiados sigue siendo independiente: registrar compras, pagos o anulaciones no
+suma ventas ni modifica caja, Ganancia, Mercado Pago o facturación.

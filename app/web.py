@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from fastapi.templating import Jinja2Templates
-from app.services.money import PESO_INPUT_LIMIT, format_whole_pesos, whole_pesos
+from app.services.money import PESO_INPUT_LIMIT, format_whole_pesos, whole_pesos, require_grouped_pesos
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -43,6 +43,19 @@ def page_url(request, key, value):
 
 
 templates.env.filters.update(money=money, money_input=money_input, local_date=local_date)
+
+
+def credit_input(value):
+    raw = str(value if value is not None else "")
+    if not raw:
+        return ""
+    try:
+        return format_whole_pesos(require_grouped_pesos(raw)).removeprefix("$ ")
+    except ValueError:
+        return raw
+
+
+templates.env.filters["credit_input"] = credit_input
 templates.env.globals["page_url"] = page_url
 
 

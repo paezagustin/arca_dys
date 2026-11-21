@@ -5,14 +5,15 @@
   if (!main?.querySelector(resultSelector)) return;
 
   const feedback = document.createElement('p');
-  feedback.className = 'report-feedback notice sr-only';
+  feedback.className = 'report-feedback sr-only';
   feedback.setAttribute('role', 'status');
   main.append(feedback);
   const filter = main.querySelector(filterSelector);
   let currentRequest;
 
   function announce(message, { visible = false, error = false } = {}) {
-    feedback.classList.toggle('sr-only', !visible);
+    feedback.classList.add('sr-only');
+    if (visible) window.AppNotifications?.show(message, {error});
     feedback.classList.toggle('error', error);
     feedback.textContent = message;
   }

@@ -1,6 +1,144 @@
 # Estado de ejecución
 
-Actualizado el 15/11/2026 (America/Buenos_Aires).
+Actualizado el 21/11/2026 (America/Buenos_Aires).
+
+Este registro conserva la evidencia de las entregas. Para pendientes, avance y
+próxima acción, consultar el [proyecto ARCA de Lific](http://127.0.0.1:3456/ARCA/overview).
+
+## Cierre de interfaz y ensayo productivo · 21/11/2026 · ARCA-31/32
+
+El usuario autorizó expresamente publicación y despliegue preservando Fiados.
+Nombres capitalizados por palabra (0020), referencia junto al nombre y lápiz,
+celular oculto en la ficha, acciones CRUD uniformes, cabecera Gestión alineada,
+lápiz primero en Sueldos y mensaje WhatsApp con emojis. Verificación visual real
+en desktop y móvil: acciones en una fila, sin desborde; contraste de Eliminar corregido.
+
+- **396 pruebas aprobadas, 156,17 s**, sin omitidas; una advertencia conocida
+  Starlette/httpx. Node formato/cursor y diff-check aprobados.
+- Backup-test restauró a **0020_credit_person_names**, saldo 7.500, vínculos y
+  evidencia de corrección conservados.
+- Raspberry real: runtime ARM64 otel-511ef85, Alembic 0016, PostgreSQL existente.
+  Respaldo custom, imagen y configuración guardados privados en SSD:
+  `/mnt/datos/docker/arca_dys/backups/deploy_credit_accounts_20261121.tkbwmM`.
+- Restauración real aislada, sin certificados ni entorno productivo. Migración
+  0016→0020 y plan aplicado dos veces: **21 originales**, **8 vinculados**,
+  **5 por revisar**, **8 bajas intactas**. Deuda **133.594 + 70.437 = 204.031**.
+  Iguales las huellas de **25 tablas y 13 secuencias** previas; cero pagos inventados.
+- Los cinco nombres repetidos requieren respuesta humana mañana: **ARCA-35**.
+  Siguen visibles en Fiados anteriores, con deuda separada; no se fusionaron.
+- La revisión automática rechazó exportar datos reales a Windows. Se siguió con
+  respaldos, plan y copia exclusivamente en Raspberry. También rechazó el smoke
+  compartiendo servidor con la copia real: se preparó otro PostgreSQL vacío para
+  sintéticos. No se transfirieron filas reales ni se ejecutó pytest sobre ellas.
+- La publicación/despliegue y verificación final se registran por separado en
+  **ARCA-33/34**, dentro de **ARCA-PLAN-2**. Los registros siguientes describen
+  etapas anteriores y no sustituyen esta autorización.
+
+## Reportes y celular argentino · ARCA-30 · 21/11/2026
+
+Celular nacional de 10 dígitos en UI/servidor/DB; 549 solo al preparar WhatsApp.
+0019 convierte los formatos anteriores inequívocos, incrementa versión y rechaza
+cualquier formato ambiguo sin modificarlo. Backup local antes de migrar:
+`artifacts/fiados-dev/before-0019.dump`. Sin cambios de datos en Raspberry.
+
+Reportes por columnas, lápiz primero, último registrado arriba; sin horas, IDs ni
+saldo por fila. Eliminar dentro de Editar; WhatsApp con icono en la cabecera del
+reporte y deuda roja/saldada verde. Vista WhatsApp con acciones/destino/aviso sin
+celular encima del texto; selector automático conserva documento, foco y scroll,
+cancela respuestas anteriores y evita enviar el texto viejo durante la actualización.
+Notificaciones globales flotantes arriba/centro, cruz y 2 segundos, también sobre
+modales nativos. Ayudas y confirmaciones continúan como contenido de sus formularios.
+
+Navegador 1366×900/390×844: caso propio ficticio #9, celular numérico, bloqueo de
+espacio, avisos sobre modal/cierre/tiempo automático, orden de
+carga retroactiva, eliminar desde edición, historial tabular, detalle sin celular
+rojo arriba y cambios rápidos del select sin perder foco/scroll. Documento móvil
+sin desborde; tabla desplazable por dentro. Sin errores de consola observados.
+Capturas locales `report-columns-*.jpg` y `whatsapp-simplified.jpg` en artifacts/fiados-dev.
+Sin envío ni apertura real de WhatsApp, sin dependencias, commit/push o despliegue.
+Suite final **390 passed, 152,66 s**, sin omitidas y un warning conocido. Restauración
+0019 con celular nacional, saldo 7.500 y evidencia de corrección aprobada. Imagen
+con target production y smoke HTTP mock aprobados; sin dependencias nuevas ni ARM64.
+Sintaxis JS, prueba Node de dinero/cursor y git diff --check aprobados.
+Próxima acción humana: ARCA-28, aceptación y teléfono físico.
+
+## Ajustes Fiados y navegación · ARCA-29 · 20/11/2026
+
+Edición por lápiz de compras/pagos con importe, fecha y productos precargados;
+eliminación confirmada por baja lógica. Cada cambio guarda antes/después por
+trigger en credit_movement_changes inmutable. Se conservan identidad, secuencia,
+tipo y hora original; comandos repetidos no duplican cambios. Se rechaza una
+corrección si deja un saldo por secuencia negativo. Los saldos legados y movimientos
+con anulación anterior mantienen su protección.
+
+Celular opcional en la ficha, accesible por lápiz a la derecha del nombre. Revisión
+local de WhatsApp con período actual/historial completo, fechas, importes y detalle
+sin recortar. URL wa.me con destino internacional y texto codificado, partes
+numeradas para mensajes largos; no API ni envío automático.
+
+Saldo reorganizado en blanco/azul, sin borde fucsia; acciones Nuevo fiado/Crear
+persona juntas sobre la tarjeta, sin título Personas. Breadcrumb común con lista,
+separadores y página actual en Fiados, Gestión/Proveedores y páginas fiscales que
+tenían retornos. No se modifican operaciones de caja, MP ni facturación.
+
+- Suite completa: **380 passed, 149,91 s**, sin omitidas y un warning conocido.
+  Incluye correcciones concurrentes, reenvíos/payload distinto, detalle en cuenta
+  saldada, bajas, saldos, protección de evidencia, celulares y WhatsApp largo.
+- Restauración 0018 aprobada: saldo 7.500, dos movimientos, una corrección
+  antes/después inmutable y archivo legado sin fecha inventada. Solo bases efímeras.
+- Imagen target production y smoke HTTP mock aprobados con 0018, servidor/cola/PDF
+  simulados y DB efímera propia. Sin ARM64 ni cambios de dependencias.
+- Desarrollo migrado tras backup local `artifacts/fiados-dev/before-0018.dump`.
+  Se conservaron los datos de la instancia que ya estaba probando el usuario.
+- Navegador 1366×900 y 390×844: cuenta nueva ficticia, edición de productos sin
+  recargar los restantes, celular ficticio, mensaje/destino preparados, cancelar
+  baja y confirmar (46.000 → 45.000), listado y breadcrumbs de Proveedores y
+  Factura por importe. Sin desborde de documento en vistas móviles revisadas ni
+  errores de consola observados. Capturas `artifacts/fiados-dev/*updated*.jpg`
+  y `whatsapp-preview.jpg`. No se abrió ningún chat ni se envió un mensaje real.
+
+Disponible en http://localhost:8001/fiados, solo esta PC. Pendiente ARCA-28:
+aceptación de la usuaria, teléfono/teclado y apertura real de WhatsApp, sin enviar
+como parte de la prueba automática. No hubo acceso/despliegue a Raspberry,
+commit/push ni CI de estos cambios. Guía vigente: [FIADOS.md](FIADOS.md).
+
+## Fiados A · desarrollo del 20/11/2026
+
+ARCA-27 / ARCA-PLAN-1. Cuentas por persona con ID estable, compras y pagos
+independientes, saldo global, saldar e historial por períodos. NUMERIC entero,
+UUID/huella, bloqueo/versión y anulaciones que conservan los originales. La nueva
+0017 agrega estructura sin agrupar nombres ni modificar customer_credits; la
+vinculación humana conserva pendientes/pagados y fechas desconocidas. No afecta
+ventas, Ganancia, Mercado Pago ni emisión fiscal.
+
+- Suite obligatoria: **364 passed**, sin omitidas, 139,71 s; una advertencia
+  conocida de Starlette/httpx. Incluye dos conexiones concurrentes, rollback,
+  respuesta perdida tras commit, preservación de históricos y rechazo por SQL
+  de fracciones sin redondear. Revisiones publicadas anteriores intactas.
+- Perfil backup-test aprobado: dump custom, SHA-256 y restauración en 0017,
+  saldo 7.500/dos movimientos/vínculo pagado sin fecha inventada, con triggers
+  de inmutabilidad activos. Solo bases efímeras propias.
+- Imagen local `arca-dys-fiados-runtime` construida con target production.
+  Smoke HTTP aprobado en mock/red interna/DB efímera: caja, Sueldos, nuevo Fiados,
+  Resumen, login/CSRF, cola, factura y PDF simulados. RSS máximo hijo 111608 KiB,
+  health promedio 2,9 ms en ese ensayo. No es una medición de la Raspberry.
+- Node verificó formato/cursor y sintaxis JS. Navegador real a 1366×900 y
+  390×844: altas, revisión/pago parcial, saldar, nuevo período, anulación,
+  historial, nombres similares, búsqueda `perez` y filtros. Popup fijo, sin
+  desplazamiento del importe (0 px); sin desborde horizontal en vistas revisadas.
+  Escritura/pegado con miles y rechazo de comas comprobados. Dos registros
+  legados ficticios vinculados visualmente, conservando una fecha desconocida.
+  Capturas locales ignoradas por Git: `artifacts/fiados-dev/`.
+- Instancia disponible en `http://localhost:8001/fiados`, proyecto
+  `arca-dys-fiados-dev`, volumen nuevo `arca-dys-fiados-dev_pg_dev`, integraciones
+  mock, proxy solo en loopback. Cuatro cuentas de ejemplo y una quinta de QA
+  saldada; no se usó el volumen de desarrollo previo. Guía: [FIADOS.md](FIADOS.md).
+
+Pendiente en ARCA-28 la aceptación de la usuaria y el teclado de un teléfono físico. Después,
+solo con nueva autorización: inventario real, respaldo restaurado, conciliación y
+ensayo privado de vinculación antes de preparar producción. Sin acceso/despliegue
+a Raspberry, sin ARM64, sin cambios de dependencias, sin commit/push ni CI de esta
+entrega. HEAD de partida: `448ce8bcf4547e35515db6dafe76d826bd43a62a`.
 
 ## H21 · PWA desplegada en la LAN por HTTP
 
