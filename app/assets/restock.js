@@ -37,24 +37,62 @@
     approval.closest('fieldset').hidden = true;
   }
 
+  function supplierList(section, input) {
+    const list = section.querySelector('.restock-supplier-list');
+    const template = section.querySelector('template');
+    const status = section.querySelector('[data-association-status]');
+    const empty = section.querySelector('[data-no-suppliers]');
+    function ids() {
+      return [...list.querySelectorAll('[name=supplier_id]')].map(field => field.value);
+    }
+    function add(supplier) {
+      if (!ids().includes(String(supplier.id))) {
+        const item = template.content.firstElementChild.cloneNode(true);
+        item.querySelector('input').value = supplier.id;
+        item.querySelector('[data-supplier-name]').textContent = supplier.name;
+        item.querySelector('button').setAttribute('aria-label', `Eliminar ${supplier.name}`);
+        list.append(item);
+        empty.hidden = true;
+        status.textContent = `${supplier.name} agregado a la lista.`;
+      }
+      input.value = '';
+      input.setCustomValidity('');
+    }
+    section.addEventListener('click', event => {
+      const remove = event.target.closest('[data-remove-supplier]');
+      if (!remove) return;
+      const item = remove.closest('li');
+      const next = item.nextElementSibling || item.previousElementSibling;
+      status.textContent = `${item.querySelector('[data-supplier-name]').textContent} retirado de la lista.`;
+      item.remove();
+      empty.hidden = Boolean(list.childElementCount);
+      (next?.querySelector('button') || input).focus({ preventScroll: true });
+    });
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter') event.preventDefault();
+    });
+    input.addEventListener('input', () => input.setCustomValidity(input.value.trim()
+      ? 'Elegí un proveedor de las sugerencias o borrá la búsqueda.' : ''));
+    return { ids, add };
+  }
+
   function initializePicker(root) {
     const mode = root.dataset.restockPicker;
     const input = root.querySelector('[role=combobox]');
     const key = root.querySelector('[data-picker-key]');
     const form = input.form;
     const isProduct = mode === 'register' || mode === 'product';
-    const suppliers = mode === 'preferred' ? [...form.querySelectorAll('[name=supplier_id]')] : [];
-    const allowed = new Set(suppliers.map(control => control.value));
+    const associated = mode === 'associate' ? supplierList(root.closest('[data-linked-suppliers]'), input) : null;
 
     AppSuggestions.attach(root, {
       async load(value, signal) {
         if (isProduct && !value.trim()) return [];
         const url = new URL(root.dataset.endpoint, location.origin);
         url.searchParams.set('q', value);
+        if (associated) for (const id of associated.ids()) url.searchParams.append('excluir', id);
         const response = await fetch(url, { signal, headers: { Accept: 'application/json' } });
         if (!response.ok) throw Error('search');
-        const rows = await response.json();
-        return mode === 'preferred' ? rows.filter(row => allowed.has(String(row.id))) : rows;
+        return response.json();
       },
       render(option, row) {
         const label = document.createElement('strong');
@@ -68,6 +106,10 @@
         }
       },
       choose(row) {
+        if (associated) {
+          associated.add(row);
+          return;
+        }
         input.value = row.name;
         if (mode === 'register') {
           resetRegistration();
@@ -81,19 +123,14 @@
           return;
         }
         key.value = row.id;
-        if (mode === 'preferred') {
-          const supplier = suppliers.find(control => control.value === key.value);
-          if (supplier) supplier.checked = true;
-        } else {
-          form.requestSubmit();
-        }
+        form.requestSubmit();
       },
       edit() {
         if (mode === 'register') resetRegistration();
         else if (mode === 'supplier' && !input.value.trim() && key.value) {
           key.value = '';
           form.requestSubmit();
-        } else if (mode !== 'supplier') {
+        } else if (key && mode !== 'supplier') {
           key.value = '';
         }
       },
@@ -237,6 +274,13 @@
   }
 
   page.addEventListener('click', event => {
+    if (quickCreate && event.target.closest('[data-cancel-quick]')) {
+      event.preventDefault();
+      resetRegistration();
+      search.elements.buscar.value = '';
+      search.elements.buscar.focus({ preventScroll: true });
+      return;
+    }
     const details = event.target.closest('[data-restock-details-open]');
     if (details) {
       document.getElementById(details.getAttribute('aria-controls')).showModal();
@@ -281,13 +325,6 @@
     if (input.matches('[data-restock-select-all]')) {
       for (const choice of input.form.querySelectorAll('[name=need_id]')) choice.checked = input.checked;
       updateDraft(input.form);
-    }
-    if (input.name === 'supplier_id' && !input.checked) {
-      const preferred = input.form.querySelector('[data-restock-picker=preferred]');
-      if (preferred?.querySelector('[data-picker-key]').value === input.value) {
-        preferred.querySelector('[data-picker-key]').value = '';
-        preferred.querySelector('[role=combobox]').value = '';
-      }
     }
   });
 

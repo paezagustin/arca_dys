@@ -21,7 +21,7 @@
 {%- endmacro %}
 
 {% macro picker(id, label, endpoint, mode, placeholder, value='', name='', key='', selected='', max_length=180) -%}
-<div class="field" data-restock-picker="{{ mode }}" data-endpoint="{{ endpoint }}">
+<div class="field" data-restock-picker="{{ mode }}" data-endpoint="{{ endpoint }}"{% if mode == 'associate' %} data-manual-choice{% endif %}>
   <label for="{{ id }}">{{ label }}</label>
   {% if key %}<input type="hidden" name="{{ key }}" value="{{ selected }}" data-picker-key>{% endif %}
   <input type="search" id="{{ id }}"{% if name %} name="{{ name }}"{% endif %} value="{{ value }}" maxlength="{{ max_length }}"
@@ -38,7 +38,7 @@
 
 {% macro supplier_picker(mode='supplier', value='', selected='', label='Proveedor', extra='', key='proveedor') -%}
 {{ picker('restock-' ~ mode, label, '/faltantes/proveedores/buscar' ~ extra, mode, 'Buscar proveedor…',
-          value=value, key=key, selected=selected, max_length=150) }}
+          value=value, name='supplier_query' if mode == 'associate' else '', key=key, selected=selected, max_length=150) }}
 {%- endmacro %}
 
 {% macro filter_actions(url) -%}
@@ -53,7 +53,7 @@
     <legend>Productos similares</legend><ul></ul>
     <label class="restock-check"><input type="checkbox" name="allow_duplicate" value="1"> Es otro producto.</label>
   </fieldset>
-  <button type="submit">Crear y registrar</button>
+  <div class="actions crud-actions"><a class="button quiet crud-cancel" href="/faltantes" data-cancel-quick>Cancelar</a><button type="submit">Guardar</button></div>
 </form>
 {%- endmacro %}
 

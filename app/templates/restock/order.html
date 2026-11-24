@@ -39,7 +39,7 @@
       </li>
       {% endfor %}
     </ul>
-    {% if not row.closed_at %}<div class="actions"><button type="submit">Guardar recepción</button></div>{% endif %}
+    {% if not row.closed_at %}<div class="actions crud-actions"><a class="button quiet crud-cancel" href="/faltantes/historial">Cancelar</a><button type="submit">Guardar</button></div>{% endif %}
   </form>
 </section>
 {% endblock %}

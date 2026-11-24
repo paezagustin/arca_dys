@@ -42,9 +42,6 @@
       {% for key, label in need_states.items() %}<option value="{{ key }}"{% if status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
     </select></div>
     {{ date_fields(starts, ends) }}
-    <div class="field"><label for="restock-sort">Orden</label><select id="restock-sort" name="orden">
-      {% for key, label in [('oldest','Más antiguos'),('newest','Más recientes'),('name','Nombre')] %}<option value="{{ key }}"{% if sort == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
-    </select></div>
   </div>
   {{ filter_actions('/faltantes') }}
 </form>

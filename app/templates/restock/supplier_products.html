@@ -15,20 +15,32 @@
 <section data-report-results="supplier-products" data-restock-refresh>
   <div class="report-heading restock-heading"><h2>{{ 'Seleccionar productos' if all_products and supplier.active else 'Productos del proveedor' }}</h2><span class="restock-count">{{ rows.total }}</span></div>
   {% if rows.items %}
-  <form class="card restock-editor" method="post" action="/faltantes/productos/proveedores/{{ supplier.id }}">
-    {{ csrf() }}
+  <div class="card restock-editor">
     <ul class="restock-list">
       {% for product in rows.items %}
       <li class="restock-match restock-item-head">
         {% if all_products and supplier.active and product.id not in linked %}
-        <label class="restock-check"><input type="checkbox" name="product_id" value="{{ product.id }}">{{ product.name }}</label>
+        <label class="restock-check"><input type="checkbox" name="product_id" value="{{ product.id }}" form="restock-link-products">{{ product.name }}</label>
         {% else %}<div><a href="/faltantes/productos/{{ product.id }}">{{ product.name }}</a>{% if all_products and product.id in linked %}<span class="muted">Asociado</span>{% endif %}</div>{% endif %}
         {{ unavailable(product) }}
+        {% if not all_products and product.id in linked and (supplier.active or linked[product.id].preferred) %}
+        {% set preferred = linked[product.id].preferred %}
+        <form method="post" action="/faltantes/productos/proveedores/{{ supplier.id }}/preferencia/{{ product.id }}" data-restock-write>
+          {{ csrf() }}<input type="hidden" name="version" value="{{ product.version }}">
+          <input type="hidden" name="preferred" value="{{ '0' if preferred else '1' }}">
+          <button type="submit" class="quiet" data-report-focus-key="preferred-{{ product.id }}">{{ 'Quitar preferencia' if preferred else 'Marcar como preferido' }}<span class="sr-only"> para {{ product.name }}</span></button>
+        </form>
+        {% endif %}
       </li>
       {% endfor %}
     </ul>
-    {% if all_products and supplier.active %}<button type="submit">Asociar seleccionados</button>{% endif %}
-  </form>
+    {% if all_products and supplier.active %}
+    <form id="restock-link-products" method="post" action="/faltantes/productos/proveedores/{{ supplier.id }}">
+      {{ csrf() }}
+      <div class="actions crud-actions"><a class="button quiet crud-cancel" href="/faltantes/productos/proveedores/{{ supplier.id }}">Cancelar</a><button type="submit">Guardar</button></div>
+    </form>
+    {% endif %}
+  </div>
   {% else %}<p class="card restock-empty">No hay productos para mostrar.</p>{% endif %}
   {{ pager(rows) }}
 </section>

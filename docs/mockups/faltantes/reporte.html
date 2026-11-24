@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mockups del reporte de Faltantes · ARCA DYS</title>
+  <link rel="stylesheet" href="../../../app/assets/app.css">
+  <link rel="stylesheet" href="../../../app/assets/restock.css">
+  <style>
+    [hidden] { display: none !important; }
+    .preview-header { background: var(--sidebar-bg); color: var(--sidebar-text); }
+    .preview-header > div, main.preview { max-width: 1180px; margin: 0 auto; padding: 16px clamp(12px, 3vw, 32px); }
+    .preview-header > div { display: flex; align-items: center; gap: 12px; }
+    .preview-header img { width: 40px; height: 40px; border-radius: 8px; }
+    .preview-header small { margin-left: auto; color: var(--sidebar-text); }
+    main.preview { padding-top: 26px; }
+    .preview h1 { margin-bottom: 8px; }
+    .view-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+    .preview .card { padding: clamp(10px, 2vw, 22px); }
+    .preview .report-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .preview .report-heading h2 { margin: 0; font-size: 1.2rem; }
+    .preview .report-heading span { font-size: .9rem; color: var(--muted); }
+    .preview .table-wrap { background: white; }
+    .preview th, .preview td { padding: 9px 12px; font-size: .94rem; }
+    .preview td { height: 53px; }
+    .preview .name { white-space: normal; min-width: 130px; }
+    .preview .detail { white-space: normal; max-width: 16rem; }
+    .preview time, .phone-meta { color: var(--muted); font-size: .84rem; font-weight: 400; }
+    .preview .name strong { display: block; }
+    .preview .quantity { font-weight: 650; }
+    .preview .edit { width: 60px; }
+    .preview .icon-button { padding: 0; min-width: 44px; min-height: 44px; }
+    .preview tr.editing td { background: #e6f4fc; }
+    .preview .editor-row > td { height: auto; padding: 14px; background: var(--inset); text-align: start; white-space: normal; }
+    .preview form { text-align: start; }
+    .preview .crud-actions { margin-top: 14px; }
+    .preview dialog { padding: 20px; }
+    .preview dialog h2 { margin-bottom: 2px; }
+    .preview dialog p { margin: 0 0 14px; }
+    .compact-only, .phone-meta, .compact .full-only { display: none; }
+    .compact .compact-only { display: inline; }
+    .compact .name strong { display: inline; }
+    .compact .name time { display: inline-block; margin-inline-start: .3rem; white-space: nowrap; }
+    @media (max-width: 660px) {
+      .preview-header small { font-size: .78rem; }
+      main.preview { padding-top: 16px; }
+      .preview h1 { font-size: 25px; }
+      .preview .card { padding: 10px; }
+      .preview:not(.compact) table { min-width: 750px; }
+      .preview:not(.compact) tbody .name { position: sticky; left: 0; background: var(--paper); box-shadow: 1px 0 var(--line); }
+      .compact .desktop-meta { display: none; }
+      .compact .phone-meta { display: block; line-height: 1.35; margin-top: 4px; }
+      .compact th, .compact td { padding: 8px 4px; }
+      .compact .name { min-width: 0; }
+      .compact .edit { width: 46px; }
+      .compact .quantity { width: 58px; }
+      .preview .restock-purchase-fields { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="operational">
+  <header class="preview-header"><div>
+    <img src="../../../app/assets/logo-dulce-salado.jpg" alt="">
+    <strong>Dulce y Salado</strong><small>Mockup · Datos de ejemplo</small>
+  </div></header>
+  <main class="preview" id="preview">
+    <h1>Faltantes</h1>
+    <div class="view-controls" role="group" aria-label="Diseño del reporte">
+      <button type="button" data-view="completa" aria-pressed="true">Tabla completa</button>
+      <button type="button" class="quiet" data-view="compacta" aria-pressed="false">Edición en la fila</button>
+    </div>
+    <section class="card" aria-labelledby="list-title">
+      <div class="report-heading"><h2 id="list-title">Listado de faltantes</h2><span id="total"></span></div>
+      <div class="table-wrap" tabindex="0" aria-label="Tabla de faltantes" role="region">
+        <table><thead><tr>
+          <th scope="col">Producto</th><th scope="col" class="full-only">Fecha</th>
+          <th scope="col" class="desktop-meta">Proveedores</th><th scope="col" class="quantity">Cant.</th>
+          <th scope="col" class="full-only">Observaciones</th><th scope="col" class="desktop-meta">Estado</th>
+          <th scope="col" class="edit">Editar</th>
+        </tr></thead><tbody id="rows"></tbody></table>
+      </div>
+    </section>
+    <dialog id="dialog" aria-labelledby="dialog-title" aria-describedby="dialog-product">
+      <h2 id="dialog-title">Cantidad y observaciones</h2><p id="dialog-product" class="muted"></p>
+    </dialog>
+    <p class="sr-only" role="status" id="feedback"></p>
+  </main>
+  <template id="product-row"><tr>
+    <td class="name"><strong></strong><time class="compact-only"></time><span class="phone-meta"></span></td>
+    <td class="full-only"><time></time></td><td class="desktop-meta suppliers detail"></td><td class="quantity"></td>
+    <td class="full-only detail note"></td><td class="desktop-meta"><span class="restock-state"></span></td>
+    <td class="edit"><button type="button" class="icon-button quiet" aria-label="Editar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m16 3 5 5M4 20l4-1L21 6a2 2 0 0 0-5-3L3 16l-1 6z"/></svg>
+    </button></td>
+  </tr></template>
+  <template id="fields"><form>
+    <div class="restock-purchase-fields">
+      <div class="field"><label for="quantity">Cantidad</label><input id="quantity" name="quantity" inputmode="decimal" maxlength="13" placeholder="Ej. 2,5"></div>
+      <div class="field"><label for="notes">Observaciones</label><textarea id="notes" name="notes" rows="2" maxlength="1000"></textarea></div>
+    </div>
+    <div class="actions crud-actions"><button type="button" class="quiet crud-cancel">Cancelar</button><button type="submit">Guardar</button></div>
+  </form></template>
+  <script>
+    const examples = [
+      { name: 'Avena arrollada', day: 21, suppliers: 'Mayorista Sur', quantity: '3', notes: 'Para el fin de semana' },
+      { name: 'Chocolate semiamargo', day: 21, suppliers: 'Mayorista Sur, Distribuidora Río', quantity: '2,5', notes: 'Consultar disponibilidad' },
+      { name: 'Velas de cumpleaños', day: 22, suppliers: 'Cotillón del Sol', quantity: '6', notes: '', ordered: true },
+      { name: 'Bolsas de papel', day: 23, suppliers: 'Papelera Norte', quantity: '', notes: '' },
+      { name: 'Dulce de leche', day: 23, suppliers: 'Distribuidora Río', quantity: '4', notes: 'Entrega el jueves', ordered: true },
+      { name: 'Etiquetas adhesivas', day: 24, suppliers: '', quantity: '', notes: 'Revisar el modelo' },
+    ];
+    const preview = document.getElementById('preview');
+    const body = document.getElementById('rows');
+    const dialog = document.getElementById('dialog');
+    const feedback = document.getElementById('feedback');
+    let activeRow;
+    let editor;
+
+    function closeEditor() {
+      if (!activeRow) return;
+      if (dialog.open) dialog.close();
+      editor.remove();
+      body.querySelector('.editor-row')?.remove();
+      activeRow.classList.remove('editing');
+      activeRow.querySelector('button').focus({ preventScroll: true });
+      activeRow = null;
+    }
+
+    function edit(example, row) {
+      closeEditor();
+      activeRow = row;
+      editor = document.getElementById('fields').content.firstElementChild.cloneNode(true);
+      const { quantity, notes } = editor.elements;
+      quantity.value = example.quantity;
+      notes.value = example.notes;
+      quantity.addEventListener('input', () => quantity.setCustomValidity(''));
+      editor.querySelector('.crud-cancel').addEventListener('click', closeEditor);
+      editor.addEventListener('submit', event => {
+        event.preventDefault();
+        const value = quantity.value.trim().replace('.', ',');
+        if (value && (!/^\d{1,9}(,\d{1,3})?$/.test(value) || Number(value.replace(',', '.')) <= 0)) {
+          quantity.setCustomValidity('Ingresá una cantidad positiva o dejala vacía.');
+          quantity.reportValidity();
+          return;
+        }
+        example.quantity = value;
+        example.notes = notes.value.trim();
+        row.querySelector('.quantity').textContent = value || '—';
+        row.querySelector('.note').textContent = example.notes || '—';
+        feedback.textContent = 'Cambios guardados en el ejemplo de ' + example.name;
+        closeEditor();
+      });
+      if (preview.classList.contains('compact')) {
+        const details = body.insertRow(row.sectionRowIndex + 1);
+        details.className = 'editor-row';
+        const cell = details.insertCell();
+        cell.colSpan = row.querySelectorAll('td').length;
+        cell.append(editor);
+        row.classList.add('editing');
+      } else {
+        document.getElementById('dialog-product').textContent = example.name;
+        dialog.append(editor);
+        dialog.showModal();
+      }
+      quantity.focus();
+    }
+
+    for (const item of examples) {
+      const row = document.getElementById('product-row').content.firstElementChild.cloneNode(true);
+      const date = item.day + '/11/2026';
+      const suppliers = item.suppliers || 'Sin proveedor asociado';
+      const state = item.ordered ? 'Pedido' : 'Pendiente';
+      row.querySelector('strong').textContent = item.name;
+      row.querySelector('.compact-only').textContent = '(' + date + ')';
+      row.querySelector('.full-only time').textContent = date;
+      for (const time of row.querySelectorAll('time')) time.dateTime = '2026-11-' + item.day;
+      row.querySelector('.suppliers').textContent = suppliers;
+      row.querySelector('.phone-meta').textContent = suppliers + ' · ' + state;
+      row.querySelector('.quantity').textContent = item.quantity || '—';
+      row.querySelector('.note').textContent = item.notes || '—';
+      const badge = row.querySelector('.restock-state');
+      badge.textContent = state;
+      if (item.ordered) badge.classList.add('restock-state-ordered');
+      const button = row.querySelector('button');
+      if (item.ordered) {
+        row.querySelector('.edit').textContent = '—';
+      } else {
+        button.setAttribute('aria-label', 'Editar ' + item.name);
+        button.addEventListener('click', () => edit(item, row));
+      }
+      body.append(row);
+    }
+    document.getElementById('total').textContent = examples.length + ' productos';
+    dialog.addEventListener('cancel', event => { event.preventDefault(); closeEditor(); });
+    function setView(mode) {
+      closeEditor();
+      preview.classList.toggle('compact', mode === 'compacta');
+      for (const button of document.querySelectorAll('[data-view]')) {
+        const active = button.dataset.view === mode;
+        button.setAttribute('aria-pressed', String(active));
+        button.classList.toggle('quiet', !active);
+      }
+    }
+    for (const button of document.querySelectorAll('[data-view]')) {
+      button.addEventListener('click', () => setView(button.dataset.view));
+    }
+    setView(location.hash === '#compacta' ? 'compacta' : 'completa');
+  </script>
+</body>
+</html>

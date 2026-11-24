@@ -104,7 +104,7 @@ def needs_index(request: Request, q: str = Query("", max_length=180), proveedor:
     pending = db.scalar(select(func.count(RestockNeed.id)).where(RestockNeed.status == "pending"))
     return show(request, "needs", section="needs", rows=rows, pending=pending, orders=restock.need_orders(db, rows.items),
                 q=q, product_filter_id=producto, supplier_filter=proveedor, supplier_name=vendor_name,
-                status=estado, starts=desde, ends=hasta, sort=orden, **search)
+                status=estado, starts=desde, ends=hasta, **search)
 
 
 @router.get("/buscar")
@@ -122,9 +122,9 @@ def search_products(request: Request, q: str = Query("", max_length=180), inclui
 
 @router.get("/proveedores/buscar")
 def search_suppliers(q: str = Query("", max_length=150), solo_activos: bool = False, sin_proveedor: bool = False,
-                     db: Session = Depends(get_db)):
+                     excluir: list[int] = Query(default=[]), db: Session = Depends(get_db)):
     try:
-        rows = restock.supplier_search(db, q, active_only=solo_activos)
+        rows = restock.supplier_search(db, q, active_only=solo_activos, excluded=excluir)
     except ValueError as error:
         raise HTTPException(422, str(error)) from None
     extra = [{"id": "none", "name": "Sin proveedor asociado"}] if sin_proveedor and (
@@ -186,23 +186,41 @@ def sync_products(request: Request, form: FormData = Depends(form_data), db: Ses
 
 
 def product_form(request, db, row=None, form=None, *, quick=False, name="", **context):
-    options = restock.suppliers_list(db)
     pending = False
+    supplier_query, supplier_matches = "", None
     if row:
         pending = db.scalar(select(RestockNeed.id).where(RestockNeed.product_id == row.id,
                                                         RestockNeed.status.in_(restock.ACTIVE_NEEDS)).limit(1)) is not None
-    relations = {link.supplier_id: link for link in row.suppliers} if row else {}
     if form is None:
         form = {"name": row.name if row else name, "barcode": row.barcode if row else "",
                 "active": "1" if not row or row.active else "0", "version": row.version if row else 1,
-                "request_key": str(uuid4()), "preferred": next((key for key, link in relations.items() if link.preferred), "")}
-        selected = set(relations)
+                "request_key": str(uuid4())}
+        selected = [link.supplier_id for link in row.suppliers] if row else []
     else:
-        selected = {option.id for option in options if str(option.id) in form.getlist("supplier_id")}
-    preferred = next((option for option in options if str(option.id) == str(form.get("preferred"))), None)
+        selected = []
+        for value in form.getlist("supplier_id"):
+            try:
+                selected.append(restock.positive_id(value))
+            except ValueError:
+                continue
+        try:
+            if "search_suppliers" in form:
+                supplier_query = form.get("supplier_query", "")
+                supplier_matches = restock.supplier_search(db, supplier_query, active_only=True, excluded=selected)
+            elif "remove_supplier" in form:
+                removed = restock.positive_id(form["remove_supplier"])
+                selected = [identifier for identifier in selected if identifier != removed]
+            elif "add_supplier" in form:
+                supplier = db.get(Supplier, restock.positive_id(form["add_supplier"]))
+                if not supplier or not supplier.active:
+                    raise ValueError("Elegí un proveedor activo")
+                selected.append(supplier.id)
+        except ValueError as error:
+            context.update(error=str(error), status_code=422)
+    suppliers = db.scalars(select(Supplier).where(Supplier.id.in_(selected))
+                          .order_by(Supplier.name_key, Supplier.id)).all() if selected else []
     return show(request, "product_form", section="products", row=row, values=form, quick=quick, pending=pending,
-                suppliers=[option for option in options if option.active or option.id in relations], selected=selected,
-                preferred_name=preferred.name if preferred else "", **context)
+                suppliers=suppliers, supplier_query=supplier_query, supplier_matches=supplier_matches, **context)
 
 
 @router.get("/productos/nuevo")
@@ -211,6 +229,11 @@ def new_product(request: Request, faltante: bool = False, nombre: str = Query(""
 
 
 def store_product(request, db, form, *, product_id=None, quick=False):
+    if not quick and any(action in form for action in ("search_suppliers", "add_supplier", "remove_supplier")):
+        row = db.get(RestockProduct, product_id) if product_id is not None else None
+        if product_id is not None and row is None:
+            raise HTTPException(404, "Producto no encontrado")
+        return product_form(request, db, row, form)
     return write(request, db, lambda: restock.save_product(db, form, form.getlist("supplier_id"),
                                                           product_id=product_id, add_need=quick),
                  "added" if quick else "product", "/faltantes" if quick else "/faltantes/productos",
@@ -239,7 +262,7 @@ def supplier_products(supplier_id: int, request: Request, q: str = Query("", max
         rows = paginate(db, restock.product_statement(q, supplier_id=None if todos else supplier_id, product_id=product_id), page)
     except ValueError as error:
         raise HTTPException(422, str(error)) from None
-    linked = {row.id for row in rows.items if any(link.supplier_id == supplier_id for link in row.suppliers)}
+    linked = {row.id: link for row in rows.items for link in row.suppliers if link.supplier_id == supplier_id}
     return show(request, "supplier_products", section="products", supplier=supplier, rows=rows, linked=linked,
                 q=q, product_filter_id=producto, all_products=todos)
 
@@ -248,6 +271,13 @@ def supplier_products(supplier_id: int, request: Request, q: str = Query("", max
 def link_products(supplier_id: int, request: Request, form: FormData = Depends(form_data), db: Session = Depends(get_db)):
     return write(request, db, lambda: restock.add_supplier_products(db, supplier_id, form.getlist("product_id")),
                  "linked", f"/faltantes/productos/proveedores/{supplier_id}")
+
+
+@router.post("/productos/proveedores/{supplier_id}/preferencia/{product_id}")
+def supplier_preference(supplier_id: int, product_id: int, request: Request, form: FormData = Depends(form_data),
+                        db: Session = Depends(get_db)):
+    return write(request, db, lambda: restock.set_supplier_preference(db, supplier_id, product_id, form),
+                 "edited", f"/faltantes/productos/proveedores/{supplier_id}")
 
 
 @router.get("/productos/{product_id}")

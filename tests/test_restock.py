@@ -200,6 +200,56 @@ def test_supplier_suggestions_respect_filters_and_ignore_accents(guest, vendors)
     ]
 
 
+def test_supplier_picker_excludes_associated_before_limiting(guest):
+    with SessionLocal() as db:
+        vendors = [Supplier(name=f"Depósito {i:02d}", name_key=f"depósito {i:02d}") for i in range(24)]
+        db.add_all(vendors)
+        db.flush()
+        ids = [row.id for row in vendors]
+        db.commit()
+    params = {"q": "depo", "solo_activos": "true", "excluir": ids[:20]}
+    matches = guest.get("/faltantes/proveedores/buscar", params=params).json()
+    assert [entry["id"] for entry in matches] == ids[20:]
+
+
+def test_product_form_draft_associations_preferences_and_validation(guest, vendors):
+    parra, other = vendors
+    product = make_product(guest, "Avena de prueba", [parra], preferred=parra)
+    path = f"/productos/{product}"
+    form = {"name": "Avena de prueba", "version": "1", "active": "1", "supplier_id": [parra]}
+    page = guest.get("/faltantes" + path).text
+    assert 'type="checkbox" name="supplier_id"' not in page and 'data-linked-suppliers' in page
+    assert 'Distribuidora B' not in page
+    assert 'name="orden"' not in guest.get("/faltantes").text
+    search = guest.post("/faltantes" + path, data={**form, "supplier_query": "distrib", "search_suppliers": "1"})
+    assert search.status_code == 200 and 'name="add_supplier"' in search.text and "Distribuidora B" in search.text
+    picked = guest.post("/faltantes" + path, data={**form, "add_supplier": other})
+    assert picked.status_code == 200 and f'name="supplier_id" value="{other}"' in picked.text
+    removed = guest.post("/faltantes" + path, data={**form, "remove_supplier": parra})
+    assert removed.status_code == 200 and f'name="supplier_id" value="{parra}"' not in removed.text
+    invalid = guest.post("/faltantes" + path, data={**form, "name": "", "supplier_id": [parra, other]})
+    assert invalid.status_code == 422 and f'name="supplier_id" value="{other}"' in invalid.text
+    with SessionLocal() as db:
+        assert [link.supplier_id for link in db.get(RestockProduct, product).suppliers] == [parra]
+    post(guest, path, {**form, "supplier_id": [parra, other]})
+    with SessionLocal() as db:
+        assert db.get(RestockProductSupplier, (product, parra)).preferred
+    preference = f"/productos/proveedores/{other}/preferencia/{product}"
+    post(guest, preference, {"version": "2", "preferred": "1"})
+    post(guest, path, form, 409)
+    with SessionLocal() as db:
+        links = db.get(RestockProduct, product).suppliers
+        assert {link.supplier_id for link in links} == {parra, other}
+        assert [link.supplier_id for link in links if link.preferred] == [other]
+    post(guest, preference, {"version": "3", "preferred": "0"})
+    post(guest, path, {**form, "version": "4", "supplier_id": [parra]})
+    post(guest, preference, {"version": "5", "preferred": "1"}, 409)
+    with SessionLocal() as db:
+        assert db.get(RestockProductSupplier, (product, other)) is None
+        assert not db.get(RestockProductSupplier, (product, parra)).preferred
+        assert db.get(Supplier, other).active
+
+
 def test_partial_receipt_cancellation_and_archived_vendor(guest, client, vendors):
     parra, _ = vendors
     needs = [make_need(guest, make_product(guest, name, [parra])) for name in ("Harina", "Aceite", "Nueces")]

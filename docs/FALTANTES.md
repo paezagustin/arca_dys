@@ -13,10 +13,12 @@ protección CSRF de los demás formularios. La lista es compartida entre disposi
    los valores se muestran en la misma tarjeta. Al pie derecho, **Gestionar
    Proveedores** abre la ficha y **Eliminar** pide confirmar la baja lógica.
 2. Usá **Sin proveedor asociado** para encontrar faltantes sin un proveedor activo.
-   Abrí **Gestionar proveedores** para completar los vínculos. En **Productos**
-   podés buscar, editar y archivar fichas. Desde **Productos
-   por proveedor** o la ficha de Gestión podés seleccionar varias fichas de la
-   página y asociarlas juntas. La preferencia solo orienta la compra.
+   Abrí **Gestionar Proveedores**, escribí parte del nombre y elegí una sugerencia.
+   Los proveedores elegidos aparecen debajo del buscador. **Eliminar** quita
+   esa asociación de la lista. **Guardar** aplica los cambios y **Cancelar** los
+   descarta. En **Productos** podés buscar, editar y archivar fichas. Desde
+   **Productos por proveedor** podés marcar o quitar una preferencia y asociar
+   varios productos a la vez. La preferencia solo orienta la compra.
 3. En **Pedidos**, escribí el proveedor y elegilo en las sugerencias para cargar
    sus faltantes automáticamente. Seleccioná los productos. Ajustá cantidades
    y observaciones y revisá el mensaje. Podés copiarlo o abrir WhatsApp si el

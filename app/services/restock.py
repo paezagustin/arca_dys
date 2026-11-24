@@ -125,10 +125,23 @@ def suppliers_list(db, *, active_only=False):
     return list(db.scalars(query))
 
 
-def supplier_search(db, q, *, active_only):
+def supplier_search(db, q, *, active_only, excluded=()):
     words = normalized(checked_text(q, "el proveedor", 150)).split()
-    return [row for row in suppliers_list(db, active_only=active_only)
-            if all(word in normalized(row.name) for word in words)][:20]
+    query = select(Supplier.id, Supplier.name, Supplier.active).order_by(Supplier.name_key, Supplier.id)
+    if active_only:
+        query = query.where(Supplier.active.is_(True))
+    if excluded:
+        query = query.where(Supplier.id.not_in([positive_id(value) for value in excluded]))
+    if not words:
+        return db.execute(query.limit(20)).all()
+    matches = []
+    for row in db.execute(query.execution_options(yield_per=100)):
+        name = normalized(row.name)
+        if all(word in name for word in words):
+            matches.append(row)
+            if len(matches) == 20:
+                break
+    return matches
 
 
 def supplier_link(supplier_id):
@@ -219,6 +232,8 @@ def save_product(db, values, supplier_ids=(), *, product_id=None, add_need=False
             raise SimilarProducts(matches)
 
     existing = {link.supplier_id: link for link in row.suppliers} if row else {}
+    if "preferred" not in values:
+        preferred = next((identifier for identifier, link in existing.items() if link.preferred and identifier in suppliers), None)
     if any(not supplier.active and identifier not in existing for identifier, supplier in suppliers.items()):
         raise Conflict("Solo podés sumar proveedores activos")
     if row is None:
@@ -270,6 +285,28 @@ def add_supplier_products(db, supplier_id, selections):
             db.add(RestockProductSupplier(product_id=product.id, supplier_id=supplier_id))
             product.version += 1
     return len(ids - linked)
+
+
+def set_supplier_preference(db, supplier_id, product_id, values):
+    desired = values.get("preferred")
+    if desired not in {"0", "1"}:
+        raise ValueError("Elegí una preferencia válida")
+    supplier = db.get(Supplier, supplier_id, with_for_update={"read": True})
+    product = db.get(RestockProduct, product_id, with_for_update=True)
+    if supplier is None or product is None:
+        raise LookupError("Producto o proveedor no encontrado")
+    require_version(product, values.get("version"))
+    link = db.get(RestockProductSupplier, (product_id, supplier_id))
+    if link is None or (desired == "1" and not supplier.active):
+        raise Conflict("Revisá los proveedores asociados antes de cambiar la preferencia")
+    if link.preferred != (desired == "1"):
+        if desired == "1":
+            for previous in product.suppliers:
+                if previous.preferred:
+                    previous.preferred = False
+            db.flush()
+        link.preferred = desired == "1"
+        product.version += 1
 
 
 def need_orders(db, needs):

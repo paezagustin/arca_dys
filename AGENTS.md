@@ -68,6 +68,11 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 ## Convenciones de interfaz
 - Reutilizar el breadcrumb de `components.html` y los estilos de los reportes:
   **Buscar** usa el botón primario y **Limpiar** usa `button quiet`.
+- En formularios de alta o edición, usar `actions crud-actions` al pie de la
+  región. Ubicar **Cancelar** a la izquierda con `button quiet crud-cancel` y
+  el botón primario a la derecha con el texto **Guardar**.
+- En la ficha de producto, usar el buscador para agregar proveedores y listar
+  debajo solo los asociados, con **Eliminar** por fila. Guardar aplica el conjunto.
 - Usar el autocompletado de Nuevo fiado para buscar entre muchas opciones, como
   productos o proveedores. Reservar los `select` para listas cortas y estables,
   como estados. Al elegir un filtro, actualizar el reporte sin otro clic y sin

@@ -47,6 +47,7 @@
   min-width: 0;
 }
 .restock-wide { grid-column: 1 / -1; }
+.restock-fields > .field + .field, .restock-purchase-fields > .field + .field { margin-top: 0; }
 .restock .field label { margin-bottom: 4px; }
 .restock-filter-fields {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
@@ -145,9 +146,14 @@
 .restock-disclosure form > button { margin-top: 8px; }
 .restock-editor { display: grid; gap: 14px; }
 .restock-status-field { width: min(100%, 380px); }
-.restock-supplier-options, .restock-duplicates { min-width: 0; border: 1px solid var(--line); border-radius: 10px; }
-.restock-duplicates { background: #fff8e8; }
-.restock-check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 4px 14px; }
+.restock-duplicates { min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: #fff8e8; }
+.restock-linked-suppliers { width: min(100%, 38rem); min-width: 0; }
+.restock-linked-suppliers > p { margin: 10px 0 0; }
+.restock-supplier-list { list-style: none; margin: 0; padding: 0; }
+.restock-supplier-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding: 8px 0; }
+.restock-supplier-list button { flex: none; }
+.restock [data-remove-supplier] { display: none; }
+.restock[data-restock-ready] [data-remove-supplier] { display: inline-flex; }
 .restock-check { display: flex; align-items: center; gap: 9px; min-height: 44px; cursor: pointer; }
 .restock-check input[type=checkbox] { width: 21px; height: 21px; flex: none; margin: 0; accent-color: var(--brand); }
 .restock-select-all { padding: 0 9px; }

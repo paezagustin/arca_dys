@@ -5,6 +5,14 @@
 {% block restock_location %}
 {{ breadcrumb([('Faltantes','/faltantes'),(title,none)] if quick else [('Faltantes','/faltantes'),('Productos','/faltantes/productos'),(title,none)]) }}
 {% endblock %}
+{% macro supplier_row(id='', name='', active=true) -%}
+<li>
+  <input type="hidden" name="supplier_id" value="{{ id }}">
+  <span data-supplier-name>{{ name }}{% if not active %} (inactivo){% endif %}</span>
+  <button type="button" class="danger" data-remove-supplier aria-label="Eliminar {{ name }}">Eliminar</button>
+  {% if id %}<noscript><button type="submit" class="danger" name="remove_supplier" value="{{ id }}" formnovalidate aria-label="Eliminar {{ name }}">Eliminar</button></noscript>{% endif %}
+</li>
+{%- endmacro %}
 {% block restock_content %}
 <h1>{{ title }}</h1>
 {% if error %}<p class="notice error" role="alert" data-inline-notice>{{ error }}</p>{% endif %}
@@ -31,17 +39,28 @@
   {% if row %}<div class="field restock-status-field"><label for="restock-active">Estado local</label><select id="restock-active" name="active">
     <option value="1"{% if values.active == '1' %} selected{% endif %}>Activo</option><option value="0"{% if values.active == '0' %} selected{% endif %}>Archivado</option>
   </select></div>{% endif %}
-  {% if suppliers and not quick %}
-  <fieldset class="restock-supplier-options" data-restock-supplier-options>
-    <legend>Proveedores asociados</legend>
-    <div class="restock-check-grid">
-      {% for row in suppliers %}<label class="restock-check"><input type="checkbox" name="supplier_id" value="{{ row.id }}"{% if row.id in selected %} checked{% endif %}> {{ row.name }}{% if not row.active %} (inactivo){% endif %}</label>{% endfor %}
-    </div>
-    <div class="restock-status-field">
-      {{ supplier_picker('preferred', preferred_name, values.preferred or '', 'Proveedor preferido', key='preferred') }}
-    </div>
-  </fieldset>
+  {% if not quick %}
+  <section class="restock-linked-suppliers" aria-label="Proveedores asociados" data-linked-suppliers>
+    {{ supplier_picker('associate', value=supplier_query, label='Proveedores asociados', extra='?solo_activos=true', key='') }}
+    <noscript>
+      <button type="submit" name="search_suppliers" value="1" formnovalidate>Buscar</button>
+      {% if supplier_matches is not none %}
+      <ul class="restock-supplier-list">{% for match in supplier_matches %}
+        <li><button type="submit" class="quiet" name="add_supplier" value="{{ match.id }}" formnovalidate>{{ match.name }}</button></li>
+      {% else %}<li>No hay coincidencias.</li>{% endfor %}</ul>
+      {% endif %}
+    </noscript>
+    <ul class="restock-supplier-list" aria-label="Proveedores seleccionados">{% for supplier in suppliers %}
+      {{ supplier_row(supplier.id, supplier.name, supplier.active) }}
+    {% endfor %}</ul>
+    <p class="muted" data-no-suppliers{% if suppliers %} hidden{% endif %}>Sin proveedores asociados.</p>
+    <template>{{ supplier_row() }}</template>
+    <span class="sr-only" role="status" data-association-status></span>
+  </section>
   {% endif %}
-  <div class="actions"><button type="submit">{{ 'Crear y registrar' if quick else 'Guardar producto' }}</button><a class="button quiet" href="{{ '/faltantes' if quick else '/faltantes/productos' }}">Cancelar</a></div>
+  <div class="actions crud-actions">
+    <a class="button quiet crud-cancel" href="{{ '/faltantes' if quick else '/faltantes/productos' }}">Cancelar</a>
+    <button type="submit">Guardar</button>
+  </div>
 </form>
 {% endblock %}
