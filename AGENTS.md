@@ -75,8 +75,11 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 - En Faltantes, las sugerencias de productos muestran el nombre y, cuando
   corresponde, **Ya pedido**. No mostrar unidad, presentación ni descripción en
   las pantallas o mensajes de reposición. Conservar sus valores históricos.
-- La baja lógica de un faltante pendiente se inicia con **Eliminar**, visible
-  abajo a la izquierda de la tarjeta, y usa la confirmación compartida.
+- En cada tarjeta de Faltantes, poner la fecha entre paréntesis junto al título.
+  Dejar **Gestionar Proveedores** y **Eliminar** juntos al pie derecho, con
+  **Eliminar** al final y con la confirmación compartida para la baja lógica.
+  Mostrar los detalles guardados en la tarjeta y ofrecer un diálogo compacto
+  para editar la cantidad y las observaciones.
 
 ## Ajustes H12 de formularios y navegación
 - Altas de montos manuales vacías con placeholder 0,00; conservar valores guardados

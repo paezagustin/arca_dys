@@ -28,7 +28,9 @@
     });
     if (!restoreFocus) return;
     const pager = updated.querySelector('.pagination');
-    const destination = (focused.rel && pager?.querySelector(`a[rel="${focused.rel}"]`))
+    const focusKey = focused.dataset.reportFocusKey;
+    const destination = (focusKey && updated.querySelector(`[data-report-focus-key="${CSS.escape(focusKey)}"]`))
+      || (focused.rel && pager?.querySelector(`a[rel="${focused.rel}"]`))
       || pager || updated.querySelector('.report-heading') || updated;
     if (destination.tabIndex < 0) destination.tabIndex = -1;
     destination.focus({ preventScroll: true });

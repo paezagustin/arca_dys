@@ -1,6 +1,7 @@
 (() => {
   const page = document.querySelector('[data-restock]');
   if (!page) return;
+  page.dataset.restockReady = '';
   const main = page.closest('main');
   const search = page.querySelector('[data-restock-search]');
   const choice = page.querySelector('[data-register-choice]');
@@ -133,16 +134,30 @@
     const data = new URLSearchParams(new FormData(form));
     if (event.submitter?.name) data.append(event.submitter.name, event.submitter.value);
     const submit = event.submitter || form.querySelector('button[type=submit], [data-confirm-trigger]');
+    const details = form.closest('dialog[data-restock-details]');
+    const detailsError = details?.querySelector('[data-restock-details-error]');
+    const cancel = details?.querySelector('[data-restock-details-close]');
+    function showError(message) {
+      if (detailsError) {
+        detailsError.textContent = message;
+        detailsError.hidden = false;
+      } else {
+        announce(message, true);
+      }
+    }
     form.dataset.saving = 'true';
     form.setAttribute('aria-busy', 'true');
     if (submit) submit.disabled = true;
+    if (cancel) cancel.disabled = true;
+    if (detailsError) detailsError.hidden = true;
     outstandingWrites += 1;
     try {
       const response = await fetch(form.action, { method: 'POST', headers: { Accept: 'application/json' }, body: data });
       const result = await response.json();
       if (!response.ok) {
-        announce(result.detail || 'No se pudo guardar. Volvé a intentar.', true);
-        if (result.duplicates) warnDuplicates(form, result.duplicates);
+        showError(result.detail || 'No se pudo guardar. Volvé a intentar.');
+        if (details && (response.status === 409 || response.status === 404)) details.dataset.refreshOnClose = '';
+        else if (result.duplicates) warnDuplicates(form, result.duplicates);
         else if (response.status === 409) {
           if (form === choice) resetRegistration();
           refreshReport();
@@ -153,6 +168,7 @@
         location.assign(result.url);
         return;
       }
+      details?.close();
       announce(result.message);
       if (form === choice || quickCreate?.contains(form)) {
         search.elements.buscar.value = '';
@@ -161,13 +177,15 @@
         search.elements.buscar.focus({ preventScroll: true });
       }
       refreshReport();
-    } catch (error) {
-      announce('No se pudo confirmar el guardado. Revisá la lista o volvé a intentar.', true);
+    } catch {
+      showError('No se pudo confirmar el guardado. Volvé a intentar.');
     } finally {
       outstandingWrites -= 1;
       delete form.dataset.saving;
       form.removeAttribute('aria-busy');
-      if (submit) submit.disabled = form.matches('[data-restock-draft]') && !form.querySelector('[name=need_id]:checked');
+      if (cancel) cancel.disabled = false;
+      if (submit) submit.disabled = details?.hasAttribute('data-refresh-on-close')
+        || (form.matches('[data-restock-draft]') && !form.querySelector('[name=need_id]:checked'));
     }
   });
 
@@ -219,6 +237,16 @@
   }
 
   page.addEventListener('click', event => {
+    const details = event.target.closest('[data-restock-details-open]');
+    if (details) {
+      document.getElementById(details.getAttribute('aria-controls')).showModal();
+      return;
+    }
+    const close = event.target.closest('[data-restock-details-close]');
+    if (close) {
+      close.closest('dialog').close();
+      return;
+    }
     const copy = event.target.closest('[data-restock-copy]');
     if (copy) copyOrder(copy.form);
     const receipt = event.target.closest('[data-receipt-set]');
@@ -227,6 +255,26 @@
       for (const select of receipt.form.querySelectorAll('[data-receipt-outcome]')) select.value = receipt.dataset.receiptSet;
     }
   });
+
+  page.addEventListener('cancel', event => {
+    if (event.target.matches('dialog[data-restock-details]') && event.target.querySelector('form[data-saving]')) {
+      event.preventDefault();
+    }
+  }, true);
+
+  page.addEventListener('close', event => {
+    const dialog = event.target;
+    if (!dialog.matches('dialog[data-restock-details]')) return;
+    const form = dialog.querySelector('form');
+    form.reset();
+    form.querySelector('button[type=submit]').disabled = false;
+    delete form.dataset.dirty;
+    form.querySelector('[data-restock-details-error]').hidden = true;
+    if (dialog.hasAttribute('data-refresh-on-close')) {
+      delete dialog.dataset.refreshOnClose;
+      refreshReport();
+    }
+  }, true);
 
   page.addEventListener('change', event => {
     const input = event.target;
@@ -259,7 +307,7 @@
   function refreshOnReturn() {
     if (document.visibilityState !== 'visible' || outstandingWrites) return;
     const region = page.querySelector('[data-restock-refresh]');
-    if (region && !region.querySelector('form[data-dirty]')) refreshReport();
+    if (region && !region.querySelector('form[data-dirty], dialog[open]')) refreshReport();
   }
 
   main.addEventListener('report:updated', initializeControls);

@@ -2,10 +2,16 @@
 <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 {%- endmacro %}
 
-{% macro purchase_fields(id, row=none, suffix='') -%}
-<div class="restock-fields restock-purchase-fields">
-  <div class="field"><label for="{{ id }}-quantity">Cantidad</label><input id="{{ id }}-quantity" name="quantity{{ suffix }}" inputmode="decimal" maxlength="13" value="{{ row.quantity|restock_quantity if row else '' }}"></div>
-  <div class="field"><label for="{{ id }}-notes">Observaciones</label><textarea id="{{ id }}-notes" name="notes{{ suffix }}" rows="2" maxlength="1000">{{ row.notes if row else '' }}</textarea></div>
+{% macro purchase_fields(id, row=none, suffix='', autofocus=false) -%}
+<div class="restock-purchase-fields">
+  <div class="field">
+    <label for="{{ id }}-quantity">Cantidad</label>
+    <input id="{{ id }}-quantity" name="quantity{{ suffix }}" inputmode="decimal" autocomplete="off" maxlength="13" placeholder="Ej. 2,5" value="{{ row.quantity|restock_quantity if row else '' }}"{% if autofocus %} autofocus{% endif %}>
+  </div>
+  <div class="field">
+    <label for="{{ id }}-notes">Observaciones</label>
+    <textarea id="{{ id }}-notes" name="notes{{ suffix }}" rows="3" maxlength="1000">{{ row.notes if row else '' }}</textarea>
+  </div>
 </div>
 {%- endmacro %}
 

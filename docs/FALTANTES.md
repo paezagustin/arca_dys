@@ -8,8 +8,10 @@ protección CSRF de los demás formularios. La lista es compartida entre disposi
 1. En **Faltantes**, escribí el nombre o código de barras y seleccioná el producto
    en las sugerencias. Si ya está en un pedido vas a ver **Ya pedido**. Pulsá
    **Registrar faltante**. Si no hay coincidencias, podés crearlo desde la
-   búsqueda. Desde la tarjeta se puede editar cantidad u observaciones, o pulsar
-   **Eliminar** para pasar el faltante a Cancelados.
+   búsqueda. La fecha está junto al nombre. **Agregar detalles** o **Editar
+   detalles** abre los campos opcionales de cantidad y observaciones. Al guardar,
+   los valores se muestran en la misma tarjeta. Al pie derecho, **Gestionar
+   Proveedores** abre la ficha y **Eliminar** pide confirmar la baja lógica.
 2. Usá **Sin proveedor asociado** para encontrar faltantes sin un proveedor activo.
    Abrí **Gestionar proveedores** para completar los vínculos. En **Productos**
    podés buscar, editar y archivar fichas. Desde **Productos

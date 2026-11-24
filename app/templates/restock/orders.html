@@ -25,8 +25,8 @@
           {{ unavailable(product) }}
         </div>
         <input type="hidden" name="version_{{ row.id }}" value="{{ row.version }}"><input type="hidden" name="product_version_{{ row.id }}" value="{{ product.version }}">
-        <details class="restock-disclosure">
-          <summary>Editar cantidad u observaciones{% if row.quantity %} · {{ row.quantity|restock_quantity }}{% endif %}</summary>
+        <details class="restock-disclosure restock-draft-details">
+          <summary>Cantidad y observaciones{% if row.quantity %} · {{ row.quantity|restock_quantity }}{% endif %}</summary>
           {{ purchase_fields('draft-' ~ row.id, row, '_' ~ row.id) }}
         </details>
         {% if row.notes %}<p class="restock-note muted">{{ row.notes }}</p>{% endif %}

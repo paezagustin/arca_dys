@@ -26,13 +26,14 @@ def money_input(value):
         return ""
 
 
-def local_date(value):
+def local_date(value, include_time=True):
     if value is None:
         return "Sin fecha"
     if isinstance(value, datetime):
         if value.tzinfo:
             value = value.astimezone(ZoneInfo("America/Argentina/Buenos_Aires"))
-        return value.strftime("%d/%m/%Y %H:%M")
+        if include_time:
+            return value.strftime("%d/%m/%Y %H:%M")
     return value.strftime("%d/%m/%Y")
 
 
