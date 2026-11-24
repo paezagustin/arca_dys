@@ -1,10 +1,10 @@
 {% extends "restock/layout.html" %}
-{% from "restock/components.html" import csrf, purchase_fields, supplier_select, unavailable with context %}
+{% from "restock/components.html" import csrf, purchase_fields, supplier_picker, unavailable with context %}
 {% block restock_content %}
 <h1>Preparar pedido</h1>
-<form class="card restock-filters restock-supplier-nav" method="get" action="/faltantes/pedidos" data-report-filter>
-  {{ supplier_select(suppliers, requested_supplier, all_label='Elegí un proveedor', required=true) }}
-  <button type="submit" class="quiet">Ver faltantes</button>
+<form class="card restock-filters restock-order-filter" method="get" action="/faltantes/pedidos" data-report-filter>
+  {{ supplier_picker(value=supplier.name if supplier else '', selected=requested_supplier, extra='?solo_activos=true') }}
+  <noscript><ul>{% for option in suppliers %}<li><a href="?proveedor={{ option.id }}">{{ option.name }}</a></li>{% endfor %}</ul></noscript>
 </form>
 
 <section data-report-results="draft" data-restock-refresh aria-labelledby="restock-order-heading">
@@ -19,15 +19,14 @@
     <ul class="restock-list">
       {% for row in rows %}
       {% set product = row.product %}
-      <li class="card restock-item" data-draft-line data-name="{{ product.name }}" data-presentation="{{ product.presentation }}" data-description="{{ product.description|truncate(180) if product.source else '' }}">
+      <li class="card restock-item" data-draft-line data-name="{{ product.name }}">
         <div class="restock-item-head">
-          <label class="restock-check restock-draft-product"><input type="checkbox" name="need_id" value="{{ row.id }}"><span><strong>{{ product.name }}</strong>{% if product.presentation %}<span class="restock-presentation">{{ product.presentation }}</span>{% endif %}</span></label>
+          <label class="restock-check restock-draft-product"><input type="checkbox" name="need_id" value="{{ row.id }}"><strong>{{ product.name }}</strong></label>
           {{ unavailable(product) }}
         </div>
-        {% if product.source and product.description %}<p class="restock-note muted">{{ product.description|truncate(180) }}</p>{% endif %}
         <input type="hidden" name="version_{{ row.id }}" value="{{ row.version }}"><input type="hidden" name="product_version_{{ row.id }}" value="{{ product.version }}">
         <details class="restock-disclosure">
-          <summary>Editar cantidad u observaciones{% if row.quantity or row.unit %} · {{ row.quantity|restock_quantity }} {{ row.unit }}{% endif %}</summary>
+          <summary>Editar cantidad u observaciones{% if row.quantity %} · {{ row.quantity|restock_quantity }}{% endif %}</summary>
           {{ purchase_fields('draft-' ~ row.id, row, '_' ~ row.id) }}
         </details>
         {% if row.notes %}<p class="restock-note muted">{{ row.notes }}</p>{% endif %}

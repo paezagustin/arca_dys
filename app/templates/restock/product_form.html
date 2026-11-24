@@ -1,8 +1,12 @@
 {% extends "restock/layout.html" %}
-{% from "restock/components.html" import csrf, unavailable with context %}
+{% from "restock/components.html" import csrf, supplier_picker, unavailable with context %}
+{% from "components.html" import breadcrumb with context %}
+{% set title = 'Editar producto' if row else 'Crear y registrar faltante' if quick else 'Nuevo producto' %}
+{% block restock_location %}
+{{ breadcrumb([('Faltantes','/faltantes'),(title,none)] if quick else [('Faltantes','/faltantes'),('Productos','/faltantes/productos'),(title,none)]) }}
+{% endblock %}
 {% block restock_content %}
-<a class="restock-back" href="{{ '/faltantes' if quick else '/faltantes/productos' }}">← {{ 'Faltantes' if quick else 'Productos' }}</a>
-<h1>{{ 'Editar producto' if row else 'Crear y registrar faltante' if quick else 'Nuevo producto' }}</h1>
+<h1>{{ title }}</h1>
 {% if error %}<p class="notice error" role="alert" data-inline-notice>{{ error }}</p>{% endif %}
 {% if row %}
   {% if not row.available and pending %}<p class="notice warning" role="status" data-inline-notice>El producto tiene una reposición activa. Podés resolverla en Faltantes o en el pedido correspondiente.</p>{% endif %}
@@ -10,21 +14,18 @@
 <form class="card restock-editor" method="post" action="{{ '/faltantes/productos/rapido' if quick else '/faltantes/productos/' ~ row.id if row else '/faltantes/productos/nuevo' }}">
   {{ csrf() }}<input type="hidden" name="request_key" value="{{ values.request_key or '' }}"><input type="hidden" name="version" value="{{ values.version or '' }}">
   {% if row and row.source %}
-  <div class="restock-item-head"><div><h2>{{ row.name }}</h2>{% if row.presentation %}<p>{{ row.presentation }}</p>{% endif %}</div>{{ unavailable(row) }}</div>
-  {% if row.description %}<p class="restock-note">{{ row.description }}</p>{% endif %}
+  <div class="restock-item-head"><h2>{{ row.name }}</h2>{{ unavailable(row) }}</div>
   <p class="restock-meta"><span>Dulce y Salado · {{ row.external_id }}</span>{% if row.barcode %}<span>{{ row.barcode }}</span>{% endif %}</p>
   {% else %}
   <div class="restock-fields">
     <div class="field"><label for="restock-name">Nombre</label><input id="restock-name" name="name" value="{{ values.name or '' }}" maxlength="180" required></div>
-    <div class="field"><label for="restock-presentation">Presentación</label><input id="restock-presentation" name="presentation" value="{{ values.presentation or '' }}" maxlength="160"></div>
     <div class="field"><label for="restock-barcode">Código de barras</label><input id="restock-barcode" name="barcode" value="{{ values.barcode or '' }}" maxlength="100"></div>
-    <div class="field restock-wide"><label for="restock-description">Descripción</label><textarea id="restock-description" name="description" maxlength="4000" rows="3">{{ values.description or '' }}</textarea></div>
   </div>
   {% endif %}
   {% if duplicates %}
   <fieldset class="restock-duplicates"><legend>Productos similares</legend>
-    <ul>{% for match in duplicates %}<li><a href="/faltantes/productos/{{ match.id }}">{{ match.name }}{% if match.presentation %} · {{ match.presentation }}{% endif %}</a></li>{% endfor %}</ul>
-    <label class="restock-check"><input type="checkbox" name="allow_duplicate" value="1" required> Es otro producto o presentación.</label>
+    <ul>{% for match in duplicates %}<li><a href="/faltantes/productos/{{ match.id }}">{{ match.name }}</a></li>{% endfor %}</ul>
+    <label class="restock-check"><input type="checkbox" name="allow_duplicate" value="1" required> Es otro producto.</label>
   </fieldset>
   {% endif %}
   {% if row %}<div class="field restock-status-field"><label for="restock-active">Estado local</label><select id="restock-active" name="active">
@@ -36,10 +37,9 @@
     <div class="restock-check-grid">
       {% for row in suppliers %}<label class="restock-check"><input type="checkbox" name="supplier_id" value="{{ row.id }}"{% if row.id in selected %} checked{% endif %}> {{ row.name }}{% if not row.active %} (inactivo){% endif %}</label>{% endfor %}
     </div>
-    <div class="field restock-status-field"><label for="restock-preferred">Proveedor preferido</label><select id="restock-preferred" name="preferred">
-      <option value="">Sin preferencia</option>
-      {% for row in suppliers %}<option value="{{ row.id }}"{% if row.id|string == values.preferred|string %} selected{% endif %}>{{ row.name }}{% if not row.active %} (inactivo){% endif %}</option>{% endfor %}
-    </select></div>
+    <div class="restock-status-field">
+      {{ supplier_picker('preferred', preferred_name, values.preferred or '', 'Proveedor preferido', key='preferred') }}
+    </div>
   </fieldset>
   {% endif %}
   <div class="actions"><button type="submit">{{ 'Crear y registrar' if quick else 'Guardar producto' }}</button><a class="button quiet" href="{{ '/faltantes' if quick else '/faltantes/productos' }}">Cancelar</a></div>

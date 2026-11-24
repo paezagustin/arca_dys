@@ -59,45 +59,77 @@ def write(request, db, action, notice, location, *, invalid=None, navigate=False
         if wants_json(request):
             details = {"detail": message}
             if isinstance(error, restock.SimilarProducts):
-                details["duplicates"] = [{"name": row.name, "presentation": row.presentation} for row in error.candidates]
+                details["duplicates"] = [row.name for row in error.candidates]
             return JSONResponse(details, status_code=status)
         if invalid:
             return invalid(status, message, getattr(error, "candidates", ()))
         raise HTTPException(status, message) from None
     target = location(result) if callable(location) else location
     if wants_json(request):
-        return {"message": NOTICES[notice], "url": f"{target}?aviso={notice}" if navigate else None}
+        reply = {"message": NOTICES[notice], "url": f"{target}?aviso={notice}" if navigate else None}
+        if notice == "added":
+            reply["request_key"] = str(uuid4())
+        return reply
     return RedirectResponse(f"{target}?aviso={notice}", status_code=303)
 
 
 def search_context(db, query):
-    rows, needs, orders = restock.product_search(db, query)
-    return {"query": query, "matches": rows, "matched_needs": needs, "matched_orders": orders,
-            "keys": {row.id: str(uuid4()) for row in rows}, "quick_key": str(uuid4())}
+    rows = restock.product_search(db, query)
+    return {"query": query, "matches": rows, "keys": {row.id: str(uuid4()) for row in rows if not row.status},
+            "quick_key": str(uuid4())}
+
+
+def supplier_label(db, identifier):
+    if not identifier:
+        return ""
+    if identifier == "none":
+        return "Sin proveedor asociado"
+    supplier = db.get(Supplier, restock.positive_id(identifier))
+    return supplier.name + (" (inactivo)" if not supplier.active else "") if supplier else ""
 
 
 @router.get("")
 def needs_index(request: Request, q: str = Query("", max_length=180), proveedor: str = "", estado: str = "pending",
                 desde: str = Query("", max_length=10), hasta: str = Query("", max_length=10), orden: str = "oldest",
-                buscar: str = Query("", max_length=180), page: int = Query(1, ge=1), db: Session = Depends(get_db)):
+                buscar: str = Query("", max_length=180), producto: str = "", page: int = Query(1, ge=1),
+                db: Session = Depends(get_db)):
     try:
-        statement = restock.need_statement(q, proveedor, estado, desde, hasta, orden)
+        product_id = restock.positive_id(producto) if producto else None
+        statement = restock.need_statement(q, proveedor, estado, desde, hasta, orden, product_id=product_id)
+        vendor_name = supplier_label(db, proveedor)
         search = search_context(db, buscar)
     except ValueError as error:
         raise HTTPException(422, str(error)) from None
     rows = paginate(db, statement, page)
     pending = db.scalar(select(func.count(RestockNeed.id)).where(RestockNeed.status == "pending"))
     return show(request, "needs", section="needs", rows=rows, pending=pending, orders=restock.need_orders(db, rows.items),
-                suppliers=restock.suppliers_list(db), q=q, supplier_filter=proveedor, status=estado,
-                starts=desde, ends=hasta, sort=orden, **search)
+                q=q, product_filter_id=producto, supplier_filter=proveedor, supplier_name=vendor_name,
+                status=estado, starts=desde, ends=hasta, sort=orden, **search)
 
 
 @router.get("/buscar")
-def search_products(q: str = Query("", max_length=180), *, request: Request, db: Session = Depends(get_db)):
+def search_products(request: Request, q: str = Query("", max_length=180), incluir_archivados: bool = False,
+                    db: Session = Depends(get_db)):
     try:
+        if wants_json(request):
+            return [{"id": row.id, "name": row.name, "status": row.status,
+                     "key": str(uuid4()) if not row.status and not incluir_archivados else None}
+                    for row in restock.product_search(db, q, include_archived=incluir_archivados)]
         return show(request, "search_results", **search_context(db, q))
     except ValueError as error:
         raise HTTPException(422, str(error)) from None
+
+
+@router.get("/proveedores/buscar")
+def search_suppliers(q: str = Query("", max_length=150), solo_activos: bool = False, sin_proveedor: bool = False,
+                     db: Session = Depends(get_db)):
+    try:
+        rows = restock.supplier_search(db, q, active_only=solo_activos)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from None
+    extra = [{"id": "none", "name": "Sin proveedor asociado"}] if sin_proveedor and (
+        not q.strip() or "sin proveedor asociado".startswith(q.lower().strip())) else []
+    return extra + [{"id": row.id, "name": row.name + (" (inactivo)" if not row.active else "")} for row in rows]
 
 
 @router.post("/registrar/{product_id}")
@@ -117,16 +149,18 @@ def cancel_need(need_id: int, request: Request, form: FormData = Depends(form_da
 
 @router.get("/productos")
 def products_index(request: Request, q: str = Query("", max_length=180), vinculo: str = "", estado: str = "",
-                   proveedor: int | None = Query(None, ge=1, le=2147483647), page: int = Query(1, ge=1),
+                   proveedor: str = "", producto: str = "", page: int = Query(1, ge=1),
                    db: Session = Depends(get_db)):
-    if proveedor:
-        return RedirectResponse(f"/faltantes/productos/proveedores/{proveedor}", status_code=303)
     try:
-        rows = paginate(db, restock.product_statement(q, vinculo, estado), page)
+        if proveedor:
+            identifier = restock.positive_id(proveedor)
+            return RedirectResponse(f"/faltantes/productos/proveedores/{identifier}", status_code=303)
+        product_id = restock.positive_id(producto) if producto else None
+        rows = paginate(db, restock.product_statement(q, vinculo, estado, product_id=product_id), page)
     except ValueError as error:
         raise HTTPException(422, str(error)) from None
-    return show(request, "products", section="products", rows=rows, q=q, link_filter=vinculo, status=estado,
-                suppliers=restock.suppliers_list(db), sync=db.get(RestockCatalogSync, restock_catalog.SOURCE),
+    return show(request, "products", section="products", rows=rows, q=q, product_filter_id=producto,
+                link_filter=vinculo, status=estado, sync=db.get(RestockCatalogSync, restock_catalog.SOURCE),
                 catalog_ready=callable(getattr(request.app.state, "restock_catalog_fetch", None)))
 
 
@@ -159,15 +193,16 @@ def product_form(request, db, row=None, form=None, *, quick=False, name="", **co
                                                         RestockNeed.status.in_(restock.ACTIVE_NEEDS)).limit(1)) is not None
     relations = {link.supplier_id: link for link in row.suppliers} if row else {}
     if form is None:
-        form = {"name": row.name if row else name, "description": row.description if row else "",
-                "presentation": row.presentation if row else "", "barcode": row.barcode if row else "",
+        form = {"name": row.name if row else name, "barcode": row.barcode if row else "",
                 "active": "1" if not row or row.active else "0", "version": row.version if row else 1,
                 "request_key": str(uuid4()), "preferred": next((key for key, link in relations.items() if link.preferred), "")}
         selected = set(relations)
     else:
         selected = {option.id for option in options if str(option.id) in form.getlist("supplier_id")}
+    preferred = next((option for option in options if str(option.id) == str(form.get("preferred"))), None)
     return show(request, "product_form", section="products", row=row, values=form, quick=quick, pending=pending,
-                suppliers=[option for option in options if option.active or option.id in relations], selected=selected, **context)
+                suppliers=[option for option in options if option.active or option.id in relations], selected=selected,
+                preferred_name=preferred.name if preferred else "", **context)
 
 
 @router.get("/productos/nuevo")
@@ -195,16 +230,18 @@ def quick_product(request: Request, form: FormData = Depends(form_data), db: Ses
 
 @router.get("/productos/proveedores/{supplier_id}")
 def supplier_products(supplier_id: int, request: Request, q: str = Query("", max_length=180), todos: bool = False,
-                      page: int = Query(1, ge=1), db: Session = Depends(get_db)):
+                      producto: str = "", page: int = Query(1, ge=1), db: Session = Depends(get_db)):
     supplier = db.get(Supplier, supplier_id)
     if supplier is None:
         raise HTTPException(404, "Proveedor no encontrado")
     try:
-        rows = paginate(db, restock.product_statement(q, supplier_id=None if todos else supplier_id), page)
+        product_id = restock.positive_id(producto) if producto else None
+        rows = paginate(db, restock.product_statement(q, supplier_id=None if todos else supplier_id, product_id=product_id), page)
     except ValueError as error:
         raise HTTPException(422, str(error)) from None
     linked = {row.id for row in rows.items if any(link.supplier_id == supplier_id for link in row.suppliers)}
-    return show(request, "supplier_products", section="products", supplier=supplier, rows=rows, linked=linked, q=q, all_products=todos)
+    return show(request, "supplier_products", section="products", supplier=supplier, rows=rows, linked=linked,
+                q=q, product_filter_id=producto, all_products=todos)
 
 
 @router.post("/productos/proveedores/{supplier_id}")
@@ -227,10 +264,15 @@ def update_product(product_id: int, request: Request, form: FormData = Depends(f
 
 
 @router.get("/pedidos")
-def orders_index(request: Request, proveedor: int | None = Query(None, ge=1, le=2147483647), db: Session = Depends(get_db)):
-    suppliers = restock.suppliers_list(db, active_only=True)
-    supplier = next((row for row in suppliers if row.id == proveedor), None)
-    return show(request, "orders", section="orders", suppliers=suppliers, supplier=supplier, requested_supplier=proveedor,
+def orders_index(request: Request, proveedor: str = "", db: Session = Depends(get_db)):
+    try:
+        supplier = db.get(Supplier, restock.positive_id(proveedor)) if proveedor else None
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from None
+    if supplier and not supplier.active:
+        supplier = None
+    return show(request, "orders", section="orders", suppliers=restock.suppliers_list(db, active_only=True),
+                supplier=supplier, requested_supplier=proveedor,
                 rows=restock.eligible_needs(db, supplier.id) if supplier else (), request_key=str(uuid4()),
                 whatsapp=restock.whatsapp_destination(supplier.contact) if supplier else "")
 
@@ -253,13 +295,16 @@ def create_order(supplier_id: int, request: Request, form: FormData = Depends(fo
 @router.get("/historial")
 def history_index(request: Request, q: str = Query("", max_length=180), proveedor: str = "", estado: str = "",
                   desde: str = Query("", max_length=10), hasta: str = Query("", max_length=10),
-                  page: int = Query(1, ge=1), db: Session = Depends(get_db)):
+                  producto: str = "", page: int = Query(1, ge=1), db: Session = Depends(get_db)):
     try:
-        rows = paginate(db, restock.order_history(q, proveedor, estado, desde, hasta), page, scalars=False)
+        product_id = restock.positive_id(producto) if producto else None
+        statement = restock.order_history(q, proveedor, estado, desde, hasta, product_id=product_id)
+        vendor_name = supplier_label(db, proveedor)
+        rows = paginate(db, statement, page, scalars=False)
     except ValueError as error:
         raise HTTPException(422, str(error)) from None
-    return show(request, "history", section="history", rows=rows, suppliers=restock.suppliers_list(db), q=q,
-                supplier_filter=proveedor, status=estado, starts=desde, ends=hasta)
+    return show(request, "history", section="history", rows=rows, q=q, product_filter_id=producto,
+                supplier_filter=proveedor, supplier_name=vendor_name, status=estado, starts=desde, ends=hasta)
 
 
 @router.get("/historial/{order_id}")

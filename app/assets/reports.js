@@ -36,12 +36,21 @@
 
   function syncFilter(controls, updatedFilter) {
     for (const [control, sentValue] of controls) {
-      const updated = updatedFilter.elements.namedItem(control.name);
+      const updated = control.name ? updatedFilter.elements.namedItem(control.name)
+        : updatedFilter.querySelector(`#${CSS.escape(control.id)}`);
       if (!updated) continue;
       const unchanged = control.value === sentValue;
-      if (control instanceof HTMLInputElement) control.defaultValue = updated.value;
       // Preserve an edit that the user made while the previous query was in flight.
       if (unchanged && control.value !== updated.value) control.value = updated.value;
+      if (control instanceof HTMLInputElement && control.type !== 'hidden') {
+        if (!unchanged) {
+          const current = control.value;
+          control.defaultValue = updated.value;
+          control.value = current;
+        } else {
+          control.defaultValue = updated.value;
+        }
+      }
     }
   }
 
@@ -52,7 +61,7 @@
     const regions = [...main.querySelectorAll(resultSelector)];
     const affected = regions.filter(region => !key || region.dataset.reportResults === key);
     const controls = !key && filter ? [...filter.elements]
-      .filter(control => control.name && control.matches('input, select'))
+      .filter(control => (control.name || control.matches('[data-report-value][id]')) && control.matches('input, select'))
       .map(control => [control, control.value]) : [];
     regions.forEach(region => region.removeAttribute('aria-busy'));
     affected.forEach(region => region.setAttribute('aria-busy', 'true'));

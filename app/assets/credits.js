@@ -20,98 +20,43 @@
   function picker(root) {
     const form = root.closest('form'), input = root.querySelector('[role=combobox]');
     const id = root.querySelector('[name=customer_id]'), version = form.querySelector('[name=version]');
-    const options = root.querySelector('[role=listbox]'), status = root.querySelector('[data-person-status]');
+    const status = root.querySelector('[data-suggestions-status]');
     const summary = root.querySelector('[data-person-summary]'), existing = root.querySelector('[data-person-existing]');
     const creating = root.querySelector('[data-person-new-fields]'), flag = root.querySelector('[name=new_customer]');
-    let controller, timer, request = 0, active = -1, selected = [], choosing = false;
     const money = digits => '$\u00a0' + CreditMoney.format(String(digits));
-    function hide() {
-      ++request; clearTimeout(timer); controller?.abort();
-      options.hidden = true; input.setAttribute('aria-expanded','false');
-      input.removeAttribute('aria-activedescendant'); active = -1;
-    }
-    function position() {
-      if (options.hidden) return;
-      const rect = input.getBoundingClientRect(), viewport = window.visualViewport;
-      const bottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
-      const spaceBelow = bottom - rect.bottom - 12, spaceAbove = rect.top - (viewport?.offsetTop || 0) - 12;
-      const above = spaceBelow < 150 && spaceAbove > spaceBelow;
-      const height = Math.max(60, Math.min(280, above ? spaceAbove : spaceBelow));
-      options.style.left = rect.left + 'px'; options.style.width = rect.width + 'px';
-      options.style.maxHeight = height + 'px';
-      options.style.top = above ? Math.max(4,rect.top - Math.min(options.scrollHeight,height) - 4) + 'px' : (rect.bottom + 4) + 'px';
-    }
-    function highlight(index) {
-      if (!selected.length) return;
-      active = Math.max(0,Math.min(index,selected.length - 1));
-      const items = [...options.querySelectorAll('[role=option]')];
-      items.forEach((item,n) => item.setAttribute('aria-selected',String(n === active)));
-      input.setAttribute('aria-activedescendant',items[active].id);
-      const current = items[active];
-      if (current.offsetTop < options.scrollTop) options.scrollTop = current.offsetTop;
-      if (current.offsetTop + current.offsetHeight > options.scrollTop + options.clientHeight) options.scrollTop = current.offsetTop + current.offsetHeight - options.clientHeight;
-    }
-    function choose(row) {
-      input.value = row.name; id.value = row.id; version.value = row.version;
-      input.setCustomValidity(''); summary.textContent = 'Saldo actual: ' + money(row.balance);
-      const distinct = form.querySelector('[name=distinct_person]');
-      if (distinct) distinct.disabled = true;
-      hide(); status.textContent = row.name + ' seleccionada.'; input.focus();
-    }
-    async function search() {
-      const current = ++request;
-      controller?.abort(); controller = new AbortController();
-      try {
-        const response = await fetch('/fiados/personas/buscar?q=' + encodeURIComponent(input.value), {signal:controller.signal,headers:{Accept:'application/json'}});
+    const lifecycle = new AbortController();
+    const suggestions = AppSuggestions.attach(root, {
+      signal: lifecycle.signal,
+      async load(value, signal) {
+        const response = await fetch('/fiados/personas/buscar?q=' + encodeURIComponent(value), { signal, headers: { Accept: 'application/json' } });
         if (!response.ok) throw Error('search');
-        const rows = await response.json();
-        if (current !== request || input.disabled || document.activeElement !== input) return;
-        options.replaceChildren(); active = -1; selected = rows;
-        rows.forEach(row => {
-          const li = document.createElement('li'); li.role = 'option'; li.id = 'credit-person-' + row.id; li.setAttribute('aria-selected','false');
-          const text = document.createElement('span'), name = document.createElement('strong'), alias = document.createElement('small'), amount = document.createElement('span');
-          name.textContent = row.name; alias.textContent = row.alias; amount.textContent = money(row.balance); amount.className = 'money';
-          text.append(name); if (row.alias) text.append(alias); li.append(text,amount);
-          li.addEventListener('mousedown', event => event.preventDefault());
-          li.addEventListener('pointerdown', () => { choosing = true; });
-          li.addEventListener('pointercancel', () => { choosing = false; });
-          li.addEventListener('click', () => { choosing = false; choose(row); });
-          options.append(li);
-        });
-        if (!rows.length) { const li = document.createElement('li'); li.className = 'credit-no-results'; li.textContent = 'No hay coincidencias. Podés crear una persona nueva.'; options.append(li); }
-        status.textContent = rows.length
-          ? (rows.length === 1 ? '1 coincidencia.' : rows.length + ' coincidencias.') + ' Usá las flechas y Enter para elegir.'
-          : 'No hay coincidencias.';
-        options.hidden = false; input.setAttribute('aria-expanded','true'); position();
-      } catch (error) {
-        if (current === request && error.name !== 'AbortError') { hide(); status.textContent = 'No se pudo buscar. Volvé a escribir para intentarlo otra vez.'; }
-      }
+        return response.json();
+      },
+      render(option, row) {
+        const text = document.createElement('span'), name = document.createElement('strong'), alias = document.createElement('small'), amount = document.createElement('span');
+        name.textContent = row.name; alias.textContent = row.alias; amount.textContent = money(row.balance); amount.className = 'money';
+        text.append(name); if (row.alias) text.append(alias); option.append(text, amount);
+      },
+      choose(row) {
+        input.value = row.name; id.value = row.id; version.value = row.version;
+        input.setCustomValidity(''); summary.textContent = 'Saldo actual: ' + money(row.balance);
+        const distinct = form.querySelector('[name=distinct_person]');
+        if (distinct) distinct.disabled = true;
+        status.textContent = row.name + ' seleccionada.';
+      },
+      edit() {
+        id.value = ''; version.value = ''; summary.textContent = '';
+        input.setCustomValidity('Seleccioná una persona de la lista o creá una nueva.');
+      },
+      emptyMessage() { return 'No hay coincidencias. Podés crear una persona nueva.'; },
+    });
+    if (dialog.contains(root)) {
+      dialog.addEventListener('close', () => lifecycle.abort(), { once: true });
+      // Una validación del servidor puede sustituir el formulario sin cerrar el diálogo.
+      root.addEventListener('credit:replace', () => lifecycle.abort(), { once: true });
     }
-    input.addEventListener('input', () => {
-      hide(); id.value = ''; version.value = ''; summary.textContent = ''; status.textContent = '';
-      input.setCustomValidity('Seleccioná una persona de la lista o creá una nueva.');
-      timer = setTimeout(search,150);
-    });
-    input.addEventListener('focus', search);
-    input.addEventListener('blur', () => { setTimeout(() => { if (!choosing) hide(); },0); });
-    input.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && !options.hidden) { event.preventDefault(); event.stopPropagation(); hide(); }
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        event.preventDefault();
-        if (options.hidden) search(); else highlight(active + (event.key === 'ArrowDown' ? 1 : -1));
-      }
-      if (event.key === 'Enter' && !options.hidden) { event.preventDefault(); if (active >= 0) choose(selected[active]); }
-      if (event.key === 'Tab') hide();
-    });
-    // Las opciones están en posición fija, dentro del mismo diálogo: no alteran el formulario.
-    const adjust = () => { if (root.isConnected) position(); };
-    const observer = new AbortController(), signal = observer.signal;
-    window.addEventListener('resize',adjust,{signal}); window.addEventListener('scroll',adjust,{capture:true,signal});
-    window.visualViewport?.addEventListener('resize',adjust,{signal}); window.visualViewport?.addEventListener('scroll',adjust,{signal});
-    document.addEventListener('pointerup', () => { choosing = false; }, {signal});
-    dialog.addEventListener('close', () => { hide(); observer.abort(); },{once:true});
     function switchMode(newPerson) {
-      hide(); flag.value = newPerson ? '1' : '0'; existing.hidden = newPerson;
+      suggestions.close(); flag.value = newPerson ? '1' : '0'; existing.hidden = newPerson;
       input.disabled = newPerson; creating.hidden = !newPerson; creating.disabled = !newPerson;
       id.value = ''; version.value = ''; summary.textContent = ''; status.textContent = '';
       const distinct = form.querySelector('[name=distinct_person]');
@@ -119,7 +64,9 @@
       if (newPerson) {
         const name = creating.querySelector('[name=name]'); if (!name.value) name.value = input.value;
         name.focus();
-      } else { input.setCustomValidity('Seleccioná una persona de la lista.'); input.focus(); }
+      } else {
+        input.setCustomValidity('Seleccioná una persona de la lista.'); input.focus();
+      }
     }
     root.querySelector('[data-person-new]').addEventListener('click', event => { event.preventDefault(); switchMode(true); });
     root.querySelector('[data-person-existing-link]').addEventListener('click', event => { event.preventDefault(); switchMode(false); });
@@ -164,6 +111,7 @@
         const document = new DOMParser().parseFromString(await response.text(),'text/html');
         const content = document.querySelector('[data-credit-form-content]');
         if (!content) throw Error('response');
+        form.querySelector('[data-credit-person]')?.dispatchEvent(new Event('credit:replace'));
         body.replaceChildren(content); dialog.querySelector('#credit-dialog-title').textContent = content.dataset.title;
         initialize(body); (body.querySelector('input:not([type=hidden]):not([readonly]):not(:disabled)') || body.querySelector('button[type=submit]')).focus();
       } catch {

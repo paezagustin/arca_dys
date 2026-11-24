@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+{% from "components.html" import breadcrumb with context %}
 {% block title %}{{ {'needs':'Faltantes','orders':'Pedidos a proveedores','history':'Historial de pedidos','products':'Productos de reposición'}[section] }}{% endblock %}
 {% block head_extra %}
 <link rel="stylesheet" href="{{ asset_url('restock.css') }}">
+<script src="{{ asset_url('suggestions.js') }}" defer></script>
 <script src="{{ asset_url('restock.js') }}" defer></script>
 {% endblock %}
 {% block content %}
@@ -11,6 +13,9 @@
     <a href="{{ url }}"{% if section == key %} aria-current="page"{% endif %}>{{ title }}</a>
     {% endfor %}
   </nav>
+  {% block restock_location %}
+  {% if section != 'needs' %}{{ breadcrumb([('Faltantes','/faltantes'),({'orders':'Pedidos','history':'Historial','products':'Productos'}[section],none)]) }}{% endif %}
+  {% endblock %}
   <p class="notice success restock-feedback" role="status" data-restock-feedback{% if not notice %} hidden{% endif %}>{{ notice or '' }}</p>
   {% block restock_content %}{% endblock %}
 </div>

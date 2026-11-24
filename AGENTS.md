@@ -65,6 +65,19 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
   limpieza manual futura de Gestión conservando control fiscal. No repetir el
   vaciado total ni ejecutar operaciones productivas desde esta sesión.
 
+## Convenciones de interfaz
+- Reutilizar el breadcrumb de `components.html` y los estilos de los reportes:
+  **Buscar** usa el botón primario y **Limpiar** usa `button quiet`.
+- Usar el autocompletado de Nuevo fiado para buscar entre muchas opciones, como
+  productos o proveedores. Reservar los `select` para listas cortas y estables,
+  como estados. Al elegir un filtro, actualizar el reporte sin otro clic y sin
+  desplazar al usuario. Alinear los controles de cada fila en móvil y escritorio.
+- En Faltantes, las sugerencias de productos muestran el nombre y, cuando
+  corresponde, **Ya pedido**. No mostrar unidad, presentación ni descripción en
+  las pantallas o mensajes de reposición. Conservar sus valores históricos.
+- La baja lógica de un faltante pendiente se inicia con **Eliminar**, visible
+  abajo a la izquierda de la tarjeta, y usa la confirmación compartida.
+
 ## Ajustes H12 de formularios y navegación
 - Altas de montos manuales vacías con placeholder 0,00; conservar valores guardados
   al editar, importes de revisión y configuración. MP sigue sugiriendo el total

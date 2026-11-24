@@ -5,8 +5,7 @@
 {% macro purchase_fields(id, row=none, suffix='') -%}
 <div class="restock-fields restock-purchase-fields">
   <div class="field"><label for="{{ id }}-quantity">Cantidad</label><input id="{{ id }}-quantity" name="quantity{{ suffix }}" inputmode="decimal" maxlength="13" value="{{ row.quantity|restock_quantity if row else '' }}"></div>
-  <div class="field"><label for="{{ id }}-unit">Unidad de compra</label><input id="{{ id }}-unit" name="unit{{ suffix }}" maxlength="160" value="{{ row.unit if row else '' }}" placeholder="Ej. bolsas de 25 kg"></div>
-  <div class="field restock-wide"><label for="{{ id }}-notes">Observaciones</label><textarea id="{{ id }}-notes" name="notes{{ suffix }}" rows="2" maxlength="1000">{{ row.notes if row else '' }}</textarea></div>
+  <div class="field"><label for="{{ id }}-notes">Observaciones</label><textarea id="{{ id }}-notes" name="notes{{ suffix }}" rows="2" maxlength="1000">{{ row.notes if row else '' }}</textarea></div>
 </div>
 {%- endmacro %}
 
@@ -15,14 +14,41 @@
 <div class="field"><label for="restock-end">Hasta</label><input id="restock-end" name="hasta" type="date" min="1900-01-01" value="{{ ends }}"></div>
 {%- endmacro %}
 
-{% macro supplier_select(suppliers, selected, include_none=false, all_label='Todos', required=false) -%}
-<div class="field"><label for="restock-supplier">Proveedor</label>
-  <select id="restock-supplier" name="proveedor"{% if required %} required{% endif %}>
-    <option value="">{{ all_label }}</option>
-    {% if include_none %}<option value="none"{% if selected == 'none' %} selected{% endif %}>Sin proveedor asociado</option>{% endif %}
-    {% for row in suppliers %}<option value="{{ row.id }}"{% if selected|string == row.id|string %} selected{% endif %}>{{ row.name }}{% if not row.active %} (inactivo){% endif %}</option>{% endfor %}
-  </select>
+{% macro picker(id, label, endpoint, mode, placeholder, value='', name='', key='', selected='', max_length=180) -%}
+<div class="field" data-restock-picker="{{ mode }}" data-endpoint="{{ endpoint }}">
+  <label for="{{ id }}">{{ label }}</label>
+  {% if key %}<input type="hidden" name="{{ key }}" value="{{ selected }}" data-picker-key>{% endif %}
+  <input type="search" id="{{ id }}"{% if name %} name="{{ name }}"{% endif %} value="{{ value }}" maxlength="{{ max_length }}"
+         placeholder="{{ placeholder }}" autocomplete="off" role="combobox" aria-autocomplete="list"
+         aria-expanded="false" aria-controls="{{ id }}-options"{% if mode == 'supplier' %} data-report-value{% endif %}>
+  <ul id="{{ id }}-options" class="suggestion-options" role="listbox" aria-label="Sugerencias" hidden></ul>
+  <span class="sr-only" role="status" data-suggestions-status></span>
 </div>
+{%- endmacro %}
+
+{% macro product_filter(id, q, selected='') -%}
+{{ picker(id, 'Producto', '/faltantes/buscar?incluir_archivados=true', 'product', 'Buscar producto…', q, 'q', 'producto', selected) }}
+{%- endmacro %}
+
+{% macro supplier_picker(mode='supplier', value='', selected='', label='Proveedor', extra='', key='proveedor') -%}
+{{ picker('restock-' ~ mode, label, '/faltantes/proveedores/buscar' ~ extra, mode, 'Buscar proveedor…',
+          value=value, key=key, selected=selected, max_length=150) }}
+{%- endmacro %}
+
+{% macro filter_actions(url) -%}
+<div class="actions"><button type="submit">Buscar</button><a class="button quiet" href="{{ url }}" data-report-link>Limpiar</a></div>
+{%- endmacro %}
+
+{% macro quick_create(key, value='') -%}
+<form method="post" action="/faltantes/productos/rapido" data-restock-write>
+  {{ csrf() }}<input type="hidden" name="request_key" value="{{ key }}">
+  <div class="field"><label for="restock-quick-name-{{ key }}">Nombre</label><input id="restock-quick-name-{{ key }}" name="name" value="{{ value }}" required maxlength="180"></div>
+  <fieldset class="restock-duplicates" data-restock-duplicates hidden>
+    <legend>Productos similares</legend><ul></ul>
+    <label class="restock-check"><input type="checkbox" name="allow_duplicate" value="1"> Es otro producto.</label>
+  </fieldset>
+  <button type="submit">Crear y registrar</button>
+</form>
 {%- endmacro %}
 
 {% macro association_list(product) -%}

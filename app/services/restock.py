@@ -67,10 +67,11 @@ def require_version(row, version):
         raise Conflict(str(error)) from error
 
 
-def product_fields(values, *, from_catalog=False):
+def product_fields(values, *, from_catalog=False, previous=None):
     name = checked_text(values.get("name"), "el nombre", 180, required=True)
-    description = checked_text(values.get("description"), "la descripción", 65536 if from_catalog else 4000)
-    presentation = checked_text(values.get("presentation"), "la presentación", 160)
+    description = checked_text(values.get("description", previous.description if previous else ""),
+                               "la descripción", 65536 if from_catalog else 4000)
+    presentation = checked_text(values.get("presentation", previous.presentation if previous else ""), "la presentación", 160)
     barcode = checked_text(values.get("barcode"), "el código de barras", 100)
     searchable = f"{name} {presentation} {barcode}"
     if from_catalog and description:
@@ -91,8 +92,10 @@ def purchase_fields(values, suffix=""):
                 raise ValueError()
         except (ValueError, InvalidOperation):
             raise ValueError("Ingresá una cantidad positiva de hasta 9 enteros y 3 decimales, o dejala vacía") from None
-    return dict(quantity=quantity, unit=checked_text(values.get("unit" + suffix), "la unidad", 160),
-                notes=checked_text(values.get("notes" + suffix), "las observaciones", 1000))
+    fields = dict(quantity=quantity, notes=checked_text(values.get("notes" + suffix), "las observaciones", 1000))
+    if "unit" + suffix in values:
+        fields["unit"] = checked_text(values["unit" + suffix], "la unidad", 160)
+    return fields
 
 
 def matching(column, query):
@@ -122,6 +125,12 @@ def suppliers_list(db, *, active_only=False):
     return list(db.scalars(query))
 
 
+def supplier_search(db, q, *, active_only):
+    words = normalized(checked_text(q, "el proveedor", 150)).split()
+    return [row for row in suppliers_list(db, active_only=active_only)
+            if all(word in normalized(row.name) for word in words)][:20]
+
+
 def supplier_link(supplier_id):
     return select(RestockProductSupplier.product_id).where(
         RestockProductSupplier.product_id == RestockProduct.id,
@@ -139,28 +148,40 @@ def association_options():
     return selectinload(RestockProduct.suppliers).joinedload(RestockProductSupplier.supplier)
 
 
-def product_statement(q="", links="", status="", supplier_id=None):
-    available = RestockProduct.active.is_(True) & or_(RestockProduct.catalog_status.is_(None),
-                                                     RestockProduct.catalog_status == "active")
-    query = select(RestockProduct).options(association_options()).where(*matching(RestockProduct.search_text, q))
+def available_product():
+    return RestockProduct.active.is_(True) & or_(RestockProduct.catalog_status.is_(None),
+                                                RestockProduct.catalog_status == "active")
+
+
+def product_conditions(q, product_id):
+    if product_id is not None:
+        return [RestockProduct.id == product_id]
+    return matching(RestockProduct.search_text, q)
+
+
+def product_statement(q="", links="", status="", supplier_id=None, *, product_id=None):
+    query = select(RestockProduct).options(association_options()).where(*product_conditions(q, product_id))
     if links not in {"", "with", "without"} or status not in {"", "active", "archived"}:
         raise ValueError("Elegí un filtro de productos válido")
     if links:
         query = query.where(has_active_supplier() if links == "with" else ~has_active_supplier())
     if status:
+        available = available_product()
         query = query.where(available if status == "active" else ~available)
     if supplier_id:
         query = query.where(supplier_link(supplier_id))
     return query.order_by(RestockProduct.name_key, RestockProduct.presentation, RestockProduct.id)
 
 
-def product_search(db, q):
+def product_search(db, q, *, include_archived=False):
     if not normalized(q):
-        return [], {}, {}
-    products = list(db.scalars(product_statement(q, status="active").limit(20)))
-    needs = {row.product_id: row for row in db.scalars(select(RestockNeed).where(
-        RestockNeed.product_id.in_([row.id for row in products]), RestockNeed.status.in_(ACTIVE_NEEDS)))}
-    return products, needs, need_orders(db, needs.values())
+        return []
+    query = select(RestockProduct.id, RestockProduct.name, RestockNeed.status).outerjoin(
+        RestockNeed, (RestockNeed.product_id == RestockProduct.id) & RestockNeed.status.in_(ACTIVE_NEEDS)
+    ).where(*matching(RestockProduct.search_text, q)).order_by(RestockProduct.name_key, RestockProduct.id).limit(20)
+    if not include_archived:
+        query = query.where(available_product())
+    return list(db.execute(query))
 
 
 def save_product(db, values, supplier_ids=(), *, product_id=None, add_need=False):
@@ -186,7 +207,7 @@ def save_product(db, values, supplier_ids=(), *, product_id=None, add_need=False
         raise LookupError("Producto no encontrado")
     if row:
         require_version(row, values.get("version"))
-    fields = product_fields(values) if not row or not row.source else {}
+    fields = product_fields(values, previous=row) if not row or not row.source else {}
     if fields and (not row or row.name_key != fields["name_key"] or row.barcode != fields["barcode"]):
         criteria = RestockProduct.name_key == fields["name_key"]
         if fields["barcode"]:
@@ -299,11 +320,11 @@ def change_need(db, need_id, values, *, cancel=False):
     row.version += 1
 
 
-def need_statement(q="", supplier="", status="pending", starts="", ends="", sort="oldest"):
+def need_statement(q="", supplier="", status="pending", starts="", ends="", sort="oldest", *, product_id=None):
     if status not in {"all", *NEED_STATES} or sort not in {"oldest", "newest", "name"}:
         raise ValueError("Elegí filtros y orden válidos")
     query = select(RestockNeed).join(RestockProduct).options(joinedload(RestockNeed.product).options(association_options())).where(
-        *matching(RestockProduct.search_text, q), *date_conditions(RestockNeed.created_at, starts, ends))
+        *product_conditions(q, product_id), *date_conditions(RestockNeed.created_at, starts, ends))
     if status != "all":
         query = query.where(RestockNeed.status == status)
     if supplier == "none":
@@ -378,10 +399,11 @@ def register_order(db, supplier_id, values, selections):
     for selection in selections:
         need = needs[selection.need_id]
         product = products[need.product_id]
+        purchase = {"unit": need.unit, **selection.purchase}
         order.lines.append(SupplierOrderLine(need_id=need.id, product_name=product.name,
                                              product_description=product.description if product.source and product.description else None,
                                              presentation=product.presentation, barcode=product.barcode,
-                                             search_text=product.search_text, **selection.purchase))
+                                             search_text=product.search_text, **purchase))
         need.status = "ordered"
         need.version += 1
     return order
@@ -442,16 +464,18 @@ def order_counts():
     return total.label("line_count"), status.label("status")
 
 
-def order_history(q, supplier, status, starts, ends):
+def order_history(q, supplier, status, starts, ends, *, product_id=None):
     if status and status not in ORDER_STATES:
         raise ValueError("Elegí un estado de pedido válido")
     query = select(SupplierOrder).where(*date_conditions(SupplierOrder.created_at, starts, ends))
     if supplier:
         query = query.where(SupplierOrder.supplier_id == positive_id(supplier))
-    if terms := matching(SupplierOrderLine.search_text, q):
-        query = query.where(select(SupplierOrderLine.id).where(SupplierOrderLine.order_id == SupplierOrder.id,
-                                                               *terms).exists())
     line = SupplierOrderLine
+    if product_id is not None:
+        query = query.where(select(line.id).join(RestockNeed, RestockNeed.id == line.need_id).where(
+            line.order_id == SupplierOrder.id, RestockNeed.product_id == product_id).exists())
+    elif terms := matching(line.search_text, q):
+        query = query.where(select(line.id).where(line.order_id == SupplierOrder.id, *terms).exists())
     stats = select(line.order_id, *order_counts()).group_by(line.order_id).subquery()
     query = query.add_columns(stats.c.line_count, stats.c.status).join(stats, stats.c.order_id == SupplierOrder.id)
     if status:

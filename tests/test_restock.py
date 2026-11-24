@@ -90,31 +90,37 @@ def order_id(result):
 
 def test_products_search_associations_filters_and_preferred(guest, vendors):
     parra, other = vendors
-    product = make_product(guest, "Cúrcuma molida", (parra, other, parra), presentation="Bolsa de 25 kg", barcode="001123456", preferred=parra)
+    product = make_product(guest, "Cúrcuma molida", (parra, other, parra), presentation="Bolsa de 25 kg",
+                           description="Descripción del proveedor", barcode="001123456", preferred=parra)
     local = make_product(guest, "Envase de vidrio")
     candidate = {"name": "Curcuma molida", "presentation": "Paquete de 100 g", "request_key": key()}
     reply = post(guest, "/productos/nuevo", candidate, 409)
-    assert reply["duplicates"][0]["presentation"] == "Bolsa de 25 kg"
+    assert reply["duplicates"] == ["Cúrcuma molida"]
     post(guest, "/productos/nuevo", {**candidate, "allow_duplicate": "1"})
     post(guest, "/productos/nuevo", {**candidate, "allow_duplicate": "1"})
 
     assert "Cúrcuma molida" in guest.get("/faltantes/buscar", params={"q": "CURC bolsa"}).text
-    assert "Bolsa de 25 kg" in guest.get("/faltantes/buscar", params={"q": "001123456"}).text
+    matches = guest.get("/faltantes/buscar?q=001123456", headers={"Accept": "application/json"}).json()
+    assert len(matches) == 1 and matches[0]["id"] == product and matches[0]["name"] == "Cúrcuma molida"
+    assert matches[0]["status"] is None and set(matches[0]) == {"id", "name", "key", "status"}
     assert "Curcuma molida" in guest.get("/faltantes/buscar", params={"q": "curcuma 100"}).text
     result = guest.get("/faltantes/productos?vinculo=without").text
     assert "Envase de vidrio" in result and "Cúrcuma molida" not in result
     result = guest.get("/faltantes/productos?vinculo=with").text
     assert "Cúrcuma molida" in result and "Envase de vidrio" not in result
 
-    values = {"name": "Cúrcuma especial", "active": "1", "presentation": "Bolsa de 25 kg", "version": "1",
+    values = {"name": "Cúrcuma especial", "active": "1", "barcode": "001123456", "version": "1",
               "supplier_id": [parra, other], "preferred": other}
     post(guest, f"/productos/{product}", values)
     post(guest, f"/productos/{product}", values, 409)
     post(guest, f"/productos/proveedores/{other}", {"product_id": [product, local, local]})
     linked = guest.get(f"/faltantes/productos/proveedores/{other}").text
     assert "Envase de vidrio" in linked and "Cúrcuma especial" in linked
+    exact = guest.get(f"/faltantes/productos?producto={product}&q=curcuma").text
+    assert "Cúrcuma especial" in exact and "Curcuma molida" not in exact
     with SessionLocal() as db:
         row = db.get(RestockProduct, product)
+        assert row.presentation == "Bolsa de 25 kg" and row.description == "Descripción del proveedor"
         assert len(row.suppliers) == 2
         assert [link.supplier_id for link in row.suppliers if link.preferred] == [other]
         assert db.scalar(select(func.count(RestockProduct.id))) == 3
@@ -140,6 +146,8 @@ def test_shared_shortage_order_retries_and_snapshots(guest, vendors):
     assert "Avena arrollada" in options and "Cacao amargo" in options and 'data-restock-whatsapp="5491100000000"' in options
     values = {**draft(parra, a), f"quantity_{a}": "2,5", f"unit_{a}": "bolsas", f"notes_{a}": "Para la semana"}
     first = order_id(post(guest, f"/pedidos/{parra}", values))
+    suggestions = guest.get("/faltantes/buscar?q=avena", headers={"Accept": "application/json"}).json()
+    assert suggestions == [{"id": oats, "name": "Avena arrollada", "status": "ordered", "key": None}]
     assert order_id(post(guest, f"/pedidos/{parra}", values)) == first
     post(guest, f"/pedidos/{parra}", {**values, "order_notes": "Distinto"}, 409)
     assert "Cacao amargo" in guest.get(f"/faltantes/pedidos?proveedor={parra}").text
@@ -163,15 +171,33 @@ def test_shared_shortage_order_retries_and_snapshots(guest, vendors):
     history = guest.get("/faltantes/historial", params={"q": "avena 25", "estado": "short", "desde": today, "hasta": today}).text
     assert f"#{first} · Parra" in history and f"#{second} · Distribuidora B" not in history
     detail = guest.get(f"/faltantes/historial/{first}").text
-    assert "Avena arrollada" in detail and "Bolsa de 25 kg" in detail and "2,5 bolsas" in detail
+    assert "Avena arrollada" in detail and "Cantidad 2,5" in detail
+    assert "Bolsa de 25 kg" not in detail and "2,5 bolsas" not in detail
     assert "No entregado" in detail and "Se agotó" in detail and "Avena renombrada" not in detail
     assert "Recibido completamente" in guest.get(f"/faltantes/historial/{second}").text
     with SessionLocal() as db:
         assert db.get(RestockNeed, b).status == "pending"
+        assert db.get(SupplierOrder, first).lines[0].presentation == "Bolsa de 25 kg"
+        assert db.get(SupplierOrder, first).lines[0].unit == "bolsas"
         labels = db.scalar(select(RestockProduct.id).where(RestockProduct.name == "Etiquetas blancas"))
         assert db.scalar(select(func.count()).select_from(RestockNeed).where(RestockNeed.product_id == labels)) == 1
     post(guest, f"/productos/proveedores/{other}", {"product_id": [labels]})
     assert "Etiquetas blancas" not in guest.get("/faltantes?proveedor=none").text
+
+
+def test_supplier_suggestions_respect_filters_and_ignore_accents(guest, vendors):
+    parra, _ = vendors
+    with SessionLocal() as db:
+        row = db.get(Supplier, parra)
+        row.name = "Depósito Parra"
+        row.active = False
+        db.commit()
+    response = guest.get("/faltantes/proveedores/buscar?q=depo%20parra")
+    assert response.json() == [{"id": parra, "name": "Depósito Parra (inactivo)"}]
+    assert guest.get("/faltantes/proveedores/buscar?q=depo&solo_activos=true").json() == []
+    assert guest.get("/faltantes/proveedores/buscar?q=sin&sin_proveedor=true").json() == [
+        {"id": "none", "name": "Sin proveedor asociado"}
+    ]
 
 
 def test_partial_receipt_cancellation_and_archived_vendor(guest, client, vendors):
@@ -276,6 +302,7 @@ def test_invalid_commands_and_transaction_rollback(guest, vendors):
         db.rollback()
         assert db.get(RestockNeed, shortage).status == "pending"
         assert db.get(RestockNeed, shortage).quantity == Decimal("3")
+        assert db.get(RestockNeed, shortage).unit == "cajas"
         assert db.scalar(select(func.count(SupplierOrder.id))) == 0
     wrong_dates = guest.get("/faltantes?desde=2099-12-30&hasta=2099-01-01")
     assert wrong_dates.status_code == 422
@@ -319,8 +346,9 @@ def test_catalog_projection_preserves_links_history_and_local_rows(guest, vendor
     post(guest, "/productos/sincronizar")
     assert "Inactivo en el catálogo" in guest.get("/faltantes?estado=ordered").text
     assert "Avena del negocio" in guest.get(f"/faltantes/historial/{before_rename}").text
-    assert "Bolsa de 25 kg" in guest.get(f"/faltantes/historial/{before_rename}").text
+    assert "Bolsa de 25 kg" not in guest.get(f"/faltantes/historial/{before_rename}").text
     with SessionLocal() as db:
+        assert db.get(SupplierOrder, before_rename).lines[0].presentation == "Bolsa de 25 kg"
         assert db.get(RestockProduct, identifier).name == "Avena renombrada"
         assert [link.supplier_id for link in db.get(RestockProduct, identifier).suppliers] == [parra]
         assert db.scalar(select(RestockProduct.catalog_status).where(RestockProduct.external_id == "DYS-000002")) == "active"

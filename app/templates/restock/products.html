@@ -1,5 +1,5 @@
 {% extends "restock/layout.html" %}
-{% from "restock/components.html" import csrf, association_list, unavailable with context %}
+{% from "restock/components.html" import csrf, filter_actions, product_filter, supplier_picker, association_list, unavailable with context %}
 {% from "components.html" import pager with context %}
 {% block restock_content %}
 <div class="page-head restock-page-head"><h1>Productos</h1><a class="button" href="/faltantes/productos/nuevo">Nuevo producto</a></div>
@@ -18,20 +18,12 @@
     </form>
   </div>
 </details>
-{% if suppliers %}
-<form class="card restock-filters restock-supplier-nav" method="get" action="/faltantes/productos">
-  <div class="field"><label for="restock-supplier-products">Productos por proveedor</label>
-    <select id="restock-supplier-products" name="proveedor" required>
-      <option value="">Elegí un proveedor</option>
-      {% for row in suppliers %}<option value="{{ row.id }}">{{ row.name }}{% if not row.active %} (inactivo){% endif %}</option>{% endfor %}
-    </select>
-  </div>
-  <button class="quiet" type="submit">Ver productos</button>
+<form class="card restock-filters restock-order-filter" method="get" action="/faltantes/productos">
+  {{ supplier_picker('jump', label='Productos por proveedor') }}
 </form>
-{% endif %}
-<form class="card restock-filters" method="get" action="/faltantes/productos" data-report-filter aria-label="Filtros de productos">
-  <div class="restock-fields">
-    <div class="field"><label for="restock-product-q">Producto</label><input type="search" id="restock-product-q" name="q" value="{{ q }}" maxlength="180"></div>
+<form class="card restock-filters" method="get" action="/faltantes/productos" data-report-filter data-auto-filter aria-label="Filtros de productos">
+  <div class="restock-fields restock-filter-fields">
+    {{ product_filter('restock-product-q', q, product_filter_id) }}
     <div class="field"><label for="restock-product-link">Proveedores asociados</label><select id="restock-product-link" name="vinculo">
       {% for key, label in [('','Todos'),('with','Con proveedor asociado'),('without','Sin proveedor asociado')] %}<option value="{{ key }}"{% if link_filter == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
     </select></div>
@@ -39,7 +31,7 @@
       {% for key, label in [('','Todos'),('active','Activos'),('archived','Archivados o fuera de catálogo')] %}<option value="{{ key }}"{% if status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
     </select></div>
   </div>
-  <div class="actions"><button type="submit" class="quiet">Aplicar filtros</button><a href="/faltantes/productos" data-report-link>Limpiar</a></div>
+  {{ filter_actions('/faltantes/productos') }}
 </form>
 <section data-report-results="products" data-restock-refresh aria-labelledby="restock-product-heading">
   <div class="report-heading restock-heading"><h2 id="restock-product-heading">Productos de reposición</h2><span class="restock-count">{{ rows.total }}</span></div>
@@ -47,10 +39,9 @@
   <ul class="restock-list">
     {% for row in rows.items %}
     <li class="card restock-item">
-      <div class="restock-item-head"><div><h3><a href="/faltantes/productos/{{ row.id }}">{{ row.name }}</a></h3>{% if row.presentation %}<p class="muted">{{ row.presentation }}</p>{% endif %}</div>
+      <div class="restock-item-head"><h3><a href="/faltantes/productos/{{ row.id }}">{{ row.name }}</a></h3>
         {{ unavailable(row) }}</div>
       {{ association_list(row) }}
-      {% if row.source and row.description %}<p class="restock-note muted">{{ row.description|truncate(180) }}</p>{% endif %}
       <p class="restock-meta"><span>{{ 'Catálogo Dulce y Salado' if row.source else 'Producto local' }}</span>{% if row.barcode %}<span>{{ row.barcode }}</span>{% endif %}</p>
     </li>
     {% endfor %}

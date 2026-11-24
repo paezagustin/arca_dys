@@ -98,9 +98,10 @@ columnas originales, además de las hojas Ventas y Sueldos del mismo período. V
 la venta. Si un egreso antiguo no tiene tipo, editarlo antes de exportar.
 
 ## Faltantes y pedidos
-En Faltantes buscá un producto por nombre, presentación o código de barras.
+En Faltantes escribí el nombre o código de barras y elegí una sugerencia.
 Registrar faltante agrega el producto a la lista compartida. Si no existe,
-podés crearlo desde la búsqueda. En Pedidos elegí un proveedor, seleccioná qué
+podés crearlo desde la búsqueda. En Pedidos escribí y elegí un proveedor para
+cargar sus faltantes automáticamente, seleccioná qué
 pedir y revisá el mensaje para copiar o compartir. Pulsá Registrar pedido realizado
 después de hacerlo. En Historial confirmá la recepción o devolvé a pendientes
 los productos que no llegaron. La [guía de Faltantes](FALTANTES.md) detalla

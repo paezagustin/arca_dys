@@ -31,14 +31,14 @@
 .restock-tabs a:hover { background: var(--ground); }
 .restock-tabs a[aria-current] { color: #07678e; background: #e6f4fc; }
 .restock .restock-quick { border-top: 3px solid var(--brand); }
-.restock-search, .restock-supplier-nav {
+.restock-register {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 12px;
 }
-.restock-live-search { grid-template-columns: minmax(0, 1fr); }
-.restock-quick .restock-matches { margin-top: 14px; }
+.restock-order-filter > .field { max-width: 440px; }
+.restock-picker-status { color: var(--muted); margin-bottom: 0; }
 .restock-filters { background: #edf3f8; }
 .restock-fields {
   display: grid;
@@ -48,6 +48,12 @@
 }
 .restock-wide { grid-column: 1 / -1; }
 .restock .field label { margin-bottom: 4px; }
+.restock-filter-fields {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
+  align-items: end;
+}
+.restock-filter-fields :is(input:not([type=hidden]), select) { height: 46px; margin: 0; }
+.restock-filter-fields input[type=date] { min-inline-size: 0; }
 .restock .actions { margin-top: 12px; flex-wrap: wrap; }
 .restock .restock-heading {
   display: flex;
@@ -105,8 +111,7 @@
 }
 .restock-disclosure[open] > summary { margin-bottom: 9px; }
 .restock-disclosure form > button { margin-top: 8px; }
-.restock-cancel summary { color: var(--bad); }
-.restock-back { display: inline-block; min-height: 36px; margin-bottom: 7px; }
+.restock-delete { justify-self: start; margin-top: 4px; }
 .restock-editor { display: grid; gap: 14px; }
 .restock-status-field { width: min(100%, 380px); }
 .restock-supplier-options, .restock-duplicates { min-width: 0; border: 1px solid var(--line); border-radius: 10px; }
@@ -115,14 +120,12 @@
 .restock-check { display: flex; align-items: center; gap: 9px; min-height: 44px; cursor: pointer; }
 .restock-check input[type=checkbox] { width: 21px; height: 21px; flex: none; margin: 0; accent-color: var(--brand); }
 .restock-select-all { padding: 0 9px; }
-.restock-presentation { display: block; font-size: .875rem; color: var(--muted); }
 .restock-draft > .actions, .restock-receipt-actions { margin-bottom: 10px; }
 .restock-preview textarea[readonly] { background: #f8fafc; }
 .restock-confirm { border-top: 1px solid var(--line); padding-top: 12px; }
-.restock [data-restock-search-results][aria-busy], .restock [data-report-results][aria-busy] { cursor: progress; }
+.restock [data-report-results][aria-busy] { cursor: progress; }
 @media (max-width: 540px) {
   .restock-tabs { font-size: .875rem; margin-bottom: 16px; }
-  .restock-search, .restock-supplier-nav { grid-template-columns: minmax(0, 1fr); }
-  .restock-search button, .restock-supplier-nav button { justify-self: start; }
+  .restock-register { grid-template-columns: minmax(0, 1fr); }
   .restock-preview .actions > *, .restock-receipt-actions button { width: 100%; text-align: center; }
 }

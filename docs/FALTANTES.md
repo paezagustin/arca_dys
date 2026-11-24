@@ -5,15 +5,18 @@ protección CSRF de los demás formularios. La lista es compartida entre disposi
 
 ## Uso diario
 
-1. En **Faltantes**, buscá por nombre, presentación o código de barras. Elegí el
-   producto y pulsá **Registrar faltante**. La cantidad, unidad y observaciones
-   son opcionales. Si no aparece, elegí **Crear y registrar faltante**.
+1. En **Faltantes**, escribí el nombre o código de barras y seleccioná el producto
+   en las sugerencias. Si ya está en un pedido vas a ver **Ya pedido**. Pulsá
+   **Registrar faltante**. Si no hay coincidencias, podés crearlo desde la
+   búsqueda. Desde la tarjeta se puede editar cantidad u observaciones, o pulsar
+   **Eliminar** para pasar el faltante a Cancelados.
 2. Usá **Sin proveedor asociado** para encontrar faltantes sin un proveedor activo.
    Abrí **Gestionar proveedores** para completar los vínculos. En **Productos**
-   podés buscar, editar, archivar y distinguir presentaciones. Desde **Productos
+   podés buscar, editar y archivar fichas. Desde **Productos
    por proveedor** o la ficha de Gestión podés seleccionar varias fichas de la
    página y asociarlas juntas. La preferencia solo orienta la compra.
-3. En **Pedidos**, elegí un proveedor y seleccioná los productos. Ajustá cantidades
+3. En **Pedidos**, escribí el proveedor y elegilo en las sugerencias para cargar
+   sus faltantes automáticamente. Seleccioná los productos. Ajustá cantidades
    y observaciones y revisá el mensaje. Podés copiarlo o abrir WhatsApp si el
    contacto de Gestión contiene un número único en un formato reconocible. Una
    vez hecho el pedido, pulsá **Registrar pedido realizado**. Copiar y abrir el
@@ -22,6 +25,12 @@ protección CSRF de los demás formularios. La lista es compartida entre disposi
    **Mantener pendiente de entrega** conserva el pedido abierto. **No entregado**
    y **Cancelar** devuelven ese producto a Faltantes y guardan el resultado de
    ese intento. Podés anotar observaciones incluso si el renglón sigue abierto.
+
+Los filtros de productos y proveedores usan sugerencias al escribir. Los cambios
+de estado, fecha y otros filtros de pocas opciones actualizan el reporte al
+seleccionarlos. **Buscar** aplica el texto libre y **Limpiar** restablece los
+valores iniciales. La unidad, la presentación y la descripción se conservan en
+los datos de origen e históricos y se omiten en las pantallas y el mensaje.
 
 El contacto de WhatsApp admite un número internacional explícito con `+`, el
 formato `549` más código de área y número, o un celular argentino de diez

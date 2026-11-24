@@ -3,12 +3,10 @@
   if (!page) return;
   const main = page.closest('main');
   const search = page.querySelector('[data-restock-search]');
-  const searchBox = search?.elements.buscar;
-  const searchResults = page.querySelector('[data-restock-search-results]');
-  const searchStatus = page.querySelector('[data-restock-search-status]');
+  const choice = page.querySelector('[data-register-choice]');
+  const choiceStatus = page.querySelector('[data-register-status]');
+  const quickCreate = page.querySelector('[data-restock-new]');
   const feedback = page.querySelector('[data-restock-feedback]');
-  let searchRequest;
-  let searchTimer;
   let outstandingWrites = 0;
 
   function announce(message, error = false) {
@@ -26,57 +24,97 @@
     main.dispatchEvent(new Event('report:refresh'));
   }
 
-  async function findProducts() {
-    searchRequest?.abort();
-    if (!searchBox.value.trim()) {
-      searchResults.replaceChildren();
-      searchResults.removeAttribute('aria-busy');
-      searchStatus.textContent = '';
-      return;
-    }
-    const controller = new AbortController();
-    searchRequest = controller;
-    searchResults.setAttribute('aria-busy', 'true');
-    searchStatus.textContent = 'Buscando productos…';
-    try {
-      const params = new URLSearchParams({ q: searchBox.value });
-      const response = await fetch(`/faltantes/buscar?${params}`, { signal: controller.signal, cache: 'no-store' });
-      if (!response.ok) throw new Error('No se pudo buscar. Volvé a intentar.');
-      const result = new DOMParser().parseFromString(await response.text(), 'text/html');
-      if (controller.signal.aborted) return;
-      const restoreFocus = searchResults.contains(document.activeElement);
-      searchResults.replaceChildren(...result.body.childNodes);
-      if (restoreFocus) searchBox.focus({ preventScroll: true });
-      const count = searchResults.querySelectorAll('.restock-match').length;
-      searchStatus.textContent = count ? `${count} productos encontrados.` : 'No se encontraron productos.';
-    } catch (error) {
-      if (!controller.signal.aborted) announce('No se pudo actualizar la búsqueda. Volvé a intentar.', true);
-    } finally {
-      if (searchRequest === controller) searchResults.removeAttribute('aria-busy');
-    }
+  function resetRegistration() {
+    if (!choice) return;
+    choice.hidden = true;
+    choiceStatus.hidden = true;
+    quickCreate.hidden = true;
+    quickCreate.open = false;
+    const approval = quickCreate.querySelector('[name=allow_duplicate]');
+    approval.checked = false;
+    approval.required = false;
+    approval.closest('fieldset').hidden = true;
   }
 
-  searchBox?.addEventListener('input', () => {
-    searchRequest?.abort();
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(findProducts, 200);
-  });
-  search?.addEventListener('submit', event => {
-    event.preventDefault();
-    clearTimeout(searchTimer);
-    findProducts();
-  });
-  if (search) {
-    search.classList.add('restock-live-search');
-    search.querySelector('button').hidden = true;
+  function initializePicker(root) {
+    const mode = root.dataset.restockPicker;
+    const input = root.querySelector('[role=combobox]');
+    const key = root.querySelector('[data-picker-key]');
+    const form = input.form;
+    const isProduct = mode === 'register' || mode === 'product';
+    const suppliers = mode === 'preferred' ? [...form.querySelectorAll('[name=supplier_id]')] : [];
+    const allowed = new Set(suppliers.map(control => control.value));
+
+    AppSuggestions.attach(root, {
+      async load(value, signal) {
+        if (isProduct && !value.trim()) return [];
+        const url = new URL(root.dataset.endpoint, location.origin);
+        url.searchParams.set('q', value);
+        const response = await fetch(url, { signal, headers: { Accept: 'application/json' } });
+        if (!response.ok) throw Error('search');
+        const rows = await response.json();
+        return mode === 'preferred' ? rows.filter(row => allowed.has(String(row.id))) : rows;
+      },
+      render(option, row) {
+        const label = document.createElement('strong');
+        label.textContent = row.name;
+        option.append(label);
+        if (row.status === 'ordered') {
+          const badge = document.createElement('span');
+          badge.className = 'restock-state restock-state-ordered';
+          badge.textContent = 'Ya pedido';
+          option.append(badge);
+        }
+      },
+      choose(row) {
+        input.value = row.name;
+        if (mode === 'register') {
+          resetRegistration();
+          choice.hidden = Boolean(row.status);
+          choice.action = `/faltantes/registrar/${row.id}`;
+          choice.elements.request_key.value = row.key || '';
+          if (row.status) {
+            choiceStatus.textContent = row.status === 'ordered' ? 'Ya pedido' : 'Ya agregado a Faltantes';
+            choiceStatus.hidden = false;
+          }
+          return;
+        }
+        key.value = row.id;
+        if (mode === 'preferred') {
+          const supplier = suppliers.find(control => control.value === key.value);
+          if (supplier) supplier.checked = true;
+        } else {
+          form.requestSubmit();
+        }
+      },
+      edit() {
+        if (mode === 'register') resetRegistration();
+        else if (mode === 'supplier' && !input.value.trim() && key.value) {
+          key.value = '';
+          form.requestSubmit();
+        } else if (mode !== 'supplier') {
+          key.value = '';
+        }
+      },
+      results(rows) {
+        if (mode === 'register' && input.value.trim() && !rows.length) {
+          quickCreate.hidden = false;
+          quickCreate.querySelector('[name=name]').value = input.value.trim();
+        }
+      },
+      emptyMessage(value) { return mode !== 'register' && (value.trim() || !isProduct) ? 'No hay coincidencias.' : ''; },
+    });
   }
+
+  page.querySelectorAll('[data-restock-picker]').forEach(initializePicker);
+  search?.addEventListener('submit', event => event.preventDefault());
 
   function warnDuplicates(form, products) {
     const box = form.querySelector('[data-restock-duplicates]');
     if (!box) return;
-    const entries = products.map(product => {
+    const entries = products.map(name => {
       const li = document.createElement('li');
-      li.textContent = [product.name, product.presentation].filter(Boolean).join(' · ');
+      li.textContent = name;
       return li;
     });
     box.querySelector('ul').replaceChildren(...entries);
@@ -89,12 +127,12 @@
 
   page.addEventListener('submit', async event => {
     const form = event.target.closest('form[data-restock-write]');
-    if (!form || event.defaultPrevented) return;
+    if (!form || event.defaultPrevented || (form.hasAttribute('data-confirm') && form.dataset.confirmed !== 'yes')) return;
     event.preventDefault();
     if (form.dataset.saving) return;
     const data = new URLSearchParams(new FormData(form));
     if (event.submitter?.name) data.append(event.submitter.name, event.submitter.value);
-    const submit = form.querySelector('button[type=submit]');
+    const submit = event.submitter || form.querySelector('button[type=submit], [data-confirm-trigger]');
     form.dataset.saving = 'true';
     form.setAttribute('aria-busy', 'true');
     if (submit) submit.disabled = true;
@@ -106,7 +144,7 @@
         announce(result.detail || 'No se pudo guardar. Volvé a intentar.', true);
         if (result.duplicates) warnDuplicates(form, result.duplicates);
         else if (response.status === 409) {
-          if (searchBox?.value.trim()) findProducts();
+          if (form === choice) resetRegistration();
           refreshReport();
         }
         return;
@@ -116,7 +154,12 @@
         return;
       }
       announce(result.message);
-      if (searchBox?.value.trim()) findProducts();
+      if (form === choice || quickCreate?.contains(form)) {
+        search.elements.buscar.value = '';
+        quickCreate.querySelector('[name=request_key]').value = result.request_key;
+        resetRegistration();
+        search.elements.buscar.focus({ preventScroll: true });
+      }
       refreshReport();
     } catch (error) {
       announce('No se pudo confirmar el guardado. Revisá la lista o volvé a intentar.', true);
@@ -138,10 +181,8 @@
     const products = selected.map(row => {
       const id = row.querySelector('[name=need_id]').value;
       const quantity = form.elements[`quantity_${id}`].value.trim();
-      const unit = form.elements[`unit_${id}`].value.trim();
       const notes = form.elements[`notes_${id}`].value.trim();
-      const title = [row.dataset.name, row.dataset.presentation, row.dataset.description].filter(Boolean).join(' · ');
-      return '- ' + [title, [quantity, unit].filter(Boolean).join(' '), notes].filter(Boolean).join(' — ');
+      return '- ' + [row.dataset.name, quantity, notes].filter(Boolean).join(' — ');
     });
     const note = form.elements.order_notes.value.trim();
     const message = selected.length ? [
@@ -193,14 +234,12 @@
       for (const choice of input.form.querySelectorAll('[name=need_id]')) choice.checked = input.checked;
       updateDraft(input.form);
     }
-    const suppliers = input.closest('[data-restock-supplier-options]');
-    if (!suppliers) return;
-    const preferred = suppliers.querySelector('[name=preferred]');
-    if (input === preferred && preferred.value) {
-      const match = [...suppliers.querySelectorAll('[name=supplier_id]')].find(option => option.value === preferred.value);
-      if (match) match.checked = true;
-    } else if (input.name === 'supplier_id' && !input.checked && preferred.value === input.value) {
-      preferred.value = '';
+    if (input.name === 'supplier_id' && !input.checked) {
+      const preferred = input.form.querySelector('[data-restock-picker=preferred]');
+      if (preferred?.querySelector('[data-picker-key]').value === input.value) {
+        preferred.querySelector('[data-picker-key]').value = '';
+        preferred.querySelector('[role=combobox]').value = '';
+      }
     }
   });
 
@@ -221,7 +260,6 @@
     if (document.visibilityState !== 'visible' || outstandingWrites) return;
     const region = page.querySelector('[data-restock-refresh]');
     if (region && !region.querySelector('form[data-dirty]')) refreshReport();
-    if (searchBox?.value.trim() && !searchResults.querySelector('form[data-dirty]')) findProducts();
   }
 
   main.addEventListener('report:updated', initializeControls);
