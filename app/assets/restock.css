@@ -56,8 +56,8 @@
   gap: 12px;
 }
 .restock-filter-fields { display: contents; }
-.restock-filter-fields > .field { flex: 1 1 8rem; min-width: 0; }
-.restock-filter-fields > [data-restock-picker] { flex-basis: 10rem; }
+.restock-filter-fields > .field { flex: 1 1 7.5rem; min-width: 0; }
+.restock-filter-fields > [data-restock-picker] { flex-basis: 8.5rem; }
 .restock .restock-filters > .actions { margin: 0; flex-wrap: nowrap; }
 .restock-filter-fields :is(input:not([type=hidden]), select) { height: 46px; margin: 0; }
 .restock-filter-fields input[type=date] { min-inline-size: 0; }
