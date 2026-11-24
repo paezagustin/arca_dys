@@ -76,3 +76,23 @@
 {% macro state_badge(key, label) -%}
 <span class="restock-state restock-state-{{ key }}">{{ label }}</span>
 {%- endmacro %}
+
+{% macro outcome_options() -%}
+<option value="waiting">Mantener pendiente de entrega</option>
+<option value="received">Recibido</option>
+<option value="undelivered">No entregado · volver a faltantes</option>
+<option value="cancelled">Cancelar · volver a faltantes</option>
+{%- endmacro %}
+
+{% macro line_editor(id, receipt=false) -%}
+<dialog id="{{ id }}" class="restock-details-dialog" aria-labelledby="{{ id }}-title" data-line-editor>
+  <h2 id="{{ id }}-title" data-line-title></h2>
+  <form method="dialog">
+    {% if receipt %}
+    <div class="field"><label for="{{ id }}-outcome">Resultado</label><select id="{{ id }}-outcome" name="outcome" autofocus>{{ outcome_options() }}</select></div>
+    <div class="field"><label for="{{ id }}-receipt">Observaciones de recepción</label><textarea id="{{ id }}-receipt" name="receipt" maxlength="1000" rows="3"></textarea></div>
+    {% else %}{{ purchase_fields(id, autofocus=true) }}{% endif %}
+    <div class="actions crud-actions"><button type="button" class="quiet crud-cancel" data-restock-details-close>Cancelar</button><button type="submit">Guardar</button></div>
+  </form>
+</dialog>
+{%- endmacro %}

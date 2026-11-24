@@ -102,7 +102,7 @@
       timer = setTimeout(search, 150);
     }, events);
     input.addEventListener('focus', () => { if (!selecting) search(); }, events);
-    input.addEventListener('blur', () => { setTimeout(() => { if (!touching) close(); }, 0); }, events);
+    input.addEventListener('blur', () => { setTimeout(() => { if (!touching && document.activeElement !== input) close(); }, 0); }, events);
     input.addEventListener('keydown', event => {
       if (event.key === 'Escape' && !options.hidden) {
         event.preventDefault(); event.stopPropagation(); close();

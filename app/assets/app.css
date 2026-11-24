@@ -143,7 +143,7 @@ small,.muted {
 }
 main {
   width:100%;
-  max-width:1500px;
+  max-width:1720px;
   margin:32px auto 0;
   padding:0 32px;
   flex:1;
@@ -945,24 +945,47 @@ input[readonly] { background: var(--ground) !important; font-weight: 600; }
 .operational .site-header :focus-visible {
   outline-color:#a6d0ff;
 }
-.operational .table-wrap {
+/* Los reportes del menú comparten la tabla de Fiados. */
+.table-wrap {
   border:1px solid var(--line);
   border-radius:8px;
+  background:var(--paper);
 }
-.operational th {
+.table-wrap :is(th,td) {
+  padding:12px;
+  vertical-align:middle;
+}
+.table-wrap thead th {
   color:var(--ink);
-  background:#edf2f8;
+  background:#edf4f8;
   font-size:16px;
 }
-.operational tbody tr:nth-child(even) {
-  background:#f7f9fc;
+.table-wrap tbody tr { background:var(--paper); }
+.table-wrap tbody tr:nth-child(even) { background:#f7fafc; }
+.table-wrap tbody tr:hover { background:#edf4f8; }
+.table-wrap tbody th[scope=row] { background:inherit; font-weight:650; }
+.table-wrap tbody tr:last-child > :is(th,td) { border-bottom:0; }
+.table-wrap .edit-column,
+.table-wrap table:has(.edit-column) > tbody > tr > td:first-child:not([colspan]) {
+  position:sticky;
+  left:0;
+  z-index:1;
+  width:1%;
+  padding:6px 10px;
 }
-.operational tbody tr:hover {
-  background:#edf2f8;
+.table-wrap table:has(.edit-column) > tbody > tr > td:first-child:not([colspan]) { background:inherit; }
+.table-wrap .edit-column { z-index:2; }
+.table-wrap .report-note { white-space:pre-line; overflow-wrap:anywhere; min-width:9rem; max-width:26rem; text-align:start; }
+form[data-report-filter]:has(> .actions) {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-end;
+  gap:12px;
 }
-.operational tbody tr:last-child td {
-  border-bottom:0;
-}
+form[data-report-filter] > .fields { display:contents; }
+form[data-report-filter]:has(> .actions) > .field,
+form[data-report-filter] > .fields > .field { flex:1 1 9rem; min-width:0; margin:0; }
+form[data-report-filter] > .actions { margin:0; flex-wrap:nowrap; }
 .operational .dashboard-metrics [data-metric=result] {
   border-top-color:var(--brand);
   background:#edf4fb;

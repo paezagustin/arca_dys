@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% from "components.html" import pager, edit_icon with context %}
+{% extends "base.html" %}{% from "components.html" import pager, edit_column, edit_icon with context %}
 {% block title %}{{ 'Sueldos' if salary else 'Fiados' }}{% endblock %}{% block content %}
 {% set url = '/salaries' if salary else '/fiados' %}
 <h1>{{ 'Sueldos' if salary else 'Fiados' }}</h1>
@@ -34,7 +34,7 @@
 {% if row %}<input type="hidden" name="edit" value="{{ row.id }}">{% endif %}
 {% if salary %}<div class="field"><label for="filter_employee">Empleado</label><select id="filter_employee" name="employee"><option value="">Todos</option>{% for name in employees %}<option {% if employee == name %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>{% else %}<div class="field"><label for="filter_customer">Nombre</label><input id="filter_customer" type="search" name="customer" value="{{ customer }}" maxlength="150"></div><div class="field"><label for="filter_paid">Pagó</label><select id="filter_paid" name="paid">{% for key,label in [('no','No'),('yes','Sí'),('all','Todos')] %}<option value="{{ key }}" {% if paid == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>{% endif %}
 <div class="field"><label for="from">Fecha desde</label><input id="from" type="date" name="fecha_desde" value="{{ filters.start or '' }}"></div><div class="field"><label for="to">Fecha hasta</label><input id="to" type="date" name="fecha_hasta" value="{{ filters.end or '' }}"></div><div class="actions"><button>Buscar</button><a class="button quiet" href="{{ url }}{% if row %}?edit={{ row.id }}{% endif %}" data-report-link>Limpiar</a></div></form>
-<div data-report-results="page"><div class="register-total"><span>Total del listado</span><strong class="metric">{{ total|money }}</strong></div><div class="table-wrap"><table><thead><tr><th>Editar</th><th>Fecha</th><th>{{ 'Empleado' if salary else 'Nombre' }}</th><th>Monto</th><th>{{ 'Tipo' if salary else 'Pagó' }}</th>{% if not salary %}<th>Fecha de pago</th><th>Observación</th>{% endif %}</tr></thead><tbody>
+<div data-report-results="page"><div class="register-total"><span>Total del listado</span><strong class="metric">{{ total|money }}</strong></div><div class="table-wrap"><table><thead><tr>{{ edit_column() }}<th>Fecha</th><th>{{ 'Empleado' if salary else 'Nombre' }}</th><th>Monto</th><th>{{ 'Tipo' if salary else 'Pagó' }}</th>{% if not salary %}<th>Fecha de pago</th><th>Observación</th>{% endif %}</tr></thead><tbody>
 {% for item in records.items %}<tr>
 <td><div class="actions">{{ edit_icon(url ~ '?edit=' ~ item.id, 'Editar registro ' ~ item.id) }}
 {% if not salary and not item.paid %}

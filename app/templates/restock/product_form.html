@@ -6,12 +6,11 @@
 {{ breadcrumb([('Faltantes','/faltantes'),(title,none)] if quick else [('Faltantes','/faltantes'),('Productos','/faltantes/productos'),(title,none)]) }}
 {% endblock %}
 {% macro supplier_row(id='', name='', active=true) -%}
-<li>
-  <input type="hidden" name="supplier_id" value="{{ id }}">
-  <span data-supplier-name>{{ name }}{% if not active %} (inactivo){% endif %}</span>
-  <button type="button" class="danger" data-remove-supplier aria-label="Eliminar {{ name }}">Eliminar</button>
-  {% if id %}<noscript><button type="submit" class="danger" name="remove_supplier" value="{{ id }}" formnovalidate aria-label="Eliminar {{ name }}">Eliminar</button></noscript>{% endif %}
-</li>
+<tr>
+  <td class="wrap"><input type="hidden" name="supplier_id" value="{{ id }}"><span data-supplier-name>{{ name }}{% if not active %} (inactivo){% endif %}</span></td>
+  <td><button type="button" class="danger" data-remove-supplier aria-label="Eliminar {{ name }}">Eliminar</button>
+    {% if id %}<noscript><button type="submit" class="danger" name="remove_supplier" value="{{ id }}" formnovalidate aria-label="Eliminar {{ name }}">Eliminar</button></noscript>{% endif %}</td>
+</tr>
 {%- endmacro %}
 {% block restock_content %}
 <h1>{{ title }}</h1>
@@ -23,7 +22,6 @@
   {{ csrf() }}<input type="hidden" name="request_key" value="{{ values.request_key or '' }}"><input type="hidden" name="version" value="{{ values.version or '' }}">
   {% if row and row.source %}
   <div class="restock-item-head"><h2>{{ row.name }}</h2>{{ unavailable(row) }}</div>
-  <p class="restock-meta"><span>Dulce y Salado · {{ row.external_id }}</span>{% if row.barcode %}<span>{{ row.barcode }}</span>{% endif %}</p>
   {% else %}
   <div class="restock-fields">
     <div class="field"><label for="restock-name">Nombre</label><input id="restock-name" name="name" value="{{ values.name or '' }}" maxlength="180" required></div>
@@ -36,12 +34,9 @@
     <label class="restock-check"><input type="checkbox" name="allow_duplicate" value="1" required> Es otro producto.</label>
   </fieldset>
   {% endif %}
-  {% if row %}<div class="field restock-status-field"><label for="restock-active">Estado local</label><select id="restock-active" name="active">
-    <option value="1"{% if values.active == '1' %} selected{% endif %}>Activo</option><option value="0"{% if values.active == '0' %} selected{% endif %}>Archivado</option>
-  </select></div>{% endif %}
   {% if not quick %}
   <section class="restock-linked-suppliers" aria-label="Proveedores asociados" data-linked-suppliers>
-    {{ supplier_picker('associate', value=supplier_query, label='Proveedores asociados', extra='?solo_activos=true', key='') }}
+    {{ supplier_picker('associate', value=supplier_query, label='Buscar proveedor', extra='?solo_activos=true', key='') }}
     <noscript>
       <button type="submit" name="search_suppliers" value="1" formnovalidate>Buscar</button>
       {% if supplier_matches is not none %}
@@ -50,10 +45,13 @@
       {% else %}<li>No hay coincidencias.</li>{% endfor %}</ul>
       {% endif %}
     </noscript>
-    <ul class="restock-supplier-list" aria-label="Proveedores seleccionados">{% for supplier in suppliers %}
-      {{ supplier_row(supplier.id, supplier.name, supplier.active) }}
-    {% endfor %}</ul>
-    <p class="muted" data-no-suppliers{% if suppliers %} hidden{% endif %}>Sin proveedores asociados.</p>
+    <div class="table-wrap restock-suppliers-report">
+      <table aria-label="Proveedores asociados al producto">
+        <thead><tr><th scope="col">Proveedor asociado</th><th scope="col" aria-label="Quitar asociación"></th></tr></thead>
+        <tbody data-supplier-list>{% for supplier in suppliers %}{{ supplier_row(supplier.id, supplier.name, supplier.active) }}{% endfor %}</tbody>
+        <tbody data-no-suppliers{% if suppliers %} hidden{% endif %}><tr><td colspan="2" class="empty">Sin proveedores asociados.</td></tr></tbody>
+      </table>
+    </div>
     <template>{{ supplier_row() }}</template>
     <span class="sr-only" role="status" data-association-status></span>
   </section>

@@ -80,11 +80,22 @@ Las correcciones humanas del alcance prevalecen sobre propuestas anteriores.
 - En Faltantes, las sugerencias de productos muestran el nombre y, cuando
   corresponde, **Ya pedido**. No mostrar unidad, presentación ni descripción en
   las pantallas o mensajes de reposición. Conservar sus valores históricos.
-- En cada tarjeta de Faltantes, poner la fecha entre paréntesis junto al título.
-  Dejar **Gestionar Proveedores** y **Eliminar** juntos al pie derecho, con
-  **Eliminar** al final y con la confirmación compartida para la baja lógica.
-  Mostrar los detalles guardados en la tarjeta y ofrecer un diálogo compacto
-  para editar la cantidad y las observaciones.
+- Usar la tabla de Fiados como referencia para todos los reportes del menú.
+  Compartir cabecera azul grisácea, filas alternadas, bordes y botones. En reportes
+  editables, el lápiz ocupa la primera columna a la izquierda, con cabecera
+  visualmente vacía y nombre accesible por fila. En móvil, mantener el lápiz
+  visible al desplazar la tabla. Conservar los reportes de consulta como tales.
+- Dar ancho a las regiones de filtros para alinear Buscar y Limpiar con los
+  campos en escritorio. En pantallas angostas, permitir que pasen a otra fila.
+- Faltantes y Pedidos usan tablas compactas con cantidad, observaciones y una
+  columna **Gestionar Proveedores**. La fecha de alta se guarda y sirve para
+  filtrar. Omitirla del reporte de faltantes. El lápiz abre el editor. Dentro,
+  dejar **Cancelar** a la izquierda y **Guardar** a la derecha. En un faltante
+  pendiente, poner **Eliminar** junto a Guardar y pedir confirmación en el
+  diálogo compartido antes de la baja lógica. Centrar la navegación de reposición.
+- En la ficha de producto, separar el buscador de la tabla de proveedores
+  asociados. Archivar o reactivar desde el inventario. Conservar la identidad
+  externa y el estado al guardar asociaciones.
 
 ## Ajustes H12 de formularios y navegación
 - Altas de montos manuales vacías con placeholder 0,00; conservar valores guardados

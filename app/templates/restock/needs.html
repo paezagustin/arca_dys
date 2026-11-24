@@ -1,6 +1,6 @@
 {% extends "restock/layout.html" %}
 {% from "restock/components.html" import csrf, date_fields, filter_actions, picker, product_filter, purchase_fields, quick_create, supplier_picker, association_list, unavailable, state_badge with context %}
-{% from "components.html" import pager with context %}
+{% from "components.html" import pager, edit_column, edit_button with context %}
 {% macro edit_need_form(row, modal=false) -%}
 <form method="post" action="/faltantes/editar/{{ row.id }}" data-restock-write>
   {{ csrf() }}<input type="hidden" name="version" value="{{ row.version }}">
@@ -9,6 +9,7 @@
   <div class="actions crud-actions">
     {% if modal %}<button type="button" class="quiet crud-cancel" data-restock-details-close>Cancelar</button>{% endif %}
     <button type="submit">Guardar</button>
+    {% if modal %}<button type="button" class="danger" form="delete-need-{{ row.id }}" data-confirm-trigger aria-haspopup="dialog">Eliminar</button>{% endif %}
   </div>
 </form>
 {%- endmacro %}
@@ -49,47 +50,39 @@
 <section data-report-results="needs" data-restock-refresh aria-labelledby="restock-list-heading">
   <div class="report-heading restock-heading"><h2 id="restock-list-heading">Lista de faltantes</h2><span class="restock-count">{{ pending }} pendiente{{ 's' if pending != 1 else '' }}</span></div>
   {% if rows.items %}
-  <ul class="restock-list">
-    {% for row in rows.items %}
-    {% set product = row.product %}
-    {% set order = orders.get(row.id) %}
+  <div class="table-wrap"><table class="restock-report" aria-labelledby="restock-list-heading">
+    <thead><tr>{{ edit_column() }}<th>Producto</th><th>Cantidad</th><th>Observaciones</th><th>Estado</th><th>Proveedores</th><th>Gestionar Proveedores</th></tr></thead>
+    <tbody>{% for row in rows.items %}
+      {% set product = row.product %}
+      {% set order = orders.get(row.id) %}
+      {% set dialog_id = 'restock-need-details-' ~ row.id %}
+      <tr data-need-id="{{ row.id }}">
+        <td>{% if row.status == 'pending' %}
+          {{ edit_button(dialog_id, 'Editar faltante de ' ~ product.name, dialog_id) }}
+          <noscript><details><summary>Editar</summary>{{ edit_need_form(row) }}</details></noscript>
+        {% endif %}</td>
+        <th scope="row">{{ product.name }}{{ unavailable(product) }}</th>
+        <td>{{ row.quantity|restock_quantity or '—' }}</td>
+        <td class="report-note">{{ row.notes or '—' }}</td>
+        <td>{{ state_badge(row.status, need_states[row.status]) }}
+          {% if order %}<small><a href="/faltantes/historial/{{ order.id }}">{{ order.supplier_name }} · #{{ order.id }}</a></small>{% endif %}
+        </td>
+        <td>{{ association_list(product) }}</td>
+        <td><a class="button quiet" href="/faltantes/productos/{{ product.id }}" aria-label="Gestionar Proveedores de {{ product.name }}">Gestionar Proveedores</a></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% for row in rows.items if row.status == 'pending' %}
     {% set dialog_id = 'restock-need-details-' ~ row.id %}
-    <li class="card restock-item restock-need" data-need-id="{{ row.id }}">
-      <div class="restock-item-head">
-        <h3>{{ product.name }} <time class="restock-need-date" datetime="{{ row.created_at.isoformat() }}">({{ row.created_at|local_date(false) }})</time></h3>
-        {{ state_badge(row.status, need_states[row.status]) }}
-      </div>
-      {% if order %}<p>Proveedor del pedido <a href="/faltantes/historial/{{ order.id }}">{{ order.supplier_name }} · #{{ order.id }}</a></p>{% endif %}
-      {{ association_list(product) }}
-      {{ unavailable(product) }}
-      {% if row.quantity or row.notes %}
-      <dl class="restock-need-details">
-        {% if row.quantity %}<div><dt>Cantidad</dt><dd class="restock-need-quantity">{{ row.quantity|restock_quantity }}</dd></div>{% endif %}
-        {% if row.notes %}<div class="restock-need-notes"><dt>Observaciones</dt><dd class="restock-note">{{ row.notes }}</dd></div>{% endif %}
-      </dl>
-      {% endif %}
-      {% if row.status == 'pending' %}
-      <div class="restock-need-footer">
-        <button type="button" class="quiet" aria-haspopup="dialog" aria-controls="{{ dialog_id }}" data-restock-details-open data-report-focus-key="{{ dialog_id }}">{{ 'Editar detalles' if row.quantity or row.notes else 'Agregar detalles' }}</button>
-        <div class="restock-need-actions">
-          <a class="button quiet" href="/faltantes/productos/{{ product.id }}">Gestionar Proveedores</a>
-          <form method="post" action="/faltantes/cancelar/{{ row.id }}" data-restock-write
-                data-confirm="¿Eliminar {{ product.name }} de los faltantes pendientes? El registro quedará en Cancelados.">
-            {{ csrf() }}<input type="hidden" name="version" value="{{ row.version }}">
-            <button type="button" class="danger" data-confirm-trigger aria-haspopup="dialog">Eliminar<span class="sr-only"> {{ product.name }}</span></button>
-          </form>
-        </div>
-      </div>
-      <dialog id="{{ dialog_id }}" class="restock-details-dialog" aria-labelledby="{{ dialog_id }}-title" aria-describedby="{{ dialog_id }}-product" data-restock-details>
-        <h2 id="{{ dialog_id }}-title">Cantidad y observaciones</h2>
-        <p id="{{ dialog_id }}-product" class="muted restock-details-product">{{ product.name }}</p>
-        {{ edit_need_form(row, true) }}
-      </dialog>
-      <noscript><details class="restock-disclosure"><summary>Editar detalles</summary>{{ edit_need_form(row) }}</details></noscript>
-      {% endif %}
-    </li>
-    {% endfor %}
-  </ul>
+    <dialog id="{{ dialog_id }}" class="restock-details-dialog" aria-labelledby="{{ dialog_id }}-title" data-restock-details>
+      <h2 id="{{ dialog_id }}-title">{{ row.product.name }}</h2>
+      {{ edit_need_form(row, true) }}
+      <form id="delete-need-{{ row.id }}" method="post" action="/faltantes/cancelar/{{ row.id }}" data-restock-write hidden
+            data-confirm="¿Eliminar {{ row.product.name }} de los faltantes pendientes? Podés consultar el registro en Cancelados.">
+        {{ csrf() }}<input type="hidden" name="version" value="{{ row.version }}">
+      </form>
+    </dialog>
+  {% endfor %}
   {% else %}<p class="card restock-empty">No hay faltantes que coincidan con estos filtros.</p>{% endif %}
   {{ pager(rows) }}
 </section>

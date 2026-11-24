@@ -171,7 +171,7 @@ def test_shared_shortage_order_retries_and_snapshots(guest, vendors):
     history = guest.get("/faltantes/historial", params={"q": "avena 25", "estado": "short", "desde": today, "hasta": today}).text
     assert f"#{first} · Parra" in history and f"#{second} · Distribuidora B" not in history
     detail = guest.get(f"/faltantes/historial/{first}").text
-    assert "Avena arrollada" in detail and "Cantidad 2,5" in detail
+    assert "Avena arrollada" in detail and "<th>Cantidad</th>" in detail and "<td>2,5</td>" in detail
     assert "Bolsa de 25 kg" not in detail and "2,5 bolsas" not in detail
     assert "No entregado" in detail and "Se agotó" in detail and "Avena renombrada" not in detail
     assert "Recibido completamente" in guest.get(f"/faltantes/historial/{second}").text
@@ -183,6 +183,33 @@ def test_shared_shortage_order_retries_and_snapshots(guest, vendors):
         assert db.scalar(select(func.count()).select_from(RestockNeed).where(RestockNeed.product_id == labels)) == 1
     post(guest, f"/productos/proveedores/{other}", {"product_id": [labels]})
     assert "Etiquetas blancas" not in guest.get("/faltantes?proveedor=none").text
+
+
+def test_product_associations_preserve_local_state_and_need_date(guest, vendors):
+    primary, second = vendors
+    product = make_product(guest, "Insumo para reposición", [primary], preferred=primary)
+    need = make_need(guest, product)
+    with SessionLocal() as db:
+        created = db.get(RestockNeed, need).created_at
+
+    path = f"/productos/{product}"
+    post(guest, path + "/estado", {"active": "0", "version": "1"})
+    post(guest, path + "/estado", {"active": "1", "version": "1"}, 409)
+    detail = guest.get("/faltantes" + path).text
+    assert "Estado local" not in detail and 'name="active"' not in detail
+    assert "Parra" in detail and "reposición activa" in detail
+    post(guest, path, {"name": "Insumo para reposición", "version": "2", "supplier_id": [primary, second]})
+    with SessionLocal() as db:
+        row = db.get(RestockProduct, product)
+        assert not row.active and {link.supplier_id for link in row.suppliers} == {primary, second}
+        assert next(link.preferred for link in row.suppliers if link.supplier_id == primary)
+    post(guest, f"/editar/{need}", {"version": "1", "quantity": "3", "notes": "Para el viernes"})
+    post(guest, f"/cancelar/{need}", {"version": "2"})
+    post(guest, path + "/estado", {"active": "1", "version": "3"})
+    with SessionLocal() as db:
+        row = db.get(RestockNeed, need)
+        assert (row.created_at, row.status, row.quantity, row.notes) == (created, "cancelled", 3, "Para el viernes")
+        assert db.get(RestockProduct, product).active
 
 
 def test_supplier_suggestions_respect_filters_and_ignore_accents(guest, vendors):

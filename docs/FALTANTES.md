@@ -8,10 +8,10 @@ protección CSRF de los demás formularios. La lista es compartida entre disposi
 1. En **Faltantes**, escribí el nombre o código de barras y seleccioná el producto
    en las sugerencias. Si ya está en un pedido vas a ver **Ya pedido**. Pulsá
    **Registrar faltante**. Si no hay coincidencias, podés crearlo desde la
-   búsqueda. La fecha está junto al nombre. **Agregar detalles** o **Editar
-   detalles** abre los campos opcionales de cantidad y observaciones. Al guardar,
-   los valores se muestran en la misma tarjeta. Al pie derecho, **Gestionar
-   Proveedores** abre la ficha y **Eliminar** pide confirmar la baja lógica.
+   búsqueda. Cada faltante ocupa una fila. El lápiz de la izquierda abre la
+   cantidad y las observaciones. **Guardar** actualiza la fila. **Eliminar**
+   abre una segunda confirmación antes de pasar el faltante a Cancelados.
+   La fecha de alta se guarda y se puede filtrar por **Desde** y **Hasta**.
 2. Usá **Sin proveedor asociado** para encontrar faltantes sin un proveedor activo.
    Abrí **Gestionar Proveedores**, escribí parte del nombre y elegí una sugerencia.
    Los proveedores elegidos aparecen debajo del buscador. **Eliminar** quita
@@ -21,7 +21,7 @@ protección CSRF de los demás formularios. La lista es compartida entre disposi
    varios productos a la vez. La preferencia solo orienta la compra.
 3. En **Pedidos**, escribí el proveedor y elegilo en las sugerencias para cargar
    sus faltantes automáticamente. Seleccioná los productos. Ajustá cantidades
-   y observaciones y revisá el mensaje. Podés copiarlo o abrir WhatsApp si el
+   y observaciones con el lápiz de cada fila y revisá el mensaje. Podés copiarlo o abrir WhatsApp si el
    contacto de Gestión contiene un número único en un formato reconocible. Una
    vez hecho el pedido, pulsá **Registrar pedido realizado**. Copiar y abrir el
    enlace son acciones de consulta.

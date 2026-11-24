@@ -1,6 +1,6 @@
 {% extends "restock/layout.html" %}
 {% from "restock/components.html" import date_fields, filter_actions, product_filter, supplier_picker, state_badge with context %}
-{% from "components.html" import pager with context %}
+{% from "components.html" import pager, edit_column, edit_icon with context %}
 {% block restock_content %}
 <h1>Historial de pedidos</h1>
 <form class="card restock-filters" method="get" action="/faltantes/historial" data-report-filter data-auto-filter="open-range" aria-label="Filtros de pedidos">
@@ -18,15 +18,15 @@
 <section data-report-results="history" data-restock-refresh aria-labelledby="restock-history-heading">
   <div class="report-heading restock-heading"><h2 id="restock-history-heading">Pedidos registrados</h2><span class="restock-count">{{ rows.total }}</span></div>
   {% if rows.items %}
-  <ul class="restock-list">
-    {% for order, count, state in rows.items %}
-    <li class="card restock-item">
-      <div class="restock-item-head"><h3><a href="/faltantes/historial/{{ order.id }}">#{{ order.id }} · {{ order.supplier_name }}</a></h3>{{ state_badge(state, order_states[state]) }}</div>
-      <p class="restock-meta"><span>{{ count }} producto{{ 's' if count != 1 else '' }}</span><span>Registrado {{ order.created_at|local_date }}</span>{% if order.closed_at %}<span>Cerrado {{ order.closed_at|local_date }}</span>{% endif %}</p>
-      <a href="/faltantes/historial/{{ order.id }}">Ver detalle<span class="sr-only"> del pedido {{ order.id }}</span></a>
-    </li>
-    {% endfor %}
-  </ul>
+  <div class="table-wrap"><table class="restock-report" aria-labelledby="restock-history-heading">
+    <thead><tr>{{ edit_column() }}<th>Pedido</th><th>Proveedor</th><th>Productos</th><th>Registrado</th><th>Estado</th><th>Cerrado</th></tr></thead>
+    <tbody>{% for order, count, state in rows.items %}
+      <tr><td>{% if not order.closed_at %}{{ edit_icon('/faltantes/historial/' ~ order.id, 'Editar recepción del pedido ' ~ order.id) }}{% endif %}</td>
+        <th scope="row"><a href="/faltantes/historial/{{ order.id }}" aria-label="Ver detalle del pedido #{{ order.id }} · {{ order.supplier_name }}">#{{ order.id }}</a></th>
+        <td class="wrap">{{ order.supplier_name }}</td><td>{{ count }}</td><td>{{ order.created_at|local_date }}</td>
+        <td>{{ state_badge(state, order_states[state]) }}</td><td>{{ order.closed_at|local_date if order.closed_at else '—' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
   {% else %}<p class="card restock-empty">No hay pedidos que coincidan con estos filtros.</p>{% endif %}
   {{ pager(rows) }}
 </section>

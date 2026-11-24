@@ -240,12 +240,10 @@ def save_product(db, values, supplier_ids=(), *, product_id=None, add_need=False
         row = RestockProduct(request_key=key, **fields)
         db.add(row)
     else:
-        active = values.get("active")
-        if active not in {"0", "1"}:
-            raise ValueError("Elegí un estado válido para el producto")
+        if "active" in values:
+            row.active = product_active(values["active"])
         for field, value in fields.items():
             setattr(row, field, value)
-        row.active = active == "1"
         row.version += 1
 
     # Liberar el índice parcial antes de asignar otro proveedor preferido.
@@ -263,6 +261,23 @@ def save_product(db, values, supplier_ids=(), *, product_id=None, add_need=False
     if add_need:
         db.add(RestockNeed(product_id=row.id, request_key=key, **purchase_fields(values)))
     return row
+
+
+def product_active(value):
+    if value not in {"0", "1"}:
+        raise ValueError("Elegí un estado válido para el producto")
+    return value == "1"
+
+
+def set_product_active(db, product_id, values):
+    row = db.get(RestockProduct, product_id, with_for_update=True)
+    if row is None:
+        raise LookupError("Producto no encontrado")
+    require_version(row, values.get("version"))
+    active = product_active(values.get("active"))
+    if row.active != active:
+        row.active = active
+        row.version += 1
 
 
 def add_supplier_products(db, supplier_id, selections):
@@ -382,9 +397,11 @@ def need_statement(q="", supplier="", status="pending", starts="", ends="", sort
 
 
 def eligible_needs(db, supplier_id):
-    return list(db.scalars(select(RestockNeed).join(RestockProduct).options(joinedload(RestockNeed.product)).where(
-        RestockNeed.status == "pending", supplier_link(supplier_id))
-        .order_by(RestockProduct.name_key, RestockProduct.presentation, RestockNeed.id)))
+    query = (select(RestockNeed).join(RestockProduct)
+             .options(joinedload(RestockNeed.product).options(association_options()))
+             .where(RestockNeed.status == "pending", supplier_link(supplier_id))
+             .order_by(RestockProduct.name_key, RestockProduct.presentation, RestockNeed.id))
+    return list(db.scalars(query))
 
 
 @dataclass(frozen=True)

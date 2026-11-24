@@ -193,7 +193,7 @@ def product_form(request, db, row=None, form=None, *, quick=False, name="", **co
                                                         RestockNeed.status.in_(restock.ACTIVE_NEEDS)).limit(1)) is not None
     if form is None:
         form = {"name": row.name if row else name, "barcode": row.barcode if row else "",
-                "active": "1" if not row or row.active else "0", "version": row.version if row else 1,
+                "version": row.version if row else 1,
                 "request_key": str(uuid4())}
         selected = [link.supplier_id for link in row.suppliers] if row else []
     else:
@@ -278,6 +278,11 @@ def supplier_preference(supplier_id: int, product_id: int, request: Request, for
                         db: Session = Depends(get_db)):
     return write(request, db, lambda: restock.set_supplier_preference(db, supplier_id, product_id, form),
                  "edited", f"/faltantes/productos/proveedores/{supplier_id}")
+
+
+@router.post("/productos/{product_id}/estado")
+def product_availability(product_id: int, request: Request, form: FormData = Depends(form_data), db: Session = Depends(get_db)):
+    return write(request, db, lambda: restock.set_product_active(db, product_id, form), "product", "/faltantes/productos")
 
 
 @router.get("/productos/{product_id}")

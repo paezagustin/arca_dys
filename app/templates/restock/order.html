@@ -1,6 +1,6 @@
 {% extends "restock/layout.html" %}
-{% from "restock/components.html" import csrf, state_badge with context %}
-{% from "components.html" import breadcrumb with context %}
+{% from "restock/components.html" import csrf, state_badge, outcome_options, line_editor with context %}
+{% from "components.html" import breadcrumb, edit_column, edit_button with context %}
 {% block restock_location %}{{ breadcrumb([('Faltantes','/faltantes'),('Historial','/faltantes/historial'),('Pedido #' ~ row.id,none)]) }}{% endblock %}
 {% block restock_content %}
 <section data-report-results="receipt" data-restock-refresh>
@@ -14,32 +14,25 @@
       <button type="button" class="quiet" data-receipt-set="received">Marcar todos los pendientes como recibidos</button>
       <button type="button" class="quiet" data-receipt-set="cancelled">Seleccionar cancelación de los pendientes</button>
     </div>{% endif %}
-    <ul class="restock-list">
-      {% for line in row.lines %}
-      <li class="card restock-item" data-order-line="{{ line.id }}">
-        <div class="restock-item-head"><h3>{{ line.product_name }}</h3>{{ state_badge(line.outcome, line_states[line.outcome]) }}</div>
-        {% if line.quantity or line.resolved_at %}<p class="restock-meta">
-          {% if line.quantity %}<span>Cantidad {{ line.quantity|restock_quantity }}</span>{% endif %}
-          {% if line.resolved_at %}<span>{{ line.resolved_at|local_date }}</span>{% endif %}
-        </p>{% endif %}
-        {% if line.notes %}<p class="restock-note">{{ line.notes }}</p>{% endif %}
-        {% if line.outcome == 'waiting' %}
-        <div class="restock-fields">
-          <div class="field"><label for="receipt-outcome-{{ line.id }}">Resultado</label>
-            <select id="receipt-outcome-{{ line.id }}" name="outcome_{{ line.id }}" data-receipt-outcome>
-              <option value="waiting">Mantener pendiente de entrega</option>
-              <option value="received">Recibido</option>
-              <option value="undelivered">No entregado · volver a faltantes</option>
-              <option value="cancelled">Cancelar · volver a faltantes</option>
-            </select>
-          </div>
-          <div class="field restock-wide"><label for="receipt-notes-{{ line.id }}">Observaciones de recepción</label><textarea id="receipt-notes-{{ line.id }}" name="receipt_{{ line.id }}" rows="2" maxlength="1000">{{ line.receipt_notes }}</textarea></div>
-        </div>
-        {% elif line.receipt_notes %}<p class="restock-note muted">Recepción · {{ line.receipt_notes }}</p>{% endif %}
-      </li>
-      {% endfor %}
-    </ul>
+    <div class="table-wrap"><table class="restock-report" aria-label="Productos y recepción">
+      <thead><tr>{% if not row.closed_at %}{{ edit_column() }}{% endif %}<th>Producto</th><th>Cantidad</th><th>Observaciones</th><th>Resultado</th><th>Observaciones de recepción</th></tr></thead>
+      <tbody>{% for line in row.lines %}
+        <tr data-order-line="{{ line.id }}" data-name="{{ line.product_name }}">
+          {% if not row.closed_at %}<td>{% if line.outcome == 'waiting' %}{{ edit_button('receipt-line-editor', 'Editar recepción de ' ~ line.product_name, 'receipt-' ~ line.id) }}{% endif %}</td>{% endif %}
+          <th scope="row">{{ line.product_name }}</th><td>{{ line.quantity|restock_quantity or '—' }}</td><td class="report-note">{{ line.notes or '—' }}</td>
+          {% if line.outcome == 'waiting' %}
+          <td><span data-line-display="outcome">{{ line_states[line.outcome] }}</span>
+            <select name="outcome_{{ line.id }}" aria-label="Resultado de {{ line.product_name }}" data-line-field="outcome" data-receipt-outcome>{{ outcome_options() }}</select></td>
+          <td class="report-note"><span data-line-display="receipt">{{ line.receipt_notes or '—' }}</span><textarea name="receipt_{{ line.id }}" aria-label="Observaciones de recepción de {{ line.product_name }}" maxlength="1000" rows="2" data-line-field="receipt">{{ line.receipt_notes }}</textarea></td>
+          {% else %}
+          <td>{{ state_badge(line.outcome, line_states[line.outcome]) }}{% if line.resolved_at %}<small>{{ line.resolved_at|local_date }}</small>{% endif %}</td>
+          <td class="report-note">{{ line.receipt_notes or '—' }}</td>
+          {% endif %}
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
     {% if not row.closed_at %}<div class="actions crud-actions"><a class="button quiet crud-cancel" href="/faltantes/historial">Cancelar</a><button type="submit">Guardar</button></div>{% endif %}
   </form>
+  {% if not row.closed_at %}{{ line_editor('receipt-line-editor', receipt=true) }}{% endif %}
 </section>
 {% endblock %}

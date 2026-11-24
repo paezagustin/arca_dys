@@ -1,20 +1,20 @@
 .restock {
-  max-width: 1110px;
   margin: 0 auto 36px;
   overflow-wrap: anywhere;
 }
 .restock [hidden] { display: none !important; }
 .restock h1 { margin-bottom: 18px; }
-.restock h3, .restock-item p { margin: 0; }
+.restock h3 { margin: 0; }
 .restock .card { margin: 0 0 16px; padding: clamp(14px, 2.2vw, 24px); }
 .restock-tabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  max-width: 600px;
-  border: 1px solid var(--line);
+  width: min(100%, 42rem);
+  border: 1px solid var(--region-line);
+  box-shadow: 0 2px 6px #18263818;
   border-radius: 12px;
   padding: 4px;
-  margin-bottom: 22px;
+  margin: 0 auto 22px;
   background: var(--paper);
 }
 .restock-tabs a {
@@ -29,7 +29,7 @@
   font-weight: 650;
 }
 .restock-tabs a:hover { background: var(--ground); }
-.restock-tabs a[aria-current] { color: #07678e; background: #e6f4fc; }
+.restock-tabs a[aria-current] { color: white; background: var(--brand); }
 .restock .restock-quick { border-top: 3px solid var(--brand); }
 .restock-register {
   display: grid;
@@ -49,10 +49,16 @@
 .restock-wide { grid-column: 1 / -1; }
 .restock-fields > .field + .field, .restock-purchase-fields > .field + .field { margin-top: 0; }
 .restock .field label { margin-bottom: 4px; }
-.restock-filter-fields {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
-  align-items: end;
+.restock-filters:has(.restock-filter-fields) {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
 }
+.restock-filter-fields { display: contents; }
+.restock-filter-fields > .field { flex: 1 1 8rem; min-width: 0; }
+.restock-filter-fields > [data-restock-picker] { flex-basis: 10rem; }
+.restock .restock-filters > .actions { margin: 0; flex-wrap: nowrap; }
 .restock-filter-fields :is(input:not([type=hidden]), select) { height: 46px; margin: 0; }
 .restock-filter-fields input[type=date] { min-inline-size: 0; }
 .restock .actions { margin-top: 12px; flex-wrap: wrap; }
@@ -70,7 +76,6 @@
 .restock-heading h2 { margin: 0; }
 .restock-count { color: #07678e; font-weight: 650; }
 .restock-list { list-style: none; padding: 0; margin: 0; }
-.restock .restock-item, .restock-match { display: grid; gap: 8px; margin-bottom: 10px; }
 .restock-match { padding: 12px 0; border-bottom: 1px solid var(--line); }
 .restock-item-head, .restock-page-head, .restock-meta, .restock-associations {
   display: flex;
@@ -81,7 +86,6 @@
 }
 .restock-item-head { justify-content: space-between; }
 .restock-item-head h2 { margin: 0; }
-.restock-item-head h3, .restock-draft-product strong { font-size: 1.0625rem; }
 .restock-page-head { align-items: center; justify-content: space-between; margin: 0 0 16px; }
 .restock-page-head h1 { margin: 0; }
 .restock-meta { color: var(--muted); font-size: .875rem; }
@@ -102,28 +106,20 @@
 .restock-state-cancelled { color: #774058; background: #f9eef4; }
 .restock-warning, .restock-state-undelivered, .restock-state-short, .restock-state-partial { color: #78491a; background: #fff2dc; }
 .restock-note { white-space: pre-wrap; }
-.restock-need-date { color: var(--muted); font-size: .875rem; font-weight: 400; white-space: nowrap; }
-.restock-need-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 24px;
-  padding: 10px 12px;
-  margin: 4px 0 0;
-  border-radius: 8px;
-  background: var(--ground);
-}
-.restock-need-details dt { color: var(--muted); font-size: .8125rem; }
-.restock-need-details dd { margin: 2px 0 0; }
-.restock-need-quantity { font-weight: 650; font-variant-numeric: tabular-nums; }
-.restock-need-notes { flex: 1 1 12rem; min-width: 0; }
-.restock-need-footer, .restock-need-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.restock-need-footer { flex-wrap: wrap; margin-top: 6px; }
-.restock-need-actions { margin-inline-start: auto; max-width: 100%; }
-.restock-need-actions .button { min-width: 0; text-align: center; }
+.restock-report th[scope=row] { white-space: normal; min-width: 9rem; max-width: 24rem; }
+.restock-report .restock-associations { justify-content: center; min-width: 9rem; }
+.restock-report .restock-chip { white-space: normal; }
+.restock-report small, .restock-report .restock-warning { display: block; margin: 4px auto; }
+.restock-report td > .button, .restock-report td button.quiet { min-height: 40px; padding: 8px 12px; }
+.restock-report .restock-check { justify-content: center; }
+.restock .restock-preview { margin-top: 18px; }
+.restock [data-line-display] { display: none; }
+.restock[data-restock-ready] [data-line-display] { display: inline; }
+.restock[data-restock-ready] [data-line-field] { display: none; }
 .restock [data-restock-details-open] { display: none; }
 .restock[data-restock-ready] [data-restock-details-open] { display: inline-flex; }
 .restock-details-dialog { max-height: calc(100dvh - 32px); padding: clamp(16px, 4vw, 24px); }
-.restock-details-dialog .restock-details-product { margin: 4px 0 18px; }
+.restock-details-dialog h2 { margin: 0 0 18px; }
 .restock-details-dialog form { display: grid; gap: 14px; }
 .restock-details-dialog .actions, .restock-details-dialog .restock-details-error { margin: 0; }
 .restock-purchase-fields {
@@ -133,7 +129,6 @@
   gap: 12px;
 }
 .restock-purchase-fields textarea { resize: vertical; }
-.restock-draft-details[open] .restock-purchase-fields { padding: 12px; background: var(--ground); border-radius: 8px; }
 .restock-empty { color: var(--muted); }
 .restock-disclosure summary {
   min-height: 44px;
@@ -145,10 +140,13 @@
 .restock-disclosure[open] > summary { margin-bottom: 9px; }
 .restock-disclosure form > button { margin-top: 8px; }
 .restock-editor { display: grid; gap: 14px; }
-.restock-status-field { width: min(100%, 380px); }
 .restock-duplicates { min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: #fff8e8; }
-.restock-linked-suppliers { width: min(100%, 38rem); min-width: 0; }
-.restock-linked-suppliers > p { margin: 10px 0 0; }
+.restock-linked-suppliers { min-width: 0; }
+.restock-linked-suppliers > .field { max-width: 38rem; }
+.restock-suppliers-report { margin-top: 28px; }
+.restock-suppliers-report th:first-child, .restock-suppliers-report td:first-child:not([colspan]) { text-align: start; }
+.restock-suppliers-report td:last-child:not([colspan]) { width: 1%; }
+.restock-suppliers-report .empty { padding: 18px; }
 .restock-supplier-list { list-style: none; margin: 0; padding: 0; }
 .restock-supplier-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding: 8px 0; }
 .restock-supplier-list button { flex: none; }
@@ -162,9 +160,12 @@
 .restock-confirm { border-top: 1px solid var(--line); padding-top: 12px; }
 .restock [data-report-results][aria-busy] { cursor: progress; }
 @media (max-width: 540px) {
-  .restock-tabs { font-size: .875rem; margin-bottom: 16px; }
+  .restock-tabs { grid-template-columns: repeat(4, auto); font-size: .875rem; margin-bottom: 16px; }
+  .restock-tabs a { padding-inline: 2px; white-space: nowrap; }
   .restock-register { grid-template-columns: minmax(0, 1fr); }
   .restock-preview .actions > *, .restock-receipt-actions button { width: 100%; text-align: center; }
   .restock-purchase-fields { grid-template-columns: minmax(0, 1fr); }
-  .restock-need-footer :is(.button, button) { padding-inline: 10px; font-size: .875rem; }
+  .restock-filter-fields > .field { flex: 1 1 8rem; }
+  .restock-filter-fields > [data-restock-picker] { flex: 1 1 100%; }
+  .table-wrap .edit-column, .table-wrap table:has(.edit-column) > tbody > tr > td:first-child:not([colspan]) { padding-inline: 5px; }
 }

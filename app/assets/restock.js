@@ -38,7 +38,7 @@
   }
 
   function supplierList(section, input) {
-    const list = section.querySelector('.restock-supplier-list');
+    const list = section.querySelector('[data-supplier-list]');
     const template = section.querySelector('template');
     const status = section.querySelector('[data-association-status]');
     const empty = section.querySelector('[data-no-suppliers]');
@@ -61,7 +61,7 @@
     section.addEventListener('click', event => {
       const remove = event.target.closest('[data-remove-supplier]');
       if (!remove) return;
-      const item = remove.closest('li');
+      const item = remove.closest('tr');
       const next = item.nextElementSibling || item.previousElementSibling;
       status.textContent = `${item.querySelector('[data-supplier-name]').textContent} retirado de la lista.`;
       item.remove();
@@ -167,13 +167,13 @@
     const form = event.target.closest('form[data-restock-write]');
     if (!form || event.defaultPrevented || (form.hasAttribute('data-confirm') && form.dataset.confirmed !== 'yes')) return;
     event.preventDefault();
-    if (form.dataset.saving) return;
+    const details = form.closest('dialog[data-restock-details]');
+    if (form.dataset.saving || details?.querySelector('form[data-saving]') || details?.hasAttribute('data-refresh-on-close')) return;
     const data = new URLSearchParams(new FormData(form));
     if (event.submitter?.name) data.append(event.submitter.name, event.submitter.value);
     const submit = event.submitter || form.querySelector('button[type=submit], [data-confirm-trigger]');
-    const details = form.closest('dialog[data-restock-details]');
     const detailsError = details?.querySelector('[data-restock-details-error]');
-    const cancel = details?.querySelector('[data-restock-details-close]');
+    const dialogButtons = details?.querySelectorAll('button') || [];
     function showError(message) {
       if (detailsError) {
         detailsError.textContent = message;
@@ -185,7 +185,7 @@
     form.dataset.saving = 'true';
     form.setAttribute('aria-busy', 'true');
     if (submit) submit.disabled = true;
-    if (cancel) cancel.disabled = true;
+    for (const button of dialogButtons) button.disabled = true;
     if (detailsError) detailsError.hidden = true;
     outstandingWrites += 1;
     try {
@@ -220,9 +220,9 @@
       outstandingWrites -= 1;
       delete form.dataset.saving;
       form.removeAttribute('aria-busy');
-      if (cancel) cancel.disabled = false;
-      if (submit) submit.disabled = details?.hasAttribute('data-refresh-on-close')
-        || (form.matches('[data-restock-draft]') && !form.querySelector('[name=need_id]:checked'));
+      const stale = details?.hasAttribute('data-refresh-on-close');
+      for (const button of dialogButtons) button.disabled = stale && !button.matches('[data-restock-details-close]');
+      if (submit) submit.disabled = stale || (form.matches('[data-restock-draft]') && !form.querySelector('[name=need_id]:checked'));
     }
   });
 
@@ -245,7 +245,7 @@
     ].filter(Boolean).join('\n\n') : '';
     form.querySelector('[data-restock-message]').value = message;
     form.querySelector('[data-restock-copy]').disabled = !message;
-    form.querySelector('button[type=submit]').disabled = !message || Boolean(form.dataset.saving);
+    form.elements.confirmed.disabled = !message || Boolean(form.dataset.saving);
     const whatsapp = form.querySelector('[data-restock-whatsapp]');
     if (whatsapp) {
       whatsapp.hidden = !message;
@@ -283,7 +283,18 @@
     }
     const details = event.target.closest('[data-restock-details-open]');
     if (details) {
-      document.getElementById(details.getAttribute('aria-controls')).showModal();
+      const dialog = document.getElementById(details.getAttribute('aria-controls'));
+      if (dialog.matches('[data-line-editor]')) {
+        const row = details.closest('tr');
+        dialog.querySelector('[data-line-title]').textContent = row.dataset.name;
+        dialog.dataset.opener = details.dataset.reportFocusKey;
+        for (const field of row.querySelectorAll('[data-line-field]')) {
+          const editor = dialog.querySelector('form').elements.namedItem(field.dataset.lineField);
+          editor.value = field.value;
+          editor.setCustomValidity('');
+        }
+      }
+      dialog.showModal();
       return;
     }
     const close = event.target.closest('[data-restock-details-close]');
@@ -296,8 +307,41 @@
     const receipt = event.target.closest('[data-receipt-set]');
     if (receipt) {
       receipt.form.dataset.dirty = 'true';
-      for (const select of receipt.form.querySelectorAll('[data-receipt-outcome]')) select.value = receipt.dataset.receiptSet;
+      for (const select of receipt.form.querySelectorAll('[data-receipt-outcome]')) {
+        select.value = receipt.dataset.receiptSet;
+        displayLineField(select);
+      }
     }
+  });
+
+  function displayLineField(field) {
+    const value = field.selectedOptions ? field.selectedOptions[0].textContent : field.value.trim();
+    field.closest('tr').querySelector(`[data-line-display="${field.dataset.lineField}"]`).textContent = value || '—';
+  }
+
+  page.addEventListener('submit', event => {
+    const dialog = event.target.closest('dialog[data-line-editor]');
+    if (!dialog) return;
+    event.preventDefault();
+    const editor = event.target;
+    const quantity = editor.elements.quantity;
+    if (quantity && quantity.value.trim()) {
+      const value = quantity.value.trim().replace(',', '.');
+      if (!/^\d{1,9}(?:\.\d{1,3})?$/.test(value) || Number(value) <= 0) {
+        quantity.setCustomValidity('Ingresá una cantidad positiva de hasta 9 enteros y 3 decimales, o dejala vacía.');
+        quantity.reportValidity();
+        return;
+      }
+    }
+    const row = page.querySelector(`[data-report-focus-key="${CSS.escape(dialog.dataset.opener)}"]`).closest('tr');
+    for (const field of row.querySelectorAll('[data-line-field]')) {
+      field.value = editor.elements.namedItem(field.dataset.lineField).value.trim();
+      displayLineField(field);
+    }
+    const form = row.closest('form');
+    form.dataset.dirty = 'true';
+    if (form.matches('[data-restock-draft]')) updateDraft(form);
+    dialog.close();
   });
 
   page.addEventListener('cancel', event => {
@@ -311,7 +355,7 @@
     if (!dialog.matches('dialog[data-restock-details]')) return;
     const form = dialog.querySelector('form');
     form.reset();
-    form.querySelector('button[type=submit]').disabled = false;
+    for (const button of dialog.querySelectorAll('button')) button.disabled = false;
     delete form.dataset.dirty;
     form.querySelector('[data-restock-details-error]').hidden = true;
     if (dialog.hasAttribute('data-refresh-on-close')) {
@@ -329,6 +373,7 @@
   });
 
   page.addEventListener('input', event => {
+    if (event.target.matches('[data-line-editor] [name=quantity]')) event.target.setCustomValidity('');
     const form = event.target.closest('form[data-restock-write]');
     if (!form) return;
     form.dataset.dirty = 'true';

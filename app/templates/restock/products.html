@@ -1,6 +1,6 @@
 {% extends "restock/layout.html" %}
 {% from "restock/components.html" import csrf, filter_actions, product_filter, supplier_picker, association_list, unavailable with context %}
-{% from "components.html" import pager with context %}
+{% from "components.html" import pager, edit_column, edit_icon with context %}
 {% block restock_content %}
 <div class="page-head restock-page-head"><h1>Productos</h1><a class="button" href="/faltantes/productos/nuevo">Nuevo producto</a></div>
 <details class="card restock-disclosure"{% if sync and sync.last_error %} open{% endif %}>
@@ -36,16 +36,20 @@
 <section data-report-results="products" data-restock-refresh aria-labelledby="restock-product-heading">
   <div class="report-heading restock-heading"><h2 id="restock-product-heading">Productos de reposición</h2><span class="restock-count">{{ rows.total }}</span></div>
   {% if rows.items %}
-  <ul class="restock-list">
-    {% for row in rows.items %}
-    <li class="card restock-item">
-      <div class="restock-item-head"><h3><a href="/faltantes/productos/{{ row.id }}">{{ row.name }}</a></h3>
-        {{ unavailable(row) }}</div>
-      {{ association_list(row) }}
-      <p class="restock-meta"><span>{{ 'Catálogo Dulce y Salado' if row.source else 'Producto local' }}</span>{% if row.barcode %}<span>{{ row.barcode }}</span>{% endif %}</p>
-    </li>
-    {% endfor %}
-  </ul>
+  <div class="table-wrap"><table class="restock-report" aria-labelledby="restock-product-heading">
+    <thead><tr>{{ edit_column() }}<th>Producto</th><th>Proveedores</th><th>Origen</th><th>Código de barras</th><th>Disponibilidad</th></tr></thead>
+    <tbody>{% for row in rows.items %}
+      <tr><td>{{ edit_icon('/faltantes/productos/' ~ row.id, 'Editar ' ~ row.name) }}</td>
+        <th scope="row">{{ row.name }}</th><td>{{ association_list(row) }}</td>
+        <td>{{ 'Catálogo Dulce y Salado' if row.source else 'Producto local' }}</td><td>{{ row.barcode or '—' }}</td>
+        <td>{{ unavailable(row) }}
+          <form method="post" action="/faltantes/productos/{{ row.id }}/estado" data-restock-write>
+            {{ csrf() }}<input type="hidden" name="version" value="{{ row.version }}"><input type="hidden" name="active" value="{{ '0' if row.active else '1' }}">
+            <button class="quiet" type="submit" data-report-focus-key="product-state-{{ row.id }}" aria-label="{{ 'Archivar' if row.active else 'Reactivar' }} {{ row.name }}">{{ 'Archivar' if row.active else 'Reactivar' }}</button>
+          </form>
+        </td></tr>
+    {% endfor %}</tbody>
+  </table></div>
   {% else %}<p class="card restock-empty">No hay productos que coincidan con estos filtros.</p>{% endif %}
   {{ pager(rows) }}
 </section>

@@ -1,5 +1,6 @@
 {% extends "restock/layout.html" %}
-{% from "restock/components.html" import csrf, purchase_fields, supplier_picker, unavailable with context %}
+{% from "restock/components.html" import csrf, line_editor, association_list, state_badge, supplier_picker, unavailable with context %}
+{% from "components.html" import edit_column, edit_button with context %}
 {% block restock_content %}
 <h1>Preparar pedido</h1>
 <form class="card restock-filters restock-order-filter" method="get" action="/faltantes/pedidos" data-report-filter>
@@ -16,23 +17,25 @@
       <label class="restock-check restock-select-all"><input type="checkbox" data-restock-select-all> Seleccionar todos</label>
       <span class="muted" data-restock-selection role="status"></span>
     </div>
-    <ul class="restock-list">
-      {% for row in rows %}
-      {% set product = row.product %}
-      <li class="card restock-item" data-draft-line data-name="{{ product.name }}">
-        <div class="restock-item-head">
-          <label class="restock-check restock-draft-product"><input type="checkbox" name="need_id" value="{{ row.id }}"><strong>{{ product.name }}</strong></label>
-          {{ unavailable(product) }}
-        </div>
-        <input type="hidden" name="version_{{ row.id }}" value="{{ row.version }}"><input type="hidden" name="product_version_{{ row.id }}" value="{{ product.version }}">
-        <details class="restock-disclosure restock-draft-details">
-          <summary>Cantidad y observaciones{% if row.quantity %} · {{ row.quantity|restock_quantity }}{% endif %}</summary>
-          {{ purchase_fields('draft-' ~ row.id, row, '_' ~ row.id) }}
-        </details>
-        {% if row.notes %}<p class="restock-note muted">{{ row.notes }}</p>{% endif %}
-      </li>
-      {% endfor %}
-    </ul>
+    <div class="table-wrap"><table class="restock-report" aria-labelledby="restock-order-heading">
+      <thead><tr>{{ edit_column() }}<th>Producto</th><th>Cantidad</th><th>Observaciones</th><th>Estado</th><th>Proveedores</th><th>Gestionar Proveedores</th></tr></thead>
+      <tbody>{% for row in rows %}
+        {% set product = row.product %}
+        <tr data-draft-line data-name="{{ product.name }}">
+          <td>{{ edit_button('draft-line-editor', 'Editar renglón de ' ~ product.name, 'draft-' ~ row.id) }}</td>
+          <th scope="row"><label class="restock-check"><input type="checkbox" name="need_id" value="{{ row.id }}">{{ product.name }}</label>
+            {{ unavailable(product) }}
+            <input type="hidden" name="version_{{ row.id }}" value="{{ row.version }}"><input type="hidden" name="product_version_{{ row.id }}" value="{{ product.version }}">
+          </th>
+          <td><span data-line-display="quantity">{{ row.quantity|restock_quantity or '—' }}</span>
+            <input data-line-field="quantity" name="quantity_{{ row.id }}" aria-label="Cantidad de {{ product.name }}" inputmode="decimal" maxlength="13" value="{{ row.quantity|restock_quantity }}"></td>
+          <td class="report-note"><span data-line-display="notes">{{ row.notes or '—' }}</span><textarea data-line-field="notes" name="notes_{{ row.id }}" aria-label="Observaciones de {{ product.name }}" maxlength="1000" rows="2">{{ row.notes }}</textarea></td>
+          <td>{{ state_badge(row.status, need_states[row.status]) }}</td>
+          <td>{{ association_list(product) }}</td>
+          <td><a class="button quiet" href="/faltantes/productos/{{ product.id }}" target="_blank" rel="noopener" aria-label="Gestionar Proveedores de {{ product.name }} (abre otra pestaña)">Gestionar Proveedores</a></td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
     <section class="card restock-editor restock-preview">
       <h3>Vista previa del pedido</h3>
       <div class="field"><label for="restock-order-notes">Observaciones para el proveedor (opcional)</label><textarea name="order_notes" id="restock-order-notes" rows="2" maxlength="1000"></textarea></div>
@@ -46,6 +49,7 @@
       <div class="actions restock-confirm"><button type="submit" name="confirmed" value="1">Registrar pedido realizado</button></div>
     </section>
   </form>
+  {{ line_editor('draft-line-editor') }}
   {% elif supplier %}<p class="card restock-empty">Este proveedor no tiene faltantes pendientes.</p>
   {% elif requested_supplier %}<p class="card restock-empty">El proveedor ya no está activo. Elegí otro para preparar el pedido.</p>
   {% else %}<p class="card restock-empty">Elegí un proveedor para ver qué productos podés pedirle.</p>{% endif %}

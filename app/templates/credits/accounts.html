@@ -1,4 +1,4 @@
-{% extends "credits/base.html" %}{% from "components.html" import pager with context %}
+{% extends "credits/base.html" %}{% from "components.html" import pager, edit_icon, edit_column with context %}
 {% block credit_content %}
 <div class="page-head"><h1>Fiados</h1><div class="actions credit-directory-actions"><a class="button" href="/fiados/nuevo" data-credit-dialog>+ Nuevo fiado</a><a href="/fiados/personas/nueva" class="button quiet" data-credit-dialog>Crear persona</a></div></div>
 {% if legacy.count %}<div class="notice credit-legacy-notice"><strong>{{ legacy.count }} registros anteriores para revisar.</strong> {% if legacy.debt is not none %}Saldo pendiente anterior: <span class="money">{{ legacy.debt|money }}</span>.{% else %}Hay importes anteriores que requieren conciliación.{% endif %} Todavía no están incluidos en las cuentas. <a href="/fiados/anteriores">Revisar y vincular</a></div>{% endif %}
@@ -8,9 +8,19 @@
   <label for="credit-account-search">Buscar persona</label><div class="credit-search-row"><input id="credit-account-search" name="q" type="search" maxlength="150" value="{{ q }}" placeholder="Nombre o referencia" autocomplete="off"><button name="state" value="{{ state }}">Buscar</button></div>
   <div class="credit-filter-toolbar"><div class="credit-filters" role="group" aria-label="Filtrar cuentas">{% for key,label in [('debt','Con deuda'),('clear','Sin deuda'),('all','Todas')] %}{% if loop.last %}<div class="credit-filter-tail">{% endif %}<button name="state" value="{{ key }}" class="quiet{% if state == key %} is-selected{% endif %}" aria-pressed="{{ 'true' if state == key else 'false' }}">{{ label }}</button>{% if loop.last %}<span class="credit-results-count">{{ accounts.total }} {{ 'persona' if accounts.total == 1 else 'personas' }}</span></div>{% endif %}{% endfor %}</div><div class="credit-list-total"><span>Total fiado:</span><strong class="money">{{ total|money }}</strong></div></div>
 </form>
-<div class="credit-accounts">{% for person,balance in accounts.items %}
-<article class="credit-account-card"><div class="credit-card-heading"><div><h3>{{ person.name }}{% if person.alias %} <span class="credit-heading-reference">({{ person.alias }})</span>{% endif %}</h3></div><span class="credit-status{% if balance > 0 %} credit-debt{% endif %}">{{ 'Con deuda' if balance > 0 else 'Sin deuda' }}</span></div><strong class="credit-card-balance money">{{ balance|money }}</strong><div class="credit-card-actions"><a class="button secondary" href="/fiados/{{ person.id }}" aria-label="Ver cuenta de {{ person.name }}">Ver cuenta</a><a class="button quiet" href="/fiados/nuevo?customer_id={{ person.id }}" aria-label="Nuevo fiado para {{ person.name }}" data-credit-dialog>+ Fiado</a></div></article>
-{% else %}<div class="empty"><p>No hay personas con estos filtros.</p><a href="/fiados?state=all">Ver todas las personas</a></div>{% endfor %}</div>
+<div class="table-wrap"><table aria-label="Cuentas de fiados">
+  <thead><tr>{{ edit_column() }}<th>Persona</th><th>Estado</th><th>Saldo</th><th>Cuenta</th></tr></thead>
+  <tbody>{% for person,balance in accounts.items %}
+    <tr>
+      <td>{{ edit_icon('/fiados/personas/' ~ person.id ~ '/editar', 'Editar datos de ' ~ person.name, true) }}</td>
+      <td class="wrap">{{ person.name }}{% if person.alias %} <span class="credit-heading-reference">({{ person.alias }})</span>{% endif %}</td>
+      <td><span class="credit-status{% if balance > 0 %} credit-debt{% endif %}">{{ 'Con deuda' if balance > 0 else 'Sin deuda' }}</span></td>
+      <td class="money">{{ balance|money }}</td>
+      <td><div class="actions"><a class="button secondary" href="/fiados/{{ person.id }}" aria-label="Ver cuenta de {{ person.name }}">Ver cuenta</a>
+        <a class="button quiet" href="/fiados/nuevo?customer_id={{ person.id }}" aria-label="Nuevo fiado para {{ person.name }}" data-credit-dialog>+ Fiado</a></div></td>
+    </tr>
+  {% else %}<tr><td colspan="5" class="empty">No hay personas con estos filtros. <a href="/fiados?state=all">Ver todas las personas</a></td></tr>{% endfor %}</tbody>
+</table></div>
 {{ pager(accounts) }}
 </section>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% extends "credits/base.html" %}{% from "components.html" import pager, edit_icon, breadcrumb, whatsapp_icon with context %}
+{% extends "credits/base.html" %}{% from "components.html" import pager, edit_column, edit_icon, breadcrumb, whatsapp_icon with context %}
 {% block credit_content %}
 {{ breadcrumb([('Fiados','/fiados'),(person.name,none)]) }}
 {% if request.query_params.get('stored') %}<div class="notice" role="status">{{ {'person':'Persona guardada.','movement':'Movimiento registrado.','reversal':'Anulación registrada.','legacy':'Registro anterior vinculado sin modificar su original.','edited':'Movimiento corregido.','deleted':'Movimiento eliminado de la cuenta.'}.get(request.query_params.get('stored'),'Registro guardado.') }}</div>{% endif %}
@@ -17,7 +17,7 @@
 </tbody></table></div>{{ pager(periods) }}</section>
 {% else %}
 <section class="card credit-movements">{{ report_heading('Período saldado' if selected_period else 'Período actual') }}
-<div class="table-wrap"><table class="credit-report"><thead><tr><th><span class="sr-only">Editar</span></th><th>Fecha</th><th>Movimiento</th><th>Detalle</th><th>Importe</th></tr></thead><tbody>
+<div class="table-wrap"><table class="credit-report"><thead><tr>{{ edit_column() }}<th>Fecha</th><th>Movimiento</th><th>Detalle</th><th>Importe</th></tr></thead><tbody>
 {% for movement,running_balance in movements.items %}
 <tr><td>{% if movement.kind in ['purchase','payment'] and movement.id not in reversed_ids %}{{ edit_icon('/fiados/movimientos/' ~ movement.id ~ '/editar','Editar ' ~ labels[movement.kind]|lower ~ ' del ' ~ movement.entry_date|local_date ~ ' por ' ~ movement.delta|abs|money,true) }}{% endif %}</td><td class="credit-report-date">{{ movement.entry_date|local_date }}</td><td>{{ labels[movement.kind] }}{% if movement.id in reversed_ids %}<small class="muted">Con anulación</small>{% endif %}</td><td class="credit-report-detail"><span class="credit-note">{{ movement.observation or '—' }}</span></td><td class="money{% if movement.delta < 0 %} credit-payment-text{% endif %}">{{ '+' if movement.delta > 0 else '−' }}{{ movement.delta|abs|money }}</td></tr>
 {% else %}<tr><td colspan="5" class="empty">La cuenta está saldada. <a href="/fiados/{{ person.id }}?history=1">Ver historial</a></td></tr>{% endfor %}
