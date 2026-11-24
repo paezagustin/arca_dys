@@ -4,7 +4,7 @@ Sistema personal para facturación sencilla y control del negocio en Raspberry P
 FastAPI, SQLAlchemy, Jinja2, PostgreSQL 17 y Docker Compose.
 
 Facturación recuperable, cobros MP idempotentes, configuración, gestión/proveedores,
-carga inicial por consola desde JSON y dashboard. La aplicación de la Raspberry no
+faltantes y pedidos, carga inicial por consola desde JSON y dashboard. La aplicación de la Raspberry no
 se despliega ni se modifica automáticamente al publicar en GitHub.
 
 ## Probar en Windows 11 sin ARCA ni Mercado Pago
@@ -16,7 +16,7 @@ esta carpeta:
 docker compose -f docker-compose.dev.yml up --build -d
 ```
 
-Abrir **http://localhost:8001** sin login para Facturación, Gestión, Resumen, Sueldos y Fiados.
+Abrir **http://localhost:8001** sin login para Facturación, Gestión, Resumen, Sueldos, Fiados y Faltantes.
 Para Pruebas y administración, ingresar con **admin / pruebas-locales**,
 cuenta exclusiva del entorno simulado. Cargar pagos ficticios y recorrer Facturación,
 selección de uno o varios pagos y descarga del PDF simulado. No requiere .env,
@@ -82,6 +82,7 @@ La segunda prueba verifica backup custom, checksum y restauración de datos fict
   y [métricas](docs/METRICAS.md).
 - [Fiados por persona](docs/FIADOS.md): opción A, búsqueda sin tildes,
   importes enteros, edición/baja trazables, celular/WhatsApp y revisión humana de los registros anteriores.
+- [Faltantes y pedidos a proveedores](docs/FALTANTES.md): alta rápida, asociaciones, recepción, historial y copia local del catálogo.
 - [Validación ARM y operación](docs/OPERACION_RASPBERRY.md).
 - [PWA y HTTPS en la LAN](docs/PWA_LAN.md).
 - [Tecnologías y configuración](docs/TECNOLOGIAS_Y_CONFIGURACION.md): función,

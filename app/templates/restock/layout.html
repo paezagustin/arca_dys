@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ {'needs':'Faltantes','orders':'Pedidos a proveedores','history':'Historial de pedidos','products':'Productos de reposición'}[section] }}{% endblock %}
+{% block head_extra %}
+<link rel="stylesheet" href="{{ asset_url('restock.css') }}">
+<script src="{{ asset_url('restock.js') }}" defer></script>
+{% endblock %}
+{% block content %}
+<div class="restock" data-restock>
+  <nav class="restock-tabs" aria-label="Reposición">
+    {% for key, url, title in [('needs','/faltantes','Faltantes'),('orders','/faltantes/pedidos','Pedidos'),('history','/faltantes/historial','Historial'),('products','/faltantes/productos','Productos')] %}
+    <a href="{{ url }}"{% if section == key %} aria-current="page"{% endif %}>{{ title }}</a>
+    {% endfor %}
+  </nav>
+  <p class="notice success restock-feedback" role="status" data-restock-feedback{% if not notice %} hidden{% endif %}>{{ notice or '' }}</p>
+  {% block restock_content %}{% endblock %}
+</div>
+{% endblock %}

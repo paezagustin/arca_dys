@@ -1,0 +1,33 @@
+{% extends "restock/layout.html" %}
+{% from "restock/components.html" import date_fields, supplier_select, state_badge with context %}
+{% from "components.html" import pager with context %}
+{% block restock_content %}
+<h1>Historial de pedidos</h1>
+<form class="card restock-filters" method="get" action="/faltantes/historial" data-report-filter aria-label="Filtros de pedidos">
+  <div class="restock-fields">
+    <div class="field"><label for="restock-history-q">Producto</label><input id="restock-history-q" type="search" name="q" maxlength="180" value="{{ q }}"></div>
+    {{ supplier_select(suppliers, supplier_filter) }}
+    <div class="field"><label for="restock-history-status">Estado del pedido</label><select id="restock-history-status" name="estado">
+      <option value="">Todos</option>
+      {% for key, label in order_states.items() %}<option value="{{ key }}"{% if status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></div>
+    {{ date_fields(starts, ends) }}
+  </div>
+  <div class="actions"><button type="submit" class="quiet">Aplicar filtros</button><a href="/faltantes/historial" data-report-link>Limpiar</a></div>
+</form>
+<section data-report-results="history" data-restock-refresh aria-labelledby="restock-history-heading">
+  <div class="report-heading restock-heading"><h2 id="restock-history-heading">Pedidos registrados</h2><span class="restock-count">{{ rows.total }}</span></div>
+  {% if rows.items %}
+  <ul class="restock-list">
+    {% for order, count, state in rows.items %}
+    <li class="card restock-item">
+      <div class="restock-item-head"><h3><a href="/faltantes/historial/{{ order.id }}">#{{ order.id }} · {{ order.supplier_name }}</a></h3>{{ state_badge(state, order_states[state]) }}</div>
+      <p class="restock-meta"><span>{{ count }} producto{{ 's' if count != 1 else '' }}</span><span>Registrado {{ order.created_at|local_date }}</span>{% if order.closed_at %}<span>Cerrado {{ order.closed_at|local_date }}</span>{% endif %}</p>
+      <a href="/faltantes/historial/{{ order.id }}">Ver detalle<span class="sr-only"> del pedido {{ order.id }}</span></a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="card restock-empty">No hay pedidos que coincidan con estos filtros.</p>{% endif %}
+  {{ pager(rows) }}
+</section>
+{% endblock %}

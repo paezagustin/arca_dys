@@ -1,0 +1,35 @@
+{% extends "restock/layout.html" %}
+{% from "restock/components.html" import csrf, unavailable with context %}
+{% from "components.html" import pager with context %}
+{% block restock_content %}
+<a class="restock-back" href="/faltantes/productos">← Productos</a>
+<div class="page-head restock-page-head"><h1>{{ supplier.name }}</h1><a class="button quiet" href="/business/suppliers/{{ supplier.id }}">Ficha de proveedor</a></div>
+{% if not supplier.active %}<p class="notice" role="status">Este proveedor está inactivo.</p>{% endif %}
+<form class="card restock-filters" action="/faltantes/productos/proveedores/{{ supplier.id }}" method="get" data-report-filter>
+  <div class="restock-fields">
+    <div class="field"><label for="restock-supplier-q">Producto</label><input type="search" id="restock-supplier-q" name="q" maxlength="180" value="{{ q }}"></div>
+    <div class="field"><label for="restock-supplier-link">Mostrar</label><select id="restock-supplier-link" name="todos"><option value="0">Productos asociados</option><option value="1"{% if all_products %} selected{% endif %}>Todos los productos</option></select></div>
+  </div>
+  <div class="actions"><button type="submit" class="quiet">Aplicar filtros</button>{% if supplier.active and not all_products %}<a class="button" href="?todos=1" data-report-link>Asociar productos</a>{% endif %}</div>
+</form>
+<section data-report-results="supplier-products" data-restock-refresh>
+  <div class="report-heading restock-heading"><h2>{{ 'Seleccionar productos' if all_products and supplier.active else 'Productos del proveedor' }}</h2><span class="restock-count">{{ rows.total }}</span></div>
+  {% if rows.items %}
+  <form class="card restock-editor" method="post" action="/faltantes/productos/proveedores/{{ supplier.id }}">
+    {{ csrf() }}
+    <ul class="restock-list">
+      {% for product in rows.items %}
+      <li class="restock-match restock-item-head">
+        {% if all_products and supplier.active and product.id not in linked %}
+        <label class="restock-check"><input type="checkbox" name="product_id" value="{{ product.id }}"><span>{{ product.name }}{% if product.presentation %} · {{ product.presentation }}{% endif %}</span></label>
+        {% else %}<div><a href="/faltantes/productos/{{ product.id }}">{{ product.name }}</a>{% if product.presentation %}<p class="muted">{{ product.presentation }}</p>{% endif %}{% if all_products and product.id in linked %}<span class="muted">Asociado</span>{% endif %}</div>{% endif %}
+        {{ unavailable(product) }}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if all_products and supplier.active %}<button type="submit">Asociar seleccionados</button>{% endif %}
+  </form>
+  {% else %}<p class="card restock-empty">No hay productos para mostrar.</p>{% endif %}
+  {{ pager(rows) }}
+</section>
+{% endblock %}

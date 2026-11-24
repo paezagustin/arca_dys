@@ -7,7 +7,7 @@ Con Docker Desktop iniciado, desde la carpeta del proyecto:
 docker compose -f docker-compose.dev.yml up --build -d
 ```
 
-Abrir http://localhost:8001. Facturación, Gestión, Resumen, Sueldos y Fiados funcionan sin ingresar.
+Abrir http://localhost:8001. Facturación, Gestión, Resumen, Sueldos, Fiados y Faltantes funcionan sin ingresar.
 Para ver el menú completo, pulsar Administración e ingresar con admin / pruebas-locales
 solo en este entorno simulado. La cuenta de prueba no se crea en producción.
 Pruebas permite cargar cobros ficticios sin NGROK, claves ni operaciones reales.
@@ -97,9 +97,18 @@ Exportar Excel descarga la hoja de ingresos y egresos del período, con sus seis
 columnas originales, además de las hojas Ventas y Sueldos del mismo período. Varias compras de un día ocupan filas adicionales sin repetir
 la venta. Si un egreso antiguo no tiene tipo, editarlo antes de exportar.
 
+## Faltantes y pedidos
+En Faltantes buscá un producto por nombre, presentación o código de barras.
+Registrar faltante agrega el producto a la lista compartida. Si no existe,
+podés crearlo desde la búsqueda. En Pedidos elegí un proveedor, seleccioná qué
+pedir y revisá el mensaje para copiar o compartir. Pulsá Registrar pedido realizado
+después de hacerlo. En Historial confirmá la recepción o devolvé a pendientes
+los productos que no llegaron. La [guía de Faltantes](FALTANTES.md) detalla
+los filtros, las asociaciones de proveedores y los estados de recepción.
+
 ## Administración
 Solo admin ve Cobros MP, Auditoría, Configuración, Conexión MP y Pruebas (esta última
-solo en simulación). Al salir vuelve el menú de cinco secciones de uso diario.
+solo en simulación). Al salir vuelve el menú de uso diario.
 Cambios del emisor/límites afectan nuevas facturas; las emitidas conservan sus datos.
 Las notificaciones MP se revisan/reintentan sin facturación automática.
 

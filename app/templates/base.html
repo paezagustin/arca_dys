@@ -4,9 +4,9 @@
 <link rel="stylesheet" href="{{ asset_url('app.css') }}"><script src="{{ asset_url('notifications.js') }}" defer></script><script src="{{ asset_url('app.js') }}" defer></script><script src="{{ asset_url('reports.js') }}" defer></script>{% block head_extra %}{% endblock %}</head>
 {% set path = request.url.path %}
 {% set billing = path.startswith('/ARCA') or path.startswith('/page/invoice') or path == '/page/billing-requests' %}
-{% set operational = billing or path.startswith(('/business', '/dashboard', '/salaries', '/fiados')) %}
+{% set operational = billing or path.startswith(('/business', '/dashboard', '/salaries', '/fiados', '/faltantes')) %}
 {% set admin = request.state.user is defined and request.state.user.role == 'admin' %}
-{% set links = [('/page/invoice','Facturación'),('/business','Gestión'),('/dashboard','Resumen'),('/salaries','Sueldos'),('/fiados','Fiados')] %}
+{% set links = [('/page/invoice','Facturación'),('/business','Gestión'),('/dashboard','Resumen'),('/salaries','Sueldos'),('/fiados','Fiados'),('/faltantes','Faltantes')] %}
 {% if admin %}
 {% set links = links[:1] + [('/page/payments','Cobros MP')] + links[1:] + [('/page/reports-stadistics','Auditoría'),('/settings','Configuración'),('/settings/mp','Conexión MP')] %}
 {% if request.app.state.integrations_mode == 'mock' %}{% set links = links + [('/dev','Pruebas')] %}{% endif %}

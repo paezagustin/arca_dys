@@ -34,6 +34,22 @@ UPDATE credit_movements SET observation='Torta ficticia corregida',version=versi
 INSERT INTO salary_payments(entry_key,entry_date,employee,amount,medium,version,deleted_at)
   VALUES (md5('$sentinel-salary-deleted')::uuid::text,'2026-11-01','Francisco',1200,'efectivo',2,now()),
          (md5('$sentinel-salary-active')::uuid::text,'2026-11-02','Juan Cruz',500,'mercado pago',1,NULL);
+INSERT INTO suppliers(name,name_key,contact,notes,active,version)
+  VALUES ('Proveedor ficticio','proveedor ficticio','','',true,1);
+INSERT INTO restock_products(name,name_key,search_text,description,presentation,barcode,active,version,created_at,updated_at)
+  VALUES ('Envases nuevos','envases nuevos','envases nuevos caja','','Caja','',true,1,now(),now());
+INSERT INTO restock_product_suppliers(product_id,supplier_id,preferred,created_at)
+  SELECT restock_products.id,suppliers.id,true,now() FROM restock_products CROSS JOIN suppliers;
+INSERT INTO restock_needs(request_key,product_id,status,quantity,unit,notes,version,created_at,updated_at)
+  SELECT md5('$sentinel-need')::uuid::text,id,'ordered',2.5,'cajas','',4,now(),now() FROM restock_products;
+INSERT INTO restock_orders(request_key,request_hash,supplier_id,supplier_name,notes,version,created_at,closed_at)
+  SELECT md5('$sentinel-order-' || n)::uuid::text,repeat('f',64),suppliers.id,name,'',1,now(),
+    CASE WHEN n = 1 THEN now() END FROM suppliers CROSS JOIN generate_series(1, 2) AS n;
+INSERT INTO restock_order_lines(order_id,need_id,product_name,presentation,barcode,search_text,quantity,unit,notes,outcome,receipt_notes,resolved_at)
+  SELECT restock_orders.id,restock_needs.id,'Envases anteriores','Caja grande','','envases anteriores caja grande',2.5,'cajas','',
+    CASE WHEN closed_at IS NULL THEN 'waiting' ELSE 'undelivered' END,
+    CASE WHEN closed_at IS NULL THEN '' ELSE 'Sin entrega' END,closed_at
+    FROM restock_orders CROSS JOIN restock_needs;
 SQL
 output="$(sh /scripts/backup-db.sh)"
 printf '%s\n' "$output"
@@ -67,6 +83,17 @@ fi
 [ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM salary_payments')" = "2" ]
 [ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT sum(amount)::numeric(18,0) FROM salary_payments WHERE deleted_at IS NULL')" = "500" ]
 [ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM salary_payments WHERE deleted_at IS NOT NULL AND amount=1200 AND version=2')" = "1" ]
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM restock_order_lines WHERE product_name = 'Envases anteriores' AND quantity = 2.5")" = "2" ]
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c "SELECT outcome FROM restock_order_lines WHERE receipt_notes = 'Sin entrega'")" = "undelivered" ]
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT status FROM restock_needs')" = "ordered" ]
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM restock_product_suppliers WHERE preferred')" = "1" ]
+if psql -d "$restore_db" -v ON_ERROR_STOP=1 -c "INSERT INTO restock_needs
+ (request_key,product_id,status,unit,notes,version,created_at,updated_at)
+ SELECT md5('$sentinel-duplicate-need')::uuid::text,product_id,'pending','','',1,now(),now() FROM restock_needs" >/dev/null 2>&1; then
+  printf 'Error: falta la restricción de faltantes activos en la restauración\n' >&2
+  exit 1
+fi
+printf 'Faltantes restaurados: vínculo preferido, solicitud activa única y dos intentos históricos conservados\n'
 printf 'Sueldos restaurados: pago eliminado conservado, saldo vigente 500\n'
 printf 'Restauración comprobada: importe 12345.67 y revisión %s\n' "$revision"
 printf 'Fiados restaurados: saldo 7500, 2 movimientos, archivo anterior sin fecha inventada e inmutabilidad activa\n'

@@ -1,0 +1,46 @@
+{% macro csrf() -%}
+<input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+{%- endmacro %}
+
+{% macro purchase_fields(id, row=none, suffix='') -%}
+<div class="restock-fields restock-purchase-fields">
+  <div class="field"><label for="{{ id }}-quantity">Cantidad</label><input id="{{ id }}-quantity" name="quantity{{ suffix }}" inputmode="decimal" maxlength="13" value="{{ row.quantity|restock_quantity if row else '' }}"></div>
+  <div class="field"><label for="{{ id }}-unit">Unidad de compra</label><input id="{{ id }}-unit" name="unit{{ suffix }}" maxlength="160" value="{{ row.unit if row else '' }}" placeholder="Ej. bolsas de 25 kg"></div>
+  <div class="field restock-wide"><label for="{{ id }}-notes">Observaciones</label><textarea id="{{ id }}-notes" name="notes{{ suffix }}" rows="2" maxlength="1000">{{ row.notes if row else '' }}</textarea></div>
+</div>
+{%- endmacro %}
+
+{% macro date_fields(starts, ends) -%}
+<div class="field"><label for="restock-start">Desde</label><input id="restock-start" name="desde" type="date" min="1900-01-01" value="{{ starts }}"></div>
+<div class="field"><label for="restock-end">Hasta</label><input id="restock-end" name="hasta" type="date" min="1900-01-01" value="{{ ends }}"></div>
+{%- endmacro %}
+
+{% macro supplier_select(suppliers, selected, include_none=false, all_label='Todos', required=false) -%}
+<div class="field"><label for="restock-supplier">Proveedor</label>
+  <select id="restock-supplier" name="proveedor"{% if required %} required{% endif %}>
+    <option value="">{{ all_label }}</option>
+    {% if include_none %}<option value="none"{% if selected == 'none' %} selected{% endif %}>Sin proveedor asociado</option>{% endif %}
+    {% for row in suppliers %}<option value="{{ row.id }}"{% if selected|string == row.id|string %} selected{% endif %}>{{ row.name }}{% if not row.active %} (inactivo){% endif %}</option>{% endfor %}
+  </select>
+</div>
+{%- endmacro %}
+
+{% macro association_list(product) -%}
+<div class="restock-associations">
+  {% if product.suppliers %}
+    {% for link in product.suppliers %}
+    <span class="restock-chip">{{ link.supplier.name }}{% if not link.supplier.active %} · Inactivo{% elif link.preferred %} · Preferido{% endif %}</span>
+    {% endfor %}
+  {% else %}<span class="muted">Sin proveedor asociado</span>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro unavailable(product) -%}
+{% if not product.available %}
+<span class="restock-state restock-warning">{{ {'inactive':'Inactivo en el catálogo','missing':'Retirado del catálogo'}.get(product.catalog_status, 'Producto archivado') }}</span>
+{% endif %}
+{%- endmacro %}
+
+{% macro state_badge(key, label) -%}
+<span class="restock-state restock-state-{{ key }}">{{ label }}</span>
+{%- endmacro %}

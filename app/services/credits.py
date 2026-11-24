@@ -5,7 +5,6 @@ from hashlib import sha256
 import json
 import re
 from urllib.parse import quote
-import unicodedata
 from uuid import UUID
 from sqlalchemy import select, func, text
 from app.models.credits import CreditCustomer, CreditMovement, CreditLegacyLink, CreditMovementChange
@@ -14,6 +13,7 @@ from app.models.billing import utcnow
 from app.services.business import clean_text, check_version, money, record_date
 from app.services.listings import business_today
 from app.services.money import require_grouped_pesos
+from app.utils.text import normalized
 
 
 class SimilarCustomers(ValueError):
@@ -31,11 +31,6 @@ def _version(row, value):
         check_version(row, value)
     except ValueError as exc:
         raise CreditConflict(str(exc)) from exc
-
-
-def normalized(value):
-    return " ".join("".join(c for c in unicodedata.normalize("NFKD", str(value))
-                            if not unicodedata.combining(c)).casefold().split())
 
 
 def normalize_phone(value):

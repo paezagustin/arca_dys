@@ -1,6 +1,6 @@
 # Alcance acordado
 
-Actualizado: 2026-11-21. Se conserva la simplificación posterior al roadmap H0-H8
+Actualizado: 2026-11-23. Se conserva la simplificación posterior al roadmap H0-H8
 y la ampliación H10 de Sueldos. Para Fiados, la opción A solicitada el 20/11
 reemplaza el formulario de pagó sí/no por cuentas de personas, primero en desarrollo y con despliegue autorizado explícitamente el 21/11.
 
@@ -24,12 +24,13 @@ reemplaza el formulario de pagó sí/no por cuentas de personas, primero en desa
 | G07 | Eliminar cargas equivocadas de ventas/egresos mediante baja lógica confirmada, sin perder datos originales ni afectar evidencia fiscal. Gestión con filtros permanentes por proveedor, tipo y fechas arriba de los totales. |
 | G05 | Sueldos simples: fecha, Francisco/Juan Cruz, monto y efectivo/mercado pago; reporte mensual por defecto filtrable. Eliminación confirmada al editar mediante baja lógica, conservando el original y excluyéndolo de listados/Resumen/Excel. |
 | G06 | Fiados por persona con ID estable, compras y pagos independientes, saldo global y períodos saldados conservados. Opción A: buscador sin tildes en cualquier palabra, lista superpuesta accesible e importes enteros con miles automáticos. Pagos con revisión/confirmación, sin sobrepagos; edición precargada y baja lógica confirmada con evidencia original, sin pagos mayores a la deuda. Celular argentino opcional (área+número, 10 dígitos; 549 solo al preparar el enlace) y mensaje de WhatsApp con fechas/montos/detalle/saldo, revisión y apertura del chat sin envío automático. Registros anteriores intactos: transición ensayada solo para nombres únicos; los repetidos requieren vinculación humana, sin fusionar ni inventar pagos/fechas. Nombres capitalizados por palabra. Ver FIADOS.md. |
+| G08 | Faltantes con productos de reposición, asociaciones a proveedores de Gestión, una necesidad activa por producto, pedidos con selección, recepción y reintentos conservados en el historial. WhatsApp manual. Copia local unidireccional, con fichas de insumos locales y adaptador de catálogo pendiente del contrato. Ver FALTANTES.md. |
 | U01 | Logo centrado y nombre Dulce y Salado debajo, menú móvil desplegable con icono sencillo y nombre de sección, sin flecha; Administración y ARCA DYS abajo de la barra lateral con margen; Resumen con importes unidos, colores y separadores; montos nuevos vacíos con placeholder y datos guardados conservados; mensajes de éxito/error flotantes centrados arriba, cierre manual y duración de 2 segundos, y enlaces de descarga. |
 | U02 | Paginación SQL de todos los listados, incluido reports-stadistics. Filtros y orden estable. |
 | O01 | Desarrollo Windows 11 con Docker Desktop: simulación sin servicios externos, datos de ejemplo y tests repetibles. |
 | O02 | Compose separados dev/test/prod; PostgreSQL 17.8 de referencia, sin upgrade mayor en este trabajo. |
 | O03 | Alembic y adopción comprobada del esquema existente; backup manual en SSD antes de migrar. |
-| O04 | Facturación/Gestión/Resumen/Sueldos/Fiados sin login con sesión local y CSRF. Otras secciones solo admin; webhook con contrato propio. |
+| O04 | Facturación/Gestión/Resumen/Sueldos/Fiados/Faltantes sin login con sesión local y CSRF. Otras secciones solo admin; webhook con contrato propio. |
 | O05 | Despliegue manual con inventario y respaldo restaurado antes de migrar; conservar control fiscal/MP/configuración, SSD y dominio NGROK actuales. H15 es una limpieza inicial puntual limitada a 0013, no una actualización ordinaria. No repetirla en la refactorización 0017: conservar y conciliar Fiados anteriores. El usuario autorizó el despliegue del 21/11/2026 con respaldo y ensayo, preservando todos los Fiados existentes. |
 | O06 | PWA en línea con inicio en Facturación. HTTPS privado por DNS local y DNS-01, con restricción de red, sin acceso público a la interfaz. Despliegue manual después del inventario. |
 | D01 | Seguimiento vigente en Lific; documentación técnica y guía de uso al día con la versión; commits/push directos con evidencia. |

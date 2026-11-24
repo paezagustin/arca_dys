@@ -61,9 +61,15 @@ def run():
                 time.sleep(.25)
         else:
             raise RuntimeError("El servidor no inició dentro del tiempo previsto")
-        for path in ("/page/invoice", "/business", "/dashboard", "/salaries", "/fiados"):
+        for path in ("/page/invoice", "/business", "/dashboard", "/salaries", "/fiados",
+                     "/faltantes", "/faltantes/pedidos", "/faltantes/historial", "/faltantes/productos"):
             with get(path) as response:
                 assert response.status == 200 and "/login" not in response.url
+        with get("/faltantes/productos/nuevo") as response:
+            page = response.read().decode()
+        with post("/faltantes/productos/rapido", {"csrf_token": hidden(page, "csrf_token"),
+                "request_key": hidden(page, "request_key"), "name": "Envase ficticio runtime"}) as response:
+            assert "Envase ficticio runtime" in response.read().decode()
         with get("/business/entries/new?kind=sale") as response:
             page = response.read().decode()
         day = str(business_today())
@@ -119,10 +125,11 @@ def run():
             assert db.execute(text("SELECT count(*) FROM salary_payments")).scalar_one() == 1
             assert db.execute(text("SELECT kind,delta FROM credit_movements")).one() == ("purchase",Decimal("20"))
             assert db.execute(text("SELECT count(*) FROM customer_credits")).scalar_one() == 0
+            assert db.execute(text("SELECT status FROM restock_needs")).scalar_one() == "pending"
         process.terminate()
         process.wait(timeout=60)
         rss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-        print("Imagen de ejecución: caja, sueldos, fiados, resumen anónimo, login, CSRF, confirmación, worker, factura simulada y PDF: OK.")
+        print("Imagen de ejecución: caja, sueldos, fiados, faltantes, resumen anónimo, login, CSRF, confirmación, worker, factura simulada y PDF: OK.")
         print(f"Medición del entorno de ensayo: RSS máximo hijo {rss} KiB; health promedio {sum(durations)/len(durations)*1000:.1f} ms.")
         print("Sin accesos externos; base efímera propia eliminada al terminar.")
     finally:

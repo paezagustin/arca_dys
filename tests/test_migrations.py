@@ -107,6 +107,30 @@ def test_fresh_database_migrates_and_matches_current_models(scratch_database):
         assert "logs_invoice" not in inspect(connection).get_table_names()
 
 
+def test_restock_rollback_only_while_new_tables_are_empty(scratch_database):
+    migrate(scratch_database, "0021_salary_deletion")
+    with scratch_database.begin() as connection:
+        connection.execute(text("INSERT INTO suppliers (name, name_key, contact, notes, active, version) "
+                                "VALUES ('Proveedor de prueba', 'proveedor de prueba', '', '', true, 1)"))
+        before = connection.execute(text("SELECT * FROM suppliers")).all()
+    migrate(scratch_database, "0022_restock")
+    migrate(scratch_database, "0021_salary_deletion", downgrade=True)
+    with scratch_database.connect() as connection:
+        assert connection.execute(text("SELECT * FROM suppliers")).all() == before
+        assert "restock_products" not in inspect(connection).get_table_names()
+    migrate(scratch_database, "0022_restock")
+    with scratch_database.begin() as connection:
+        connection.execute(text("INSERT INTO restock_products "
+                                "(name, name_key, search_text, presentation, description, barcode, active, version, created_at, updated_at) "
+                                "VALUES ('Envases', 'envases', 'envases', '', '', '', true, 1, now(), now())"))
+    with pytest.raises(RuntimeError, match="descartaría registros de Faltantes"):
+        migrate(scratch_database, "0021_salary_deletion", downgrade=True)
+    with scratch_database.connect() as connection:
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0022_restock"
+        assert connection.execute(text("SELECT name FROM restock_products")).scalar_one() == "Envases"
+        assert connection.execute(text("SELECT * FROM suppliers")).all() == before
+
+
 def test_existing_export_adopts_without_losing_rows(scratch_database):
     load_export(scratch_database)
     with scratch_database.begin() as connection:

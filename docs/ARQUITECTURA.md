@@ -33,6 +33,7 @@ flowchart LR
 | Gestión | services/business.py | Ventas manuales independientes, egresos En Blanco/En Negro y proveedores. |
 | Sueldos | services/registers.py, api/registers.py | Registros simples, ENUM nativos, UUID/versión, CSRF y baja lógica de Sueldos con bloqueo; listados/Resumen/Excel comparten vigencia. |
 | Fiados | models/credits.py, services/credits.py, api/credits.py | Personas/celular, movimientos enteros, correcciones trazables/baja lógica, saldo global, UUID/versión/bloqueos y CSRF. Vínculos explícitos a customer_credits sin modificar sus originales. Mensaje WhatsApp local, sin API. |
+| Faltantes | models/restock.py, services/restock.py, services/restock_catalog.py, api/restock.py | Necesidad única activa, N:M con proveedores, confirmación y recepción transaccionales, snapshots de pedidos y proyección local del catálogo. Ver [FALTANTES.md](FALTANTES.md). |
 | Carga inicial | scripts/import_business_json.py | JSON privados, transacción, recibo idempotente, claves explícitas y conciliación mensual. |
 | Reportes | services/metrics.py | SQL/Decimal, datos vigentes, fuentes separadas y gráficos SVG. |
 | Configuración | services/settings.py, access.py | Roles, sesiones revocables, límites/emisor versionados. |
@@ -115,6 +116,7 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0016_credit_deletion | Marca de baja nullable en Fiados. Conserva el contenido de los registros, su UUID y sus fechas de alta y pago. |
 | 0017_credit_accounts | Personas, movimientos inmutables y vínculos a históricos; no agrupa ni traslada datos automáticamente. NUMERIC entero sin redondeo por escala. Solo ensayada en desarrollo/pruebas. |
 | 0018_credit_updates | Celular opcional, versión y baja lógica de movimiento. UPDATE controlado con evidencia antes/después por trigger en credit_movement_changes inmutable; conserva identidad/secuencia/tipo y fuente legada. |
+| 0022_restock | Seis tablas aditivas para productos, proveedores asociados, faltantes, pedidos y estado de sincronización. El downgrade se admite con las tablas nuevas vacías. |
 | 0021_salary_deletion | Agrega deleted_at nullable a Sueldos. Conserva todos los valores y rechaza downgrade si reactivaría pagos eliminados. |
 | 0020_credit_person_names | Capitaliza cada palabra y recompone búsqueda, sin fusionar identidades ni modificar customer_credits. |
 | 0019_credit_local_phone | Celular argentino de 10 dígitos. Convierte únicamente 549+10 dígitos y rechaza formatos ambiguos sin cambios; CHECK de formato y versión incrementada al convertir. |
@@ -164,7 +166,7 @@ dev expone 127.0.0.1:8001; no sirve de proxy genérico. Suite x86 y ARM usan pro
 distintos y DB descartables. La simulación persiste comprobantes propios identificados
 SIM/SIN VALIDEZ FISCAL y permite probar pérdida de respuestas y reinicios.
 
-Sesiones opacas hasheadas, expiración, roles y CSRF; Facturación, Gestión, Resumen, Sueldos y Fiados
+Sesiones opacas hasheadas, expiración, roles y CSRF; Facturación, Gestión, Resumen, Sueldos, Fiados y Faltantes
 permiten uso anónimo; las demás secciones requieren admin. Health/assets públicos; webhooks usan su propio contrato. CSP sin
 CDN ni scripts inline, límites de cuerpo, salidas HTML escapadas y
 errores sin SQL/credenciales. CSS/JS versionados evitan estilos antiguos al actualizar.

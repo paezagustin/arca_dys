@@ -10,6 +10,7 @@ from app.models.business import Supplier, BusinessEntry, MoneyMigrationAudit
 from app.models.data_import import DataImport, LegacyImportRow, LegacyImportSupplierMap
 from app.models.registers import SalaryPayment, CustomerCredit
 from app.models.credits import CreditCustomer, CreditMovement, CreditLegacyLink, CreditMovementChange
+from app.models.restock import RestockProduct, RestockProductSupplier, RestockNeed, SupplierOrder, SupplierOrderLine, RestockCatalogSync
 __all__ = [
     "Payment",
     "Invoice",

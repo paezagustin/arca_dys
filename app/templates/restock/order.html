@@ -1,0 +1,44 @@
+{% extends "restock/layout.html" %}
+{% from "restock/components.html" import csrf, state_badge with context %}
+{% block restock_content %}
+<a class="restock-back" href="/faltantes/historial">← Historial</a>
+<section data-report-results="receipt" data-restock-refresh>
+  <div class="page-head restock-page-head"><h1>Pedido #{{ row.id }} · {{ row.supplier_name }}</h1>{{ state_badge(status, order_states[status]) }}</div>
+  <p class="restock-meta"><span>Registrado {{ row.created_at|local_date }}</span>{% if row.closed_at %}<span>Cerrado {{ row.closed_at|local_date }}</span>{% endif %}</p>
+  {% if row.notes %}<p class="restock-note">{{ row.notes }}</p>{% endif %}
+  <div class="report-heading restock-heading"><h2>Productos y recepción</h2><span class="restock-count">{{ row.lines|length }} producto{{ 's' if row.lines|length != 1 else '' }}</span></div>
+  <form method="post" action="/faltantes/historial/{{ row.id }}/recepcion" data-restock-receipt data-restock-write>
+    {{ csrf() }}<input type="hidden" name="version" value="{{ row.version }}">
+    {% if not row.closed_at %}<div class="actions restock-receipt-actions" data-restock-js hidden>
+      <button type="button" class="quiet" data-receipt-set="received">Marcar todos los pendientes como recibidos</button>
+      <button type="button" class="quiet" data-receipt-set="cancelled">Seleccionar cancelación de los pendientes</button>
+    </div>{% endif %}
+    <ul class="restock-list">
+      {% for line in row.lines %}
+      <li class="card restock-item" data-order-line="{{ line.id }}">
+        <div class="restock-item-head"><div><h3>{{ line.product_name }}</h3>{% if line.presentation %}<p class="muted">{{ line.presentation }}</p>{% endif %}</div>{{ state_badge(line.outcome, line_states[line.outcome]) }}</div>
+        {% if line.quantity or line.unit or line.barcode or line.resolved_at %}<p class="restock-meta">
+          {% if line.quantity or line.unit %}<span>{{ line.quantity|restock_quantity }} {{ line.unit }}</span>{% endif %}
+          {% if line.barcode %}<span>{{ line.barcode }}</span>{% endif %}{% if line.resolved_at %}<span>{{ line.resolved_at|local_date }}</span>{% endif %}
+        </p>{% endif %}
+        {% if line.notes %}<p class="restock-note">{{ line.notes }}</p>{% endif %}
+        {% if line.outcome == 'waiting' %}
+        <div class="restock-fields">
+          <div class="field"><label for="receipt-outcome-{{ line.id }}">Resultado</label>
+            <select id="receipt-outcome-{{ line.id }}" name="outcome_{{ line.id }}" data-receipt-outcome>
+              <option value="waiting">Mantener pendiente de entrega</option>
+              <option value="received">Recibido</option>
+              <option value="undelivered">No entregado · volver a faltantes</option>
+              <option value="cancelled">Cancelar · volver a faltantes</option>
+            </select>
+          </div>
+          <div class="field restock-wide"><label for="receipt-notes-{{ line.id }}">Observaciones de recepción</label><textarea id="receipt-notes-{{ line.id }}" name="receipt_{{ line.id }}" rows="2" maxlength="1000">{{ line.receipt_notes }}</textarea></div>
+        </div>
+        {% elif line.receipt_notes %}<p class="restock-note muted">Recepción · {{ line.receipt_notes }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if not row.closed_at %}<div class="actions"><button type="submit">Guardar recepción</button></div>{% endif %}
+  </form>
+</section>
+{% endblock %}

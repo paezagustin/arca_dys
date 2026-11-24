@@ -492,3 +492,59 @@ sus URLs asset_url cambien para que los clientes reciban los estilos nuevos.
 Al preparar archivos tar para una imagen, no dejar mtime0 en assets cambiados.
 La imagen por sí sola no prueba la interfaz: verificar HTML/URLs/HTTP y código.
 Respaldo efectivo: deploy_crud_20261121.FIVX4s en el directorio SSD de backups.
+
+## Faltantes 0022
+
+Esta actualización ordinaria agrega seis tablas vacías sobre `0021_salary_deletion`.
+La autorización del nuevo hito comprende inventario, ensayo aislado y corte de
+ARCA DYS. Usar la instalación efectiva y el procedimiento de Compose del host.
+La sincronización comercial queda inactiva hasta conectar el adaptador real.
+
+1. Inventariar imagen activa, proyecto/archivos Compose efectivos, revisión
+   Alembic, salud HTTP y de PostgreSQL, cola fiscal y espacio en el SSD. Verificar
+   que la ruta pública de NGROK siga limitada al webhook. Trabajar en una copia
+   separada del commit publicado y construir la imagen productiva para `linux/arm64`.
+   Inspeccionar la arquitectura y el diff. Ejecutar la suite, el perfil `backup-test`
+   y el smoke de la imagen en una red interna con datos ficticios.
+2. Guardar el manifiesto efectivo, configuración e imagen anterior en una carpeta
+   privada del SSD. Crear un dump custom y su checksum. Restaurar el dump en un
+   PostgreSQL aislado con `pg_restore --exit-on-error` y comprobar que parta de
+   `0021_salary_deletion`. Ejecutar `copycmd alembic upgrade 0022_restock` con el
+   candidato, según el arranque aislado del paso 3 de esta guía. Comparar filas,
+   referencias y secuencias de tablas existentes antes y después del ensayo.
+   Los seis conjuntos nuevos deben estar vacíos. Ensayar la reversión en una
+   copia y el flujo funcional en otra base con datos ficticios. La limpieza H15
+   queda fuera de la ventana de esta actualización.
+3. En una ventana acordada, comprobar que no haya una emisión fiscal en curso.
+   Detener solo FastAPI, tomar el respaldo del corte y repetir restauración y
+   migración sobre la copia del corte. Con el manifiesto efectivo apuntando a la
+   imagen ARM64 probada, ejecutar:
+
+   ```sh
+   dc run --rm --no-deps fastapi alembic upgrade 0022_restock
+   dc up -d --no-deps --force-recreate fastapi
+   ```
+
+4. Comprobar `/health`, Alembic `0022_restock` y el acceso a Facturación, Gestión,
+   proveedores, Resumen, Sueldos, Fiados y las cuatro vistas de Faltantes desde
+   la LAN. Revisar logs de arranque, estado de cola y conectividad del webhook
+   existente con observaciones de solo lectura. Comparar la configuración
+   efectiva y los IDs de los demás contenedores con el inventario. Mantener los
+   montajes, redes y configuración del túnel vigentes. Las comprobaciones en
+   producción usan páginas y consultas de lectura, con las pruebas de escritura
+   reservadas a la base simulada.
+
+### Reversión de 0022
+
+- Antes de migrar, volver a la imagen y manifiesto anteriores si la base conserva
+  `0021_salary_deletion`.
+- Después de migrar, el arranque de la imagen anterior requiere `0021_salary_deletion`.
+  Con FastAPI detenido y respaldo actualizado, ejecutar **con la imagen nueva**
+  `dc run --rm --no-deps fastapi alembic downgrade 0021_salary_deletion` solo si
+  las seis tablas nuevas siguen vacías. El guard de la migración comprueba esa
+  condición bajo bloqueo y aborta si encuentra cualquier fila. Cambiar a la
+  imagen anterior después de confirmar la revisión y recrear solo FastAPI.
+- Si Faltantes ya tiene datos, conservar `0022_restock` y usar una imagen
+  correctiva compatible. Restaurar un respaldo en una base separada para
+  investigar o conciliar. Conservar las operaciones posteriores al respaldo,
+  incluidas las fiscales, al decidir cualquier recuperación.

@@ -45,7 +45,7 @@
     }
   }
 
-  async function refresh(url, { key, restore = false } = {}) {
+  async function refresh(url, { key, restore = false, quiet = false } = {}) {
     currentRequest?.abort();
     const controller = new AbortController();
     currentRequest = controller;
@@ -56,7 +56,7 @@
       .map(control => [control, control.value]) : [];
     regions.forEach(region => region.removeAttribute('aria-busy'));
     affected.forEach(region => region.setAttribute('aria-busy', 'true'));
-    announce('Actualizando resultados…', { visible: true });
+    announce('Actualizando resultados…', { visible: !quiet });
 
     try {
       const response = await fetch(url, {
@@ -96,6 +96,7 @@
       if (!restore && url.href !== location.href) history.pushState(null, '', url);
       window.scrollTo(scrollX, scrollY);
       announce('Resultados actualizados.');
+      main.dispatchEvent(new Event('report:updated'));
     } catch (error) {
       if (controller.signal.aborted) return;
       const message = error instanceof TypeError ? 'No se pudo conectar. Volvé a intentar.' : error.message;
@@ -129,4 +130,5 @@
   });
 
   window.addEventListener('popstate', () => refresh(new URL(location.href), { restore: true }));
+  main.addEventListener('report:refresh', () => refresh(new URL(location.href), { restore: true, quiet: true }));
 })();

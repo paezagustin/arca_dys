@@ -56,7 +56,7 @@ en migrations/mp_legacy_bridge.py, solo desde 0001_legacy, 0002_cleanup o 0003_b
 Un fallo revierte el DDL y el versionado completo del puente. No se deja una base
 visible en 0004 con duplicados. **No ejecutar alembic stamp manual**, no retirar
 restricciones ni ejecutar solamente la parte DDL de este módulo. El comando está
-verificado hasta 0016_credit_deletion y exige revisar compatibilidad ante otro head.
+verificado hasta `0022_restock` y exige revisar compatibilidad ante otro head.
 Una instalación ya versionada desde 0004, sin duplicados, utiliza `alembic upgrade head`
 normalmente. Una base sin duplicados desde 0001-0003 también usa el upgrade normal.
 No ejecutar código anterior contra el nuevo esquema ni hacer downgrade: una

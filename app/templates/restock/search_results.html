@@ -1,0 +1,43 @@
+{% from "restock/components.html" import csrf, purchase_fields, association_list with context %}
+{% if matches %}
+<ul class="restock-list restock-matches" aria-label="Productos encontrados">
+  {% for product in matches %}
+  {% set need = matched_needs.get(product.id) %}
+  {% set order = matched_orders.get(need.id) if need else none %}
+  <li class="restock-match">
+    <div class="restock-item-head"><div><h3>{{ product.name }}</h3>
+    {% if product.presentation or product.barcode %}<p class="restock-meta">{% if product.presentation %}<span>{{ product.presentation }}</span>{% endif %}{% if product.barcode %}<span>{{ product.barcode }}</span>{% endif %}</p>{% endif %}
+    {% if product.description %}<p class="restock-note muted">{{ product.description }}</p>{% endif %}
+    </div></div>
+    {{ association_list(product) }}
+    {% if order %}<p class="restock-state restock-state-ordered">Ya pedido a <a href="/faltantes/historial/{{ order.id }}">{{ order.supplier_name }} · #{{ order.id }}</a></p>
+    {% elif need %}<p class="restock-state restock-state-pending">Pendiente desde el {{ need.created_at|local_date }}</p>
+    {% else %}
+    <form method="post" action="/faltantes/registrar/{{ product.id }}" data-restock-write>
+      {{ csrf() }}<input type="hidden" name="request_key" value="{{ keys[product.id] }}">
+      <button type="submit">Registrar faltante<span class="sr-only"> de {{ product.name }} {{ product.presentation }}</span></button>
+      <details class="restock-disclosure"><summary>Cantidad u observaciones (opcional)</summary>{{ purchase_fields('match-' ~ product.id) }}</details>
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+<p><a href="/faltantes/productos/nuevo?faltante=1&amp;nombre={{ query|urlencode }}">Crear otra presentación o producto</a></p>
+{% elif query.strip() %}
+<details class="restock-disclosure" data-restock-quick>
+  <summary>No se encontraron productos. Crear y registrar faltante</summary>
+  <form method="post" action="/faltantes/productos/rapido" data-restock-write>
+    {{ csrf() }}<input type="hidden" name="request_key" value="{{ quick_key }}">
+    <div class="restock-fields">
+      <div class="field"><label for="restock-quick-name">Nombre</label><input id="restock-quick-name" name="name" value="{{ query }}" required maxlength="180"></div>
+      <div class="field"><label for="restock-quick-presentation">Presentación (opcional)</label><input id="restock-quick-presentation" name="presentation" maxlength="160"></div>
+      <div class="field"><label for="restock-quick-barcode">Código de barras (opcional)</label><input id="restock-quick-barcode" name="barcode" maxlength="100"></div>
+    </div>
+    <fieldset class="restock-duplicates" data-restock-duplicates hidden>
+      <legend>Productos similares</legend><ul></ul>
+      <label class="restock-check"><input type="checkbox" name="allow_duplicate" value="1"> Es otro producto o presentación.</label>
+    </fieldset>
+    <button type="submit">Crear y registrar</button>
+  </form>
+</details>
+{% endif %}

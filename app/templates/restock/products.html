@@ -1,0 +1,56 @@
+{% extends "restock/layout.html" %}
+{% from "restock/components.html" import csrf, association_list, unavailable with context %}
+{% from "components.html" import pager with context %}
+{% block restock_content %}
+<div class="page-head restock-page-head"><h1>Productos</h1><a class="button" href="/faltantes/productos/nuevo">Nuevo producto</a></div>
+<details class="card restock-disclosure"{% if sync and sync.last_error %} open{% endif %}>
+  <summary>Catálogo Dulce y Salado</summary>
+  <div class="restock-catalog">
+    <p>Última sincronización exitosa <strong>{{ sync.last_success_at|local_date if sync and sync.last_success_at else 'Todavía no realizada' }}</strong></p>
+    {% if sync and sync.last_error %}<p class="notice error" role="alert" data-inline-notice>{{ sync.last_error }} Último intento {{ sync.last_attempt_at|local_date }}.</p>{% endif %}
+    {% if not catalog_ready %}<p class="muted" id="restock-catalog-connection">Conexión con la API pendiente.</p>{% endif %}
+    <form method="post" action="/faltantes/productos/sincronizar">{{ csrf() }}
+      <button type="submit" class="quiet"{% if not catalog_ready %} disabled aria-describedby="restock-catalog-connection"{% endif %}>Sincronizar catálogo</button>
+    </form>
+  </div>
+</details>
+{% if suppliers %}
+<form class="card restock-filters restock-supplier-nav" method="get" action="/faltantes/productos">
+  <div class="field"><label for="restock-supplier-products">Productos por proveedor</label>
+    <select id="restock-supplier-products" name="proveedor" required>
+      <option value="">Elegí un proveedor</option>
+      {% for row in suppliers %}<option value="{{ row.id }}">{{ row.name }}{% if not row.active %} (inactivo){% endif %}</option>{% endfor %}
+    </select>
+  </div>
+  <button class="quiet" type="submit">Ver productos</button>
+</form>
+{% endif %}
+<form class="card restock-filters" method="get" action="/faltantes/productos" data-report-filter aria-label="Filtros de productos">
+  <div class="restock-fields">
+    <div class="field"><label for="restock-product-q">Producto</label><input type="search" id="restock-product-q" name="q" value="{{ q }}" maxlength="180"></div>
+    <div class="field"><label for="restock-product-link">Proveedores asociados</label><select id="restock-product-link" name="vinculo">
+      {% for key, label in [('','Todos'),('with','Con proveedor asociado'),('without','Sin proveedor asociado')] %}<option value="{{ key }}"{% if link_filter == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></div>
+    <div class="field"><label for="restock-product-status">Estado</label><select id="restock-product-status" name="estado">
+      {% for key, label in [('','Todos'),('active','Activos'),('archived','Archivados o fuera de catálogo')] %}<option value="{{ key }}"{% if status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></div>
+  </div>
+  <div class="actions"><button type="submit" class="quiet">Aplicar filtros</button><a href="/faltantes/productos" data-report-link>Limpiar</a></div>
+</form>
+<section data-report-results="products" data-restock-refresh aria-labelledby="restock-product-heading">
+  <div class="report-heading restock-heading"><h2 id="restock-product-heading">Productos de reposición</h2><span class="restock-count">{{ rows.total }}</span></div>
+  {% if rows.items %}
+  <ul class="restock-list">
+    {% for row in rows.items %}
+    <li class="card restock-item">
+      <div class="restock-item-head"><div><h3><a href="/faltantes/productos/{{ row.id }}">{{ row.name }}</a></h3>{% if row.presentation %}<p class="muted">{{ row.presentation }}</p>{% endif %}</div>
+        {{ unavailable(row) }}</div>
+      {{ association_list(row) }}
+      <p class="restock-meta"><span>{{ 'Catálogo Dulce y Salado' if row.source else 'Producto local' }}</span>{% if row.barcode %}<span>{{ row.barcode }}</span>{% endif %}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="card restock-empty">No hay productos que coincidan con estos filtros.</p>{% endif %}
+  {{ pager(rows) }}
+</section>
+{% endblock %}
