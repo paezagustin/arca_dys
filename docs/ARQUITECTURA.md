@@ -117,6 +117,7 @@ original sin recrearlo. La exportación Adminer contiene estructura y no datos.
 | 0017_credit_accounts | Personas, movimientos inmutables y vínculos a históricos; no agrupa ni traslada datos automáticamente. NUMERIC entero sin redondeo por escala. Solo ensayada en desarrollo/pruebas. |
 | 0018_credit_updates | Celular opcional, versión y baja lógica de movimiento. UPDATE controlado con evidencia antes/después por trigger en credit_movement_changes inmutable; conserva identidad/secuencia/tipo y fuente legada. |
 | 0022_restock | Seis tablas aditivas para productos, proveedores asociados, faltantes, pedidos y estado de sincronización. El downgrade se admite con las tablas nuevas vacías. |
+| 0023_restock_catalog | Estados de ficha y categoría de Dulce y Salado, descripción de origen en los pedidos y marcas de sincronización. Las columnas nuevas quedan en NULL para los registros anteriores. |
 | 0021_salary_deletion | Agrega deleted_at nullable a Sueldos. Conserva todos los valores y rechaza downgrade si reactivaría pagos eliminados. |
 | 0020_credit_person_names | Capitaliza cada palabra y recompone búsqueda, sin fusionar identidades ni modificar customer_credits. |
 | 0019_credit_local_phone | Celular argentino de 10 dígitos. Convierte únicamente 549+10 dígitos y rechaza formatos ambiguos sin cambios; CHECK de formato y versión incrementada al convertir. |

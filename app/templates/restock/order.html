@@ -17,6 +17,7 @@
       {% for line in row.lines %}
       <li class="card restock-item" data-order-line="{{ line.id }}">
         <div class="restock-item-head"><div><h3>{{ line.product_name }}</h3>{% if line.presentation %}<p class="muted">{{ line.presentation }}</p>{% endif %}</div>{{ state_badge(line.outcome, line_states[line.outcome]) }}</div>
+        {% if line.product_description %}<p class="restock-note muted">{{ line.product_description }}</p>{% endif %}
         {% if line.quantity or line.unit or line.barcode or line.resolved_at %}<p class="restock-meta">
           {% if line.quantity or line.unit %}<span>{{ line.quantity|restock_quantity }} {{ line.unit }}</span>{% endif %}
           {% if line.barcode %}<span>{{ line.barcode }}</span>{% endif %}{% if line.resolved_at %}<span>{{ line.resolved_at|local_date }}</span>{% endif %}

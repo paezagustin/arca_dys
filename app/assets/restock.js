@@ -140,7 +140,7 @@
       const quantity = form.elements[`quantity_${id}`].value.trim();
       const unit = form.elements[`unit_${id}`].value.trim();
       const notes = form.elements[`notes_${id}`].value.trim();
-      const title = [row.dataset.name, row.dataset.presentation].filter(Boolean).join(' · ');
+      const title = [row.dataset.name, row.dataset.presentation, row.dataset.description].filter(Boolean).join(' · ');
       return '- ' + [title, [quantity, unit].filter(Boolean).join(' '), notes].filter(Boolean).join(' — ');
     });
     const note = form.elements.order_notes.value.trim();

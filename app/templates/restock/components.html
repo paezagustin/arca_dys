@@ -37,7 +37,7 @@
 
 {% macro unavailable(product) -%}
 {% if not product.available %}
-<span class="restock-state restock-warning">{{ {'inactive':'Inactivo en el catálogo','missing':'Retirado del catálogo'}.get(product.catalog_status, 'Producto archivado') }}</span>
+<span class="restock-state restock-warning">{% if product.catalog_status == 'inactive' and product.catalog_product_active and product.catalog_category_active is sameas false %}Categoría inactiva en el catálogo{% else %}{{ {'inactive':'Inactivo en el catálogo','missing':'Retirado del catálogo'}.get(product.catalog_status, 'Producto archivado') }}{% endif %}</span>
 {% endif %}
 {%- endmacro %}
 

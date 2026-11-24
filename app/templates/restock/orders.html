@@ -19,11 +19,12 @@
     <ul class="restock-list">
       {% for row in rows %}
       {% set product = row.product %}
-      <li class="card restock-item" data-draft-line data-name="{{ product.name }}" data-presentation="{{ product.presentation }}">
+      <li class="card restock-item" data-draft-line data-name="{{ product.name }}" data-presentation="{{ product.presentation }}" data-description="{{ product.description|truncate(180) if product.source else '' }}">
         <div class="restock-item-head">
           <label class="restock-check restock-draft-product"><input type="checkbox" name="need_id" value="{{ row.id }}"><span><strong>{{ product.name }}</strong>{% if product.presentation %}<span class="restock-presentation">{{ product.presentation }}</span>{% endif %}</span></label>
           {{ unavailable(product) }}
         </div>
+        {% if product.source and product.description %}<p class="restock-note muted">{{ product.description|truncate(180) }}</p>{% endif %}
         <input type="hidden" name="version_{{ row.id }}" value="{{ row.version }}"><input type="hidden" name="product_version_{{ row.id }}" value="{{ product.version }}">
         <details class="restock-disclosure">
           <summary>Editar cantidad u observaciones{% if row.quantity or row.unit %} · {{ row.quantity|restock_quantity }} {{ row.unit }}{% endif %}</summary>

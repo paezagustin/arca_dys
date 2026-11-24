@@ -1,6 +1,6 @@
 """Reposición de mercadería e historial de pedidos a proveedores."""
 from sqlalchemy import (
-    Boolean, CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, Numeric,
+    BigInteger, Boolean, CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, Numeric,
     String, Text, UniqueConstraint, text,
 )
 from sqlalchemy.orm import relationship
@@ -35,6 +35,10 @@ class RestockProduct(Base):
     source = Column(String(40))
     external_id = Column(String(160))
     catalog_status = Column(String(10))
+    catalog_product_active = Column(Boolean)
+    catalog_category_id = Column(BigInteger)
+    catalog_category_name = Column(String(100))
+    catalog_category_active = Column(Boolean)
     version = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
     updated_at = Column(DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
@@ -120,6 +124,7 @@ class SupplierOrderLine(Base):
     order_id = Column(ForeignKey("restock_orders.id"), nullable=False)
     need_id = Column(ForeignKey("restock_needs.id"), nullable=False)
     product_name = Column(String(180), nullable=False)
+    product_description = Column(Text)
     presentation = Column(String(160), nullable=False)
     barcode = Column(String(100), nullable=False)
     search_text = Column(Text, nullable=False)
@@ -139,3 +144,5 @@ class RestockCatalogSync(Base):
     last_attempt_at = Column(DateTime(timezone=True))
     last_success_at = Column(DateTime(timezone=True))
     last_error = Column(Text)
+    watermark = Column(DateTime(timezone=True))
+    last_full_sync_at = Column(DateTime(timezone=True))

@@ -50,6 +50,10 @@ INSERT INTO restock_order_lines(order_id,need_id,product_name,presentation,barco
     CASE WHEN closed_at IS NULL THEN 'waiting' ELSE 'undelivered' END,
     CASE WHEN closed_at IS NULL THEN '' ELSE 'Sin entrega' END,closed_at
     FROM restock_orders CROSS JOIN restock_needs;
+UPDATE restock_products SET source='dulce-salado', external_id='123', catalog_status='active',
+  catalog_product_active=true, catalog_category_id=5, catalog_category_name='Categoría de prueba', catalog_category_active=true;
+INSERT INTO restock_catalog_sync(source,last_attempt_at,last_success_at,watermark,last_full_sync_at)
+  VALUES ('dulce-salado',now(),now(),now(),now());
 SQL
 output="$(sh /scripts/backup-db.sh)"
 printf '%s\n' "$output"
@@ -87,6 +91,8 @@ fi
 [ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c "SELECT outcome FROM restock_order_lines WHERE receipt_notes = 'Sin entrega'")" = "undelivered" ]
 [ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT status FROM restock_needs')" = "ordered" ]
 [ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM restock_product_suppliers WHERE preferred')" = "1" ]
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM restock_products WHERE external_id = '123' AND catalog_product_active AND catalog_category_id = 5")" = "1" ]
+[ "$(psql -d "$restore_db" -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM restock_catalog_sync WHERE watermark IS NOT NULL AND last_full_sync_at IS NOT NULL')" = "1" ]
 if psql -d "$restore_db" -v ON_ERROR_STOP=1 -c "INSERT INTO restock_needs
  (request_key,product_id,status,unit,notes,version,created_at,updated_at)
  SELECT md5('$sentinel-duplicate-need')::uuid::text,product_id,'pending','','',1,now(),now() FROM restock_needs" >/dev/null 2>&1; then

@@ -67,13 +67,16 @@ def require_version(row, version):
         raise Conflict(str(error)) from error
 
 
-def product_fields(values):
+def product_fields(values, *, from_catalog=False):
     name = checked_text(values.get("name"), "el nombre", 180, required=True)
-    description = checked_text(values.get("description"), "la descripción", 4000)
+    description = checked_text(values.get("description"), "la descripción", 65536 if from_catalog else 4000)
     presentation = checked_text(values.get("presentation"), "la presentación", 160)
     barcode = checked_text(values.get("barcode"), "el código de barras", 100)
+    searchable = f"{name} {presentation} {barcode}"
+    if from_catalog and description:
+        searchable = f"{searchable} {description}"
     return dict(name=name, name_key=normalized(name), description=description, presentation=presentation,
-                barcode=barcode, search_text=normalized(f"{name} {presentation} {barcode}"))
+                barcode=barcode, search_text=normalized(searchable))
 
 
 def purchase_fields(values, suffix=""):
@@ -376,6 +379,7 @@ def register_order(db, supplier_id, values, selections):
         need = needs[selection.need_id]
         product = products[need.product_id]
         order.lines.append(SupplierOrderLine(need_id=need.id, product_name=product.name,
+                                             product_description=product.description if product.source and product.description else None,
                                              presentation=product.presentation, barcode=product.barcode,
                                              search_text=product.search_text, **selection.purchase))
         need.status = "ordered"

@@ -131,12 +131,15 @@ def products_index(request: Request, q: str = Query("", max_length=180), vinculo
 
 
 @router.post("/productos/sincronizar")
-def sync_products(request: Request, db: Session = Depends(get_db)):
+def sync_products(request: Request, form: FormData = Depends(form_data), db: Session = Depends(get_db)):
     fetch = getattr(request.app.state, "restock_catalog_fetch", None)
     if not callable(fetch):
         raise HTTPException(503, "La conexión con Dulce y Salado está pendiente. Podés seguir trabajando con los productos locales.")
+    mode = form.get("mode", "auto")
+    if mode not in {"auto", "full"}:
+        raise HTTPException(422, "Elegí un tipo de sincronización válido.")
     try:
-        restock_catalog.synchronize(db, fetch)
+        changed = restock_catalog.synchronize(db, fetch, force_full=mode == "full")
     except restock_catalog.SyncFailed as error:
         if wants_json(request):
             raise HTTPException(502, str(error)) from None
@@ -144,7 +147,7 @@ def sync_products(request: Request, db: Session = Depends(get_db)):
     except restock.Conflict as error:
         raise HTTPException(409, str(error)) from None
     if wants_json(request):
-        return {"message": NOTICES["synced"]}
+        return {"message": NOTICES["synced"], "changed": changed}
     return RedirectResponse("/faltantes/productos?aviso=synced", status_code=303)
 
 

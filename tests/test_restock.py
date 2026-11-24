@@ -304,9 +304,9 @@ def test_catalog_projection_preserves_links_history_and_local_rows(guest, vendor
     snapshot = restock_catalog.CatalogSnapshot
     incoming = snapshot((item("DYS-000001", "Avena del negocio", "Bolsa de 25 kg"),
                          item("DYS-000002", "Avena del negocio", "Paquete chico")), complete=True)
-    monkeypatch.setattr(app.state, "restock_catalog_fetch", lambda: incoming, raising=False)
+    monkeypatch.setattr(app.state, "restock_catalog_fetch", lambda query: incoming)
     post(guest, "/productos/sincronizar")
-    post(guest, "/productos/sincronizar")
+    post(guest, "/productos/sincronizar", {"mode": "full"})
     with SessionLocal() as db:
         product = db.scalar(select(RestockProduct).where(RestockProduct.external_id == "DYS-000001"))
         identifier = product.id
@@ -327,7 +327,7 @@ def test_catalog_projection_preserves_links_history_and_local_rows(guest, vendor
     receive(guest, before_rename, {need: ("undelivered", "Sin mercadería")})
     after_rename = order_id(post(guest, f"/pedidos/{parra}", draft(parra, need)))
     incoming = snapshot((), complete=True)
-    post(guest, "/productos/sincronizar")
+    post(guest, "/productos/sincronizar", {"mode": "full"})
     assert "Retirado del catálogo" in guest.get("/faltantes?estado=ordered").text
     receive(guest, after_rename, {need: ("received", "")})
     post(guest, f"/registrar/{identifier}", {"request_key": key()}, 409)
@@ -335,7 +335,7 @@ def test_catalog_projection_preserves_links_history_and_local_rows(guest, vendor
     with SessionLocal() as db:
         last_success = db.get(RestockCatalogSync, restock_catalog.SOURCE).last_success_at
     incoming = snapshot((item("DYS-000001", "No guardar"), item("DYS-000001", "ID repetido")), complete=True)
-    post(guest, "/productos/sincronizar", status=502)
+    post(guest, "/productos/sincronizar", {"mode": "full"}, status=502)
     with SessionLocal() as db:
         assert db.get(RestockProduct, local).name == "Avena del negocio"
         assert db.get(RestockProduct, identifier).name == "Avena renombrada"

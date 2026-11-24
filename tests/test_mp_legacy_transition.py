@@ -115,14 +115,15 @@ def test_bridge_preserves_complete_report_and_original_rows(scratch_database, so
     assert migrate_legacy_mp(scratch_database) == before  # Repetición sin escrituras.
 
 
-def test_bridge_retry_preserves_the_previous_release(scratch_database):
+@pytest.mark.parametrize("previous", ["0021_salary_deletion", "0022_restock"])
+def test_bridge_retry_preserves_the_previous_release(scratch_database, previous):
     seed_legacy_duplicates(scratch_database)
     receipt = migrate_legacy_mp(scratch_database)
-    migrate(scratch_database, "0021_salary_deletion", downgrade=True)
+    migrate(scratch_database, previous, downgrade=True)
 
     assert migrate_legacy_mp(scratch_database) == receipt
     with scratch_database.connect() as db:
-        assert db.scalar(text("SELECT version_num FROM alembic_version")) == "0021_salary_deletion"
+        assert db.scalar(text("SELECT version_num FROM alembic_version")) == previous
 
 
 def test_bridge_cli_and_read_only_audit(scratch_database):

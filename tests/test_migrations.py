@@ -131,6 +131,20 @@ def test_restock_rollback_only_while_new_tables_are_empty(scratch_database):
         assert connection.execute(text("SELECT * FROM suppliers")).all() == before
 
 
+def test_catalog_rollback_preserves_synced_state(scratch_database):
+    migrate(scratch_database, "0022_restock")
+    migrate(scratch_database, "0023_restock_catalog")
+    migrate(scratch_database, "0022_restock", downgrade=True)
+    migrate(scratch_database, "0023_restock_catalog")
+    with scratch_database.begin() as connection:
+        connection.execute(text("INSERT INTO restock_catalog_sync (source, watermark) VALUES ('dulce-salado', now())"))
+    with pytest.raises(RuntimeError, match="descartaría datos del catálogo"):
+        migrate(scratch_database, "0022_restock", downgrade=True)
+    with scratch_database.connect() as connection:
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0023_restock_catalog"
+        assert connection.scalar(text("SELECT watermark IS NOT NULL FROM restock_catalog_sync")) is True
+
+
 def test_existing_export_adopts_without_losing_rows(scratch_database):
     load_export(scratch_database)
     with scratch_database.begin() as connection:

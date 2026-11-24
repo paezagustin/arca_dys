@@ -1,0 +1,15 @@
+# Producción opcional. La red externa ya está administrada por Dulce y Salado.
+services:
+  fastapi:
+    env_file:
+      - ${DYS_ARCA_CATALOG_ENV_FILE:-/home/pi/.config/arca-dys-access/catalog.env}
+    environment:
+      DYS_ARCA_CATALOG_URL: http://dys-catalog-internal:8000
+    networks:
+      - default
+      - dys_catalog
+
+networks:
+  dys_catalog:
+    name: dys-arca-catalog
+    external: true

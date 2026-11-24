@@ -498,7 +498,7 @@ Respaldo efectivo: deploy_crud_20261121.FIVX4s en el directorio SSD de backups.
 Esta actualización ordinaria agrega seis tablas vacías sobre `0021_salary_deletion`.
 La autorización del nuevo hito comprende inventario, ensayo aislado y corte de
 ARCA DYS. Usar la instalación efectiva y el procedimiento de Compose del host.
-La sincronización comercial queda inactiva hasta conectar el adaptador real.
+Para habilitar la sincronización comercial, seguir también [catálogo 0023](#catálogo-0023).
 
 1. Inventariar imagen activa, proyecto/archivos Compose efectivos, revisión
    Alembic, salud HTTP y de PostgreSQL, cola fiscal y espacio en el SSD. Verificar
@@ -548,3 +548,30 @@ La sincronización comercial queda inactiva hasta conectar el adaptador real.
   correctiva compatible. Restaurar un respaldo en una base separada para
   investigar o conciliar. Conservar las operaciones posteriores al respaldo,
   incluidas las fiscales, al decidir cualquier recuperación.
+
+## Catálogo 0023
+
+La imagen nueva requiere `0023_restock_catalog`. Desde `0021_salary_deletion`,
+`alembic upgrade 0023_restock_catalog` aplica también `0022_restock`. Verificar
+las dos revisiones sobre el respaldo restaurado antes del corte. Antes de crear
+fichas o pedidos se puede ensayar `alembic downgrade 0021_salary_deletion` para
+volver a la imagen original. Los guards preservan el módulo si ya hay filas.
+Si se cargaron datos, mantener el esquema con una imagen compatible.
+
+Sumar el archivo versionado `docker-compose.catalog.yml` al Compose efectivo de
+ARCA. Este override incorpora únicamente FastAPI a la red externa existente
+`dys-arca-catalog`, además de su red actual. Verificar con `docker network inspect`
+que sea un bridge interno. Usar un archivo privado legible por el operador de
+Compose, con permisos `0600`, que contenga la variable `DYS_ARCA_CATALOG_TOKEN`
+provista por Dulce y Salado. La ruta predeterminada del override es
+`/home/pi/.config/arca-dys-access/catalog.env` y se puede indicar otra con
+`DYS_ARCA_CATALOG_ENV_FILE`. Verificar el manifiesto resultante en el host y
+mantener el valor del token en el canal de secretos.
+
+Con FastAPI creado desde la imagen ARM64 publicada, comprobar `/health`,
+las rutas privadas de Faltantes, la conectividad y el alcance de la API al
+servicio interno. Hacer la primera carga con **Sincronizar catálogo** o con
+`dc exec -T fastapi python -m app.manage sync-restock-catalog --full`.
+Contrastar los conteos por estado y la fecha de sincronización. Repetir una
+lectura completa para verificar que las fichas conservan su ID y versión en
+ausencia de cambios. Los productos locales se comprueban en el ensayo aislado.

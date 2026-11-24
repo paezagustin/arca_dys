@@ -7,10 +7,14 @@
   <summary>Catálogo Dulce y Salado</summary>
   <div class="restock-catalog">
     <p>Última sincronización exitosa <strong>{{ sync.last_success_at|local_date if sync and sync.last_success_at else 'Todavía no realizada' }}</strong></p>
+    {% if sync and sync.last_full_sync_at %}<p>Última conciliación completa <strong>{{ sync.last_full_sync_at|local_date }}</strong></p>{% endif %}
     {% if sync and sync.last_error %}<p class="notice error" role="alert" data-inline-notice>{{ sync.last_error }} Último intento {{ sync.last_attempt_at|local_date }}.</p>{% endif %}
     {% if not catalog_ready %}<p class="muted" id="restock-catalog-connection">Conexión con la API pendiente.</p>{% endif %}
     <form method="post" action="/faltantes/productos/sincronizar">{{ csrf() }}
-      <button type="submit" class="quiet"{% if not catalog_ready %} disabled aria-describedby="restock-catalog-connection"{% endif %}>Sincronizar catálogo</button>
+      <div class="actions">
+        <button type="submit" class="quiet"{% if not catalog_ready %} disabled aria-describedby="restock-catalog-connection"{% endif %}>Sincronizar catálogo</button>
+        {% if catalog_ready %}<button type="submit" class="quiet" name="mode" value="full">Conciliar catálogo completo</button>{% endif %}
+      </div>
     </form>
   </div>
 </details>
@@ -46,6 +50,7 @@
       <div class="restock-item-head"><div><h3><a href="/faltantes/productos/{{ row.id }}">{{ row.name }}</a></h3>{% if row.presentation %}<p class="muted">{{ row.presentation }}</p>{% endif %}</div>
         {{ unavailable(row) }}</div>
       {{ association_list(row) }}
+      {% if row.source and row.description %}<p class="restock-note muted">{{ row.description|truncate(180) }}</p>{% endif %}
       <p class="restock-meta"><span>{{ 'Catálogo Dulce y Salado' if row.source else 'Producto local' }}</span>{% if row.barcode %}<span>{{ row.barcode }}</span>{% endif %}</p>
     </li>
     {% endfor %}

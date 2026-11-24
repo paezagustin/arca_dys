@@ -33,7 +33,9 @@ versiones al registrar. La coordinación del envío manual ocurre fuera del sist
 ## Datos y garantías
 
 La revisión [`0022_restock`](../migrations/versions/0022_restock.py) agrega seis
-tablas. Las rutas HTTP y plantillas viven en `app/api/restock.py` y
+tablas. [`0023_restock_catalog`](../migrations/versions/0023_restock_catalog.py)
+agrega los estados de origen, las marcas de sincronización y la descripción de
+catálogo en los renglones nuevos de pedido. Las rutas HTTP y plantillas viven en `app/api/restock.py` y
 `app/templates/restock/`. `app/services/restock.py` concentra las reglas y
 consultas. El módulo conserva la arquitectura FastAPI, Jinja y SQLAlchemy.
 
@@ -86,21 +88,33 @@ insumos como productos locales desde **Nuevo producto**. El nombre es el único
 dato obligatorio. Los nombres y códigos similares generan una advertencia;
 las presentaciones siguen siendo fichas independientes.
 
-`app/services/restock_catalog.py` recibe un conjunto validado por un adaptador y
-lo aplica de forma idempotente por identidad externa dentro de una transacción.
-Las fichas locales y el estado de archivado local se conservan. Una ficha ausente
-se marca retirada únicamente tras una lectura confirmada como completa. Una
-respuesta parcial solo actualiza los productos que incluye. Un error conserva la
-copia anterior y registra un mensaje sin detalles del proveedor ni credenciales.
+`app/services/dys_catalog.py` consume la API v1 por `GET` y Bearer con la
+paginación `after_id`. El ID original de Django se guarda como texto en
+`external_id`, con `source=dulce-salado`. La presentación combina unidad comercial
+y marca. Se conserva la descripción para distinguir variantes y el código de
+barras se mantiene como texto, incluidos sus ceros iniciales. La ficha está
+disponible cuando su estado local, su estado de origen y su categoría están activos.
+El contrato está en `docs/INTEGRACION_ARCA_DYS.md` y `docs/arca-dys.openapi.yaml`
+del repositorio Dulce-Salado.
 
-El botón **Sincronizar catálogo**, junto con la fecha y el último error, está en
-**Productos → Catálogo Dulce y Salado**. Se habilita al conectar el adaptador real.
-La interfaz interna `CatalogSnapshot` es una representación de la copia a aplicar.
-El adaptador HTTP, la autenticación, el recorrido completo y el tratamiento de
-bajas se definirán con el contrato de Dulce y Salado. Para una segunda etapa,
-validar primero la ejecución manual. Con latencia y volumen medidos, evaluar
-una ejecución programada en la operación existente de la Raspberry, separada
-del ciclo de la cola fiscal y con el mismo bloqueo de sincronización.
+**Productos → Catálogo Dulce y Salado** muestra la última sincronización exitosa,
+la última conciliación completa y el error más reciente. **Sincronizar catálogo**
+hace una lectura completa al inicio y al cumplirse siete días desde la última.
+Entre conciliaciones utiliza `updated_since` inclusivo desde el inicio de la
+última sincronización exitosa, con cinco minutos de solapamiento. **Conciliar
+catálogo completo** permite adelantar ese barrido.
+
+El servicio aplica toda la lectura en una transacción por identidad externa y
+conserva las fichas locales y su archivado. Verifica una ficha ausente por ID
+antes de marcarla retirada y vuelve a confirmar que el listado siga disponible.
+Una página, un detalle o una credencial inválidos conservan la copia y la marca
+anteriores. El catálogo en servicio puede seguir cambiando entre páginas; el
+solapamiento y la reconciliación periódica permiten recuperar esos cambios.
+
+La sincronización también se puede iniciar desde el contenedor ARCA con
+`python -m app.manage sync-restock-catalog` y la opción `--full`. La ejecución es
+manual. Para programarla conviene medir frecuencia de cambios y duración y usar
+el mismo comando fuera del ciclo de la cola fiscal.
 
 ## Validación y recuperación
 

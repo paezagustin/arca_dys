@@ -1,4 +1,4 @@
-"""Operaciones explícitas de esquema. Nunca emite facturas ni consulta pagos."""
+"""Operaciones explícitas de mantenimiento. Nunca emite facturas ni consulta pagos."""
 import argparse
 from alembic import command
 from alembic.config import Config
@@ -68,9 +68,11 @@ def adopt_legacy(target_engine=engine):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["adopt-legacy", "create-user", "audit-mp-legacy", "migrate-legacy-mp", "check-mp-identities"])
+    parser.add_argument("action", choices=["adopt-legacy", "create-user", "audit-mp-legacy", "migrate-legacy-mp",
+                                           "check-mp-identities", "sync-restock-catalog"])
     parser.add_argument("--username")
     parser.add_argument("--role", choices=["admin", "operator"], default="admin")
+    parser.add_argument("--full", action="store_true", help="Conciliar todo el catálogo en sync-restock-catalog")
     args = parser.parse_args()
     if args.action == "adopt-legacy":
         adopt_legacy()
@@ -86,6 +88,20 @@ def main():
         with engine.connect() as connection:
             connection.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"))
             print(json.dumps(check_mp_identities(connection), sort_keys=True))
+    elif args.action == "sync-restock-catalog":
+        from sqlalchemy.orm import Session
+        from app.services.dys_catalog import configured_fetch
+        from app.services.restock import Conflict
+        from app.services.restock_catalog import SyncFailed, synchronize
+        fetch = configured_fetch()
+        if fetch is None:
+            parser.exit(1, "Configurá la conexión con el catálogo antes de sincronizar.\n")
+        try:
+            with Session(engine) as db:
+                changed = synchronize(db, fetch, force_full=args.full)
+        except (SyncFailed, Conflict) as error:
+            parser.exit(1, f"{error}\n")
+        print(f"Catálogo sincronizado. Fichas nuevas o modificadas: {changed}")
     else:
         from getpass import getpass
         from sqlalchemy.orm import Session

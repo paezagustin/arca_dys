@@ -16,6 +16,7 @@ from alembic.script import ScriptDirectory
 from app.core.config import ENV, INTEGRATIONS_MODE
 from app.core.database import engine
 from app.core.logging import setup_logging
+from app.services.dys_catalog import configured_fetch
 from app.api import invoice, mp, page, page_reports_statistics
 from app.api import access, business, dashboard, registers, credits, restock, settings as settings_routes
 
@@ -54,6 +55,7 @@ async def lifespan(app):
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None,
               dependencies=[Depends(access.require_web_access)])
 app.state.integrations_mode = INTEGRATIONS_MODE
+app.state.restock_catalog_fetch = configured_fetch()
 from app.core.request_limits import RequestLimits
 app.add_middleware(RequestLimits)
 app.include_router(mp.router)
